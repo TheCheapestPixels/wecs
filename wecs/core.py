@@ -1,3 +1,4 @@
+import types
 import dataclasses
 
 
@@ -45,21 +46,27 @@ class Component():
         return cls
 
 
-def and_filter(types):
+def and_filter(types_and_filters):
     def filter(entity):
-        if all([entity.has_component(t) for t in types]):
-            return True
-        else:
-            return False
+        for clause in types_and_filters:
+            if type(clause) is types.FunctionType:
+                if not clause(entity):
+                    return False
+            elif not entity.has_component(clause):
+                return False
+        return True
     return filter
 
 
-def or_filter(types):
+def or_filter(types_and_filters):
     def filter(entity):
-        if any([entity.has_component(t) for t in types]):
-            return True
-        else:
-            return False
+        for clause in types_and_filters:
+            if type(clause) is types.FunctionType:
+                if clause(entity):
+                    return True
+            elif entity.has_component(clause):
+                return True
+        return False
     return filter
 
 
@@ -77,10 +84,10 @@ class System:
             for filter_name, filter_func in self.entity_filters.items()
         }
 
-    def init_entity(filter_name, entity):
+    def init_entity(self, filter_name, entity):
         pass
 
-    def destroy_entity(filter_name, entity, component):
+    def destroy_entity(self, filter_name, entity, component):
         pass
 
     def update(self, filtered_entities):

@@ -9,28 +9,34 @@ of an ECS system.
 ## ECS definition
 
 
-* Entities
-  * have a set of Components
+* `Entities`
+  * have a set of `Components`
   * are, with regard to how they are processed, typeless
-* Components
-  * are the state of an Entity
+* `Components`
+  * are the state of an `Entity`
   * have a type
-* Systems
-  * process Components of specific types (see user story below) when
-    * a Component of any such type is created, for which the System's
-      `init_component()` is called. This allows for setup, i.e. loading models
-      into Panda3D's scene graph.
-    * a Component of any such type is destroyed, calling `destroy_component()`.
-      This allows for necessary breakdown.
-    * the System is added to or removed from the World. This calls
-      `init_component()` or `destroy_component()` respectively.
-    * the System's game logic is being run, caused by
-      * World.update()
-      * a task that is created when the System is added to the World
-* World
-  * has a set of Entities
-  * has a set of Systems
-  * causes Systems to process their relevant Components in an appropriate
+* `Systems`
+  * have filters which have
+    * a name identifying
+    * a function testing for the presence of component types
+  * process `Entities` when
+    * a `Component` is added to the entity so that it now satisfies a filter.
+      The System's `init_entity(filter_name, entity)` is called. This allows
+      for setup, i.e. loading models into Panda3D's scene graph.
+    * a `Component` is removed, so that the entity now does not satisfy a filter
+      anymore. `destroy_component(filter_name, entity, component)` is called, .
+      This allows for necessary breakdown. Do note that the component that has
+      been removed is already not on the entity anymore, which is why it is
+      passed as an extra argument.
+    * the `System` is added to or removed from the `World`. This calls
+      `init_entity()` or `destroy_entity()` respectively.
+    * the `System`'s game logic is being run, caused by
+      * `World.update()`
+      * a task that is created when the `System` is added to the `World`
+* `World`
+  * has a set of `Entities`
+  * has a set of `Systems`
+  * causes `Systems` to process their relevant `Components` in an appropriate
     running order
 
 
@@ -47,25 +53,27 @@ This is solved simply by capping the timestep. However, physics objects in the
 game will have control logic being run on them that causes physics actions, like
 i.e. a system processing thrusters applies an impulse to the rocket. These need
 to scale to the timestep that will be used for the next physics simulation step.
-Thus, there are two Systems, TimestepSystem and PhysicsSystem, plus
-game-specific system, here exemplified by ThrusterSystem.
+Thus, there are two systems, `TimestepSystem` and `PhysicsSystem`, plus
+game-specific system, here exemplified by `ThrusterSystem`.
 
-* TimestepSystem
-  * is run on [PhysicsWorld, PhysicsObject], meaning any component implementing
-    any of these types; this is an OR filter.
-  * gets the PhysicsWorld component (there is exactly one per world) and lets it
-    determine the next timestep's length
-  * updates all the component's timestep field
-* ThrusterSystem
-  * is run on [(Thruster, PhysicsObject)], meaning the components of those types
-    that are on any entity that has components of all of these types. This is an
-    AND filter.
-* PhysicsSystem
-  * is run on [PhysicsWorld]
-  * runs the physics simulation
+* `TimestepSystem`
+  * is run on `or_filter([PhysicsWorld, PhysicsObject])`, meaning entities with
+    either component
+  * gets the `PhysicsWorld` component (there is exactly one per world) and lets
+    it determine (and store) the next timestep's length
+  * stores the timestep on each `PhysicsObject` component
+* `ThrusterSystem`
+  * is run on `and_filter([Thruster, PhysicsObject])`, meaning the components of those types
+    that are on any entity that has components of all of these types.
+  * adds an impulse on each `PhysicsObject`, respecting the timestep field
+* `PhysicsSystem`
+  * is run on `[PhysicsWorld]`
+  * runs the physics simulation with the stored timestep
 
 
 ## Implementational detail: Optimizing type filtering performance
+
+NOTE: I implemented prefiltering, but not quite like written down here.
 
 As the number of Entities grows through expanding the game world or getting more
 players, and the number of Systems grows due to new features in the game, the
@@ -121,6 +129,7 @@ programmatically extractable understanding of System-Component dependencies.
 Entities act as nothing more than a label, and are usually implemented as a
 simple integer as a globally unique identifier (GUID). The question arises: How
 many of those do we need?
+
 Assume a game of five million concurrent players, and a thousand Entities in the
 game world per player. Thus we arrive at five billion Entities in the game
 world. This is just above 2**32 numbers (4.29 billion). 64 bit offers over 18
@@ -157,6 +166,8 @@ Panda3D, the task manager can solve this. Long-running systems into separate
 task chains to run asynchronous, while "every frame" tasks are put into the
 default task chain.
 
+CURRENT STATE: When a system is added, an `int` is provided. `world.update()`
+will run the task in order of ascending numbers.
 
 ## Note: Component inheritance
 

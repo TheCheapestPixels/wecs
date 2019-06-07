@@ -34,7 +34,7 @@ def make_basic_character_components():
 def make_standard_wizard_components():
     wizard_components = [
         components.Mana(mana=5, max_mana=10, spells_ready=[]),
-        components.RejuvenationSpell(mana_cost=4, time_restored=4),
+        components.RejuvenationSpell(mana_cost=4, time_restored=5),
         components.RestoreHealthSpell(mana_cost=2, health_restored=4),
         components.LichdomSpell(mana_cost=10),
     ]

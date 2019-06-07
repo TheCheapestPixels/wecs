@@ -76,6 +76,12 @@ class Mana:
 # FooSpell is a character's knowledge of a spell.
 # FooSpellEffect is the effect of a spell that's lingering on an
 #   entity.
+# FooSpell.name is used to indicate the Action.plan symbol that causes casting
+#   this spell, and the Mana.spells_ready entry indicating that it can be cast.
+# CastFooSpell is the system for casting FooSpell.
+# Before any CastFooSpell can be run, the system ReadySpells must have added
+#   FooSpell.name to Mana.spells_ready this frame.
+
 
 @Component()
 class RejuvenationSpell:

@@ -174,27 +174,42 @@ class ReadInput(System):
             entity.get_component(Action).plan = command
 
 
-class CastRejuvenationSpell(System):
+class SpellcastingMixin:
+    def update(self, filtered_entities):
+        for entity in filtered_entities['cast_spell']:
+            if entity.get_component(Action).plan == self.spell_class.name:
+                mana = entity.get_component(Mana)
+                if self.spell_class.name in mana.spells_ready:
+                    self.cast_spell(entity)
+                else:
+                    self.spell_not_ready(entity)
+
+
+class CastRejuvenationSpell(System, SpellcastingMixin):
     entity_filters = {
         'cast_spell': and_filter([Action, Mana, RejuvenationSpell, Age, Alive]),
     }
+    spell_class = RejuvenationSpell
 
     def update(self, filtered_entities):
-        for entity in filtered_entities['cast_spell']:
-            if entity.get_component(Action).plan == 'rejuvenation':
-                mana = entity.get_component(Mana)
-                if 'rejuvenation' in mana.spells_ready:
-                    spell = entity.get_component(RejuvenationSpell)
-                    age = entity.get_component(Age)
-                    mana.mana -= spell.mana_cost
-                    age.age -= spell.time_restored
-                    print("REJUVENATION SPELL CAST!")
-                else:
-                    print("Not enough mana for rejuvenation spell.")
-                entity.get_component(Action).plan = None
+        SpellcastingMixin.update(self, filtered_entities)
+
+    def cast_spell(self, entity):
+        mana = entity.get_component(Mana)
+        spell = entity.get_component(self.spell_class)
+        age = entity.get_component(Age)
+        mana.mana -= spell.mana_cost
+        age.age -= spell.time_restored
+        if age.age < 0:
+            age.age = 0
+        print("REJUVENATION SPELL CAST!")
+        entity.get_component(Action).plan = None
+
+    def spell_not_ready(self, entity):
+        entity.get_component(Action).plan = None
 
 
-class CastRestoreHealthSpell(System):
+class CastRestoreHealthSpell(System, SpellcastingMixin):
     entity_filters = {
         'cast_spell': and_filter(
             [
@@ -203,46 +218,50 @@ class CastRestoreHealthSpell(System):
             ],
         ),
     }
+    spell_class = RestoreHealthSpell
 
     def update(self, filtered_entities):
-        for entity in filtered_entities['cast_spell']:
-            if entity.get_component(Action).plan == 'restore_health':
-                spell = entity.get_component(RestoreHealthSpell)
-                mana = entity.get_component(Mana)
-                if 'restore_health' in mana.spells_ready:
-                    mana.mana -= spell.mana_cost
-                    print("RESTORE HEALTH CAST!")
-                    health = entity.get_component(Health)
-                    health.health += spell.health_restored
-                    if health.health > health.max_health:
-                        health.health = health.max_health
-                else:
-                    print("Not enough mana to restore health.")
-                entity.get_component(Action).plan = None
+        SpellcastingMixin.update(self, filtered_entities)
+
+    def cast_spell(self, entity):
+        mana = entity.get_component(Mana)
+        spell = entity.get_component(self.spell_class)
+        age = entity.get_component(Age)
+        health = entity.get_component(Health)
+
+        mana.mana -= spell.mana_cost
+        health.health += spell.health_restored
+        if health.health > health.max_health:
+            health.health = health.max_health
+        print("RESTORE HEALTH CAST!")
+        entity.get_component(Action).plan = None
+
+    def spell_not_ready(self, entity):
+        print("Not enough mana to restore health.")
+        entity.get_component(Action).plan = None
 
 
-class CastLichdomSpell(System):
+class CastLichdomSpell(System, SpellcastingMixin):
     entity_filters = {
-        'cast_spell': and_filter(
-            [
-                and_filter([Action, Mana, LichdomSpell, Alive]),
-                # not_filter([LichdomSpellEffect])
-            ],
-        ),
+        'cast_spell': and_filter([Action, Mana, LichdomSpell, Alive]),
     }
+    spell_class = LichdomSpell
 
     def update(self, filtered_entities):
-        for entity in filtered_entities['cast_spell']:
-            if entity.get_component(Action).plan == 'lichdom':
-                spell = entity.get_component(LichdomSpell)
-                mana = entity.get_component(Mana)
-                if mana.mana >= spell.mana_cost:
-                    mana.mana -= spell.mana_cost
-                    if entity.has_component(LichdomSpellEffect):
-                        print("SPELL FAILS, already under its effect.")
-                    else:
-                        entity.add_component(LichdomSpellEffect())
-                        print("LICHDOM SPELL CAST!")
-                else:
-                    print("Not enough mana for lichdom spell.")
-                entity.get_component(Action).plan = None
+        SpellcastingMixin.update(self, filtered_entities)
+
+    def cast_spell(self, entity):
+        mana = entity.get_component(Mana)
+        spell = entity.get_component(self.spell_class)
+        if entity.has_component(LichdomSpellEffect):
+            mana.mana -= int(spell.mana_cost / 2)
+            print("SPELL FAILS, already under its effect.")
+        else:
+            mana.mana -= spell.mana_cost
+            entity.add_component(LichdomSpellEffect())
+            print("LICHDOM SPELL CAST!")
+        entity.get_component(Action).plan = None
+
+    def spell_not_ready(self, entity):
+        print("Not enough mana for lichdom spell.")
+        entity.get_component(Action).plan = None

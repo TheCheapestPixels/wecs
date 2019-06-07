@@ -1,12 +1,13 @@
 # WECS
 
 WECS stands for World, Entities, Components, Systems, and is an implementation
-of an ECS system.
+of an ECS system. For a detailed description, see the Design chapter below.
 
 
 ## Bob the Wizard
 
-WECS comes with a sample in the form of a little RPG.
+WECS comes with an example of a not-totally-trivial game in the form of a little
+RPG.
 
 Bob the Wizard is alive. Bob is aging. When Bob gets too old, his health will
 deteriorate. If his health is gone, he dies. Bob knows a few spells. He knows
@@ -20,7 +21,6 @@ spell Lichdom, and one day, he may be able to cast it...
 # Design
 
 ## ECS definition
-
 
 * `Entities`
   * have a set of `Components`
@@ -49,7 +49,7 @@ spell Lichdom, and one day, he may be able to cast it...
 * `World`
   * has a set of `Entities`
   * has a set of `Systems`
-  * causes `Systems` to process their relevant `Components` in an appropriate
+  * causes `Systems` to process their relevant `Entities` in an appropriate
     running order
 
 
@@ -76,11 +76,14 @@ game-specific system, here exemplified by `ThrusterSystem`.
     it determine (and store) the next timestep's length
   * stores the timestep on each `PhysicsObject` component
 * `ThrusterSystem`
-  * is run on `and_filter([Thruster, PhysicsObject])`, meaning the components of those types
-    that are on any entity that has components of all of these types.
+  * is run on `and_filter([Thruster, PhysicsObject])`, meaning the components of
+    those types that are on any entity that has components of all of these
+    types.
   * adds an impulse on each `PhysicsObject`, respecting the timestep field
 * `PhysicsSystem`
-  * is run on `[PhysicsWorld]`
+  * is run on `and_filter([PhysicsWorld])`. Since only one component type is
+    used here, it could just as well have been the `or_filter`, but the
+    `and_filter` stops faster.
   * runs the physics simulation with the stored timestep
 
 
@@ -139,6 +142,8 @@ programmatically extractable understanding of System-Component dependencies.
 
 ## Implementational detail: Size of GUIDs (TL;DR: 64 bit is the right answer)
 
+NOTE: Theoretical for now, there are no GUIDs being used yet.
+
 Entities act as nothing more than a label, and are usually implemented as a
 simple integer as a globally unique identifier (GUID). The question arises: How
 many of those do we need?
@@ -181,6 +186,7 @@ default task chain.
 
 CURRENT STATE: When a system is added, an `int` is provided. `world.update()`
 will run the task in order of ascending numbers.
+
 
 ## Note: Component inheritance
 

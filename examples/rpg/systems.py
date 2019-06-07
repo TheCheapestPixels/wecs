@@ -113,48 +113,50 @@ class Die(System):
 
 class PrintOutput(System):
     entity_filters = {
+        'all_outputters': and_filter([Name, Output]),
         'print_alive': and_filter([Alive, Name, Output]),
         'print_dead': and_filter([Dead, Name, Output]),
         'print_undead': and_filter([Undead, Name, Output]),
         'print_age': and_filter([Age, Name, Output]),
         'print_mana': and_filter([Mana, Name, Output]),
         'print_health': and_filter([Health, Name, Output]),
-        'print_can_cast': and_filter([Health, Name, Output]),
+        'print_can_cast': and_filter([Mana, Name, Output]),
     }
 
     def update(self, filtered_entities):
-        for entity in filtered_entities['print_age']:
-            print("{} is {} time old.".format(
-                entity.get_component(Name).name,
-                entity.get_component(Age).age,
-            ))
-        for entity in filtered_entities['print_alive']:
-            print("{} is alive.".format(
-                entity.get_component(Name).name,
-            ))
-        for entity in filtered_entities['print_dead']:
-            print("{} is dead.".format(
-                entity.get_component(Name).name,
-            ))
-        for entity in filtered_entities['print_undead']:
-            print("{} is undead.".format(
-                entity.get_component(Name).name,
-            ))
-        for entity in filtered_entities['print_health']:
-            print("{} is {} healthy.".format(
-                entity.get_component(Name).name,
-                entity.get_component(Health).health,
-            ))
-        for entity in filtered_entities['print_mana']:
-            print("{} has {} mana.".format(
-                entity.get_component(Name).name,
-                entity.get_component(Mana).mana,
-            ))
-        for entity in filtered_entities['print_can_cast']:
-            print("{} can cast: {}".format(
-                entity.get_component(Name).name,
-                ', '.join(entity.get_component(Mana).spells_ready),
-            ))
+        for entity in filtered_entities['all_outputters']:
+            if entity in filtered_entities['print_age']:
+                print("{} is {} time old.".format(
+                    entity.get_component(Name).name,
+                    entity.get_component(Age).age,
+                ))
+            if entity in filtered_entities['print_alive']:
+                print("{} is alive.".format(
+                    entity.get_component(Name).name,
+                ))
+            if entity in filtered_entities['print_dead']:
+                print("{} is dead.".format(
+                    entity.get_component(Name).name,
+                ))
+            if entity in filtered_entities['print_undead']:
+                print("{} is undead.".format(
+                    entity.get_component(Name).name,
+                ))
+            if entity in filtered_entities['print_health']:
+                print("{} is {} healthy.".format(
+                    entity.get_component(Name).name,
+                    entity.get_component(Health).health,
+                ))
+            if entity in filtered_entities['print_mana']:
+                print("{} has {} mana.".format(
+                    entity.get_component(Name).name,
+                    entity.get_component(Mana).mana,
+                ))
+            if entity in filtered_entities['print_can_cast']:
+                print("{} can cast: {}".format(
+                    entity.get_component(Name).name,
+                    ', '.join(entity.get_component(Mana).spells_ready),
+                ))
 
 
 class ReadInput(System):

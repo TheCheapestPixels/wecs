@@ -4,6 +4,19 @@ WECS stands for World, Entities, Components, Systems, and is an implementation
 of an ECS system.
 
 
+## Bob the Wizard
+
+WECS comes with a sample in the form of a little RPG.
+
+Bob the Wizard is alive. Bob is aging. When Bob gets too old, his health will
+deteriorate. If his health is gone, he dies. Bob knows a few spells. He knows
+Rejuvenation and Restore Health, which make him younger and healthier, keeping
+him alive, but they cost mana, which Bob gets only very slowly.
+
+But there's something about Bob. Bob really doesn't want to die. Bob knows the
+spell Lichdom, and one day, he may be able to cast it...
+
+
 # Design
 
 ## ECS definition

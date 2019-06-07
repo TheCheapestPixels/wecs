@@ -17,6 +17,7 @@ from components import Input
 from components import Action
 
 
+# Used by ReadySpells
 spells = [RejuvenationSpell, RestoreHealthSpell, LichdomSpell]
 
 

@@ -74,6 +74,14 @@ for c in make_non_player_character_components():
 entity.add_component(components.Name(name="Obo the Barbarian"))
 
 
+entity = world.add_entity()
+for c in make_basic_character_components():
+    entity.add_component(c)
+for c in make_non_player_character_components():
+    entity.add_component(c)
+entity.add_component(components.Name(name="Ugu the Barbarian"))
+
+
 i = 0
 while True:
     i += 1

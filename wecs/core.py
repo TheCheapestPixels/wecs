@@ -46,35 +46,51 @@ class Component():
         return cls
 
 
-def and_filter(types_and_filters):
-    def filter(entity):
-        for clause in types_and_filters:
-            if type(clause) is types.FunctionType:
+class Filter:
+    def get_component_dependencies(self):
+        dependencies = set()
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
+                dependencies.update(clause.get_component_dependencies())
+            else:
+                dependencies.add(clause)
+        return dependencies
+
+
+class AndFilter(Filter):
+    def __init__(self, types_and_filters):
+        self.types_and_filters = types_and_filters
+
+    def __call__(self, entity):
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
                 if not clause(entity):
                     return False
             elif not entity.has_component(clause):
                 return False
         return True
-    return filter
 
 
-def or_filter(types_and_filters):
-    def filter(entity):
-        for clause in types_and_filters:
-            if type(clause) is types.FunctionType:
+def and_filter(types_and_filters):
+    return AndFilter(types_and_filters)
+
+
+class OrFilter(Filter):
+    def __init__(self, types_and_filters):
+        self.types_and_filters = types_and_filters
+
+    def __call__(self, entity):
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
                 if clause(entity):
                     return True
             elif entity.has_component(clause):
                 return True
         return False
-    return filter
 
 
-def dnf_filter(type_sets):
-    clauses = [and_filter(ts) for ts in type_sets]
-    def filter(entity):
-        return any([c(entity) for c in clauses])
-    return filter
+def or_filter(types_and_filters):
+    return OrFilter(types_and_filters)
 
 
 class System:
@@ -93,11 +109,20 @@ class System:
     def update(self, filtered_entities):
         pass
 
+    def get_component_dependencies(self):
+        dependencies = set()
+        for filter_func in self.entity_filters.values():
+            dependencies.update(filter_func.get_component_dependencies())
+        return dependencies
+
+    def __repr__(self):
+        return self.__class__.__name__
+
 
 class World:
     def __init__(self):
         self.entities = set()
-        self.systems = {} # {System: sort}
+        self.systems = {} # {sort: System}
         self.entity_filters = {}  # {Filter: set([Entities]}
         self.system_of_filter = {}
 
@@ -150,6 +175,13 @@ class World:
                 system.destroy_entity(filter_name, entity)
             del self.entity_filters[filter_func]
         del self.systems[system._sort]
+
+    def get_system_component_dependencies(self):
+        dependencies = {
+            system: system.get_component_dependencies()
+            for system in self.systems.values()
+        }
+        return dependencies
 
     def add_entity_to_filters(self, entity):
         for filter_func, entities in self.entity_filters.items():

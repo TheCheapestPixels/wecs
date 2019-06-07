@@ -198,3 +198,11 @@ present. This leads to easy management of the system:
 
 * http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/
 * https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf
+
+
+# TODO
+
+* Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
+* Batch addition / removal of `Components` to update filters less often
+* Is there proper component cleanup when an entity is removed?
+* Unique `Components`

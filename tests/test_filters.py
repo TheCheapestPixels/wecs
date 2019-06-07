@@ -1,7 +1,7 @@
 import dataclasses
 
 from wecs.core import Component
-from wecs.core import and_filter, or_filter, dnf_filter
+from wecs.core import and_filter, or_filter
 
 from fixtures import world, entity
 
@@ -49,29 +49,6 @@ def test_or_filter(entity):
     assert f(entity)
 
     entity.remove_component(ComponentB)
-    assert not f(entity)
-
-
-def test_dnf_filter(entity):
-    f = dnf_filter([[ComponentA], [ComponentB, ComponentC]])
-    assert not f(entity)
-
-    entity.add_component(ComponentA())
-    assert f(entity)
-
-    entity.add_component(ComponentB())
-    assert f(entity)
-
-    entity.add_component(ComponentC())
-    assert f(entity)
-
-    entity.remove_component(ComponentA)
-    assert f(entity)
-
-    entity.remove_component(ComponentB)
-    assert not f(entity)
-
-    entity.remove_component(ComponentC)
     assert not f(entity)
 
 

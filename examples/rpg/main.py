@@ -3,8 +3,9 @@ from wecs.core import World, Component, System
 import systems
 import components
 
+
 world = World()
-systems = [
+system_queue = [
     systems.Aging,
     systems.DieFromHealthLoss,
     systems.BecomeLich,
@@ -17,7 +18,7 @@ systems = [
     systems.CastRestoreHealthSpell,
     systems.CastLichdomSpell,
 ]
-for sort, system in enumerate(systems):
+for sort, system in enumerate(system_queue):
     world.add_system(system(), sort)
 
 

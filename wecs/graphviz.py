@@ -43,7 +43,6 @@ def system_component_dependency(world, filename=None,
         assert filename is None
     if filename is None and systems_groups is None:
         filename = "system_component_dependencies"
-
     if omit_systems is None:
         omit_systems = []
 
@@ -57,7 +56,10 @@ def system_component_dependency(world, filename=None,
         systems = [s for s in dependency_graph.keys()
                    if type(s) not in omit_systems]
         if filename is None:
-            filename = "system_component_dependencies"
+            filename = "system_component_dependencies.gv"
+        else:
+            filename += '.gv'
+        print(filename)
         draw_graph(filename, world, systems)
 
 
@@ -69,7 +71,6 @@ def draw_graph(filename, world, systems):
 
     dot = Graph(
         comment="System Component Dependencies",
-        filename=filename,
         graph_attr=dict(
             rankdir='LR',
             ranksep='5',
@@ -87,4 +88,4 @@ def draw_graph(filename, world, systems):
         for dependency in dependency_graph[system]:
             dot.edge(repr(system), repr(dependency))
 
-    dot.render(format='png')
+    dot.render(filename=filename, format='png')

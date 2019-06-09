@@ -72,7 +72,7 @@ for c in make_basic_character_components():
     entity.add_component(c)
 for c in make_non_player_character_components():
     entity.add_component(c)
-entity.add_component(components.Name(name="Obo the Barbarian"))
+#entity.add_component(components.Name(name="Obo the Barbarian"))
 
 
 entity = world.add_entity()
@@ -80,11 +80,46 @@ for c in make_basic_character_components():
     entity.add_component(c)
 for c in make_non_player_character_components():
     entity.add_component(c)
-entity.add_component(components.Name(name="Ugu the Barbarian"))
+#entity.add_component(components.Name(name="Ugu the Barbarian"))
+
+
+def generate_dependency_graphs():
+    from wecs.graphviz import system_component_dependency
+
+    # Systems grouped by... well, grouped.
+    systems_groups={
+        'Magic': [
+            systems.BecomeLich,
+            systems.RegenerateMana,
+            systems.ReadySpells,
+            systems.CastRejuvenationSpell,
+            systems.CastRestoreHealthSpell,
+            systems.CastLichdomSpell,
+        ],
+        'IO': [
+            systems.PrintOutput,
+            systems.ReadInput,
+        ],
+        'Lifecycle': [
+            systems.Aging,
+            systems.DieFromHealthLoss,
+            systems.Die,
+        ],
+    }
+
+    # Make sure that the list above covers all the systems
+    all_systems = set()
+    for l in systems_groups.values():
+        all_systems.update(l)
+    assert all([type(s) in all_systems for s in world.systems.values()])
+
+    # ...and render!
+    system_component_dependency(world, systems_groups=systems_groups)
 
 
 i = 0
 while True:
     i += 1
     print("\n--- Timestep {}".format(i))
+    # generate_dependency_graphs()
     world.update()

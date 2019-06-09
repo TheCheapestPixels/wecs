@@ -25,7 +25,7 @@ for sort, system in enumerate(system_queue):
 def make_basic_character_components():
     character_components = [
         components.Alive(),
-        components.Age(age=0),
+        components.Age(age=0, age_of_frailty=8),
         components.Health(health=10, max_health=10),
         components.Action(plan=''),
     ]

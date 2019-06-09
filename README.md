@@ -225,3 +225,7 @@ present. This leads to easy management of the system:
 * Batch addition / removal of `Components` to update filters less often
 * Is there proper component cleanup when an entity is removed?
 * Unique `Components`
+* Break adding/reoving components out of `update()`
+* Create custom Pong models
+  * Make the models
+  * Remove positioning hacks from `Model` after creating Pong models

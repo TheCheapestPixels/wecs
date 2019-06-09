@@ -31,7 +31,9 @@ class Aging(System):
         for entity in filtered_entities['has_age']:
             entity.get_component(Age).age += 1
         for entity in filtered_entities['grows_frail']:
-            if entity.get_component(Age).age > 8:
+            age = entity.get_component(Age).age
+            age_of_frailty = entity.get_component(Age).age_of_frailty
+            if age >= age_of_frailty:
                 entity.get_component(Health).health -= 1
 
 
@@ -127,9 +129,10 @@ class PrintOutput(System):
     def update(self, filtered_entities):
         for entity in filtered_entities['all_outputters']:
             if entity in filtered_entities['print_age']:
-                print("{} is {} time old.".format(
+                print("{}'s age: {} (growing frail at {})".format(
                     entity.get_component(Name).name,
                     entity.get_component(Age).age,
+                    entity.get_component(Age).age_of_frailty,
                 ))
             if entity in filtered_entities['print_alive']:
                 print("{} is alive.".format(
@@ -144,14 +147,16 @@ class PrintOutput(System):
                     entity.get_component(Name).name,
                 ))
             if entity in filtered_entities['print_health']:
-                print("{} is {} healthy.".format(
+                print("{}'s health: {}/{}.".format(
                     entity.get_component(Name).name,
                     entity.get_component(Health).health,
+                    entity.get_component(Health).max_health,
                 ))
             if entity in filtered_entities['print_mana']:
-                print("{} has {} mana.".format(
+                print("{}'s mana: {}/{}".format(
                     entity.get_component(Name).name,
                     entity.get_component(Mana).mana,
+                    entity.get_component(Mana).max_mana,
                 ))
             if entity in filtered_entities['print_can_cast']:
                 print("{} can cast: {}".format(

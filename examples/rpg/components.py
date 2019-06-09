@@ -57,6 +57,7 @@ class Undead:
 @Component()
 class Age:
     age: int
+    age_of_frailty: int
 
 
 @Component()

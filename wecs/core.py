@@ -36,6 +36,10 @@ class Entity:
         self.components.remove(component)
         self.world.remove_entity_from_filters(self, component)
 
+    def __repr__(self):
+        names = [repr(c) for c in self.components]
+        return "<Entity ({})>".format(', '.join(names))
+
 
 class Component():
     def __init__(self, unique=True):
@@ -206,8 +210,11 @@ class World:
     def update(self):
         for sort in sorted(self.systems):
             system = self.systems[sort]
-            filtered_entities = {
-                filter_name: self.entity_filters[filter_func]
-                for filter_name, filter_func in system.entity_filters.items()
-            }
-            system.update(filtered_entities)
+            self.update_system(system)
+
+    def update_system(self, system):
+        filtered_entities = {
+            filter_name: self.entity_filters[filter_func]
+            for filter_name, filter_func in system.entity_filters.items()
+        }
+        system.update(filtered_entities)

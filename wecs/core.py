@@ -2,8 +2,11 @@ import types
 import dataclasses
 
 
-# Right now, we don't even need a number, until we deal with
-# databases, network, savefiles, any serialization at all.
+# FIXME: We rely on the hash of these objects to be unique, which is...
+# iffy. If isn't *really* a problem that a UID gets destroyed and a new one is
+# created in its place so that a dangling reference is created, because
+# thanks to that dangling reference, the now invalid UID is still referenced.
+# Still, this smells.
 class UID:
     pass
 
@@ -143,7 +146,7 @@ class System:
 
 class World:
     def __init__(self):
-        # FIXME: One of these (probably self.entities) is redundant,
+        # TODO: One of these (probably self.entities) is redundant,
         # and should be phased out.
         self.entities = set()
         self.entities_by_uid = {}

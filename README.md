@@ -140,6 +140,109 @@ upfront about what Component types they process, leading to a clear and
 programmatically extractable understanding of System-Component dependencies.
 
 
+## Components referencing each other
+
+NOTE: This has been implemented using the "Unique values" approach described
+below, with the references referring to `Entities`.
+
+In a world, there is a thing, and it has the property of being a room:
+
+    ```
+    entity = world.add_entity()
+    entity.add_property(Room())
+    ```
+
+In the world, there is another thing, and it's Bob:
+
+    ```
+    bob = world.add_entity()
+    ```
+
+Bob has the property of being in a room:
+
+    ```
+    bob.add_component(RoomPresence(room=...))
+    ```
+
+And at "..." the problem starts.
+
+
+### Observer pattern
+
+If I just use a reference
+
+    ```
+    RoomPresence(room=entity.get_component(Room))
+    ```
+
+that's bad, because there's no cleanup mechanism if `entity` gets removed from
+the world. We could use the observer pattern to do that. Now `Room` has a list
+of references, `observers`. RoomPresence(room=room) adds itself to that list.
+When `entity.destroy()` is called, it destroys its components, calling
+`Room.destroy()`, which calls all the `observers`. Thing is, now we experience
+the problem in reverse. So `RoomPresence.destroy()` now must take care to clean
+up the `observer` lists of all components that it is observing. You see how this
+tends to get complicated?
+
+On the upside, we now have a bus over which we can also send more general
+events, though this will bring complications of its own. But like spells that
+affect every affectable entity in the room could be implemented that way.
+
+However, this upside is actually a downside. When we introduce inter-component
+messaging, we now have components processing data, and have broken the
+fundamental paradigm of ECS:
+
+* Components are data
+* Systems are processing
+* System-System interaction should happen by manipulating data
+
+So, what can we do instead?
+
+
+### Unique values
+
+If we use unique values
+
+    ```
+    room.add_component(Room(uid="Balcony"))
+    bob.add_component(RoomPresence(room="Balcony"))
+    ```
+
+then we have I have to make sure that those UIDs are in fact unique. That isn't
+too difficult:
+
+    ```
+    room.add_component(Room())
+    bob.add_component(RoomPresence(room=room.get_component(Room)._uid))
+    ```
+
+The `Room._uid is generated automatically during `add_component()`, and then the
+component is registered with the `World`. Now when a `System` `CastSpellOnRoom`
+runs and sees that Bob does indeed cast a spell on the room that he is in, so it
+tries
+
+    ```
+    room_uid = RoomPresence(room=room.get_component(Room)._uid
+    room = world.get_component(_uid)
+    ```
+
+to do something with the room, but if the room has already been destroyed,
+`world.get_component()` will raise a `KeyError("No such component")`. It's now
+up to the system how to deal with that, and how to bring Bob's `RoomPresence`
+component back into a consistent state.
+
+However, it's not this system's *job* to clean up after `RoomPresences`, it is
+to cast a spell. What it can do, or what should ideally happen automatically, is
+that Bob gets marked as needing cleanup (e.g. `bob.add_component(CleanUpRoom)`),
+and that a dedicated system deals with what consistency means in the game (e.g.
+just removing the component, or setting the referenced room to an empty void for
+the player to enjoy). This in turn leads to possible race conditions; *when*
+does that transition happen during a frame? On the other hand, since *all*
+systems that can't work properly anymore due to this inconsistent situation
+should deal predictably and fail-safe (mark and proceed with other entities)
+with it, this should be of preventable impact.
+
+
 ## Implementational detail: Size of GUIDs (TL;DR: 64 bit is the right answer)
 
 NOTE: Theoretical for now, there are no GUIDs being used yet.
@@ -221,11 +324,18 @@ present. This leads to easy management of the system:
 
 # TODO
 
-* Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
-* Batch addition / removal of `Components` to update filters less often
-* Is there proper component cleanup when an entity is removed?
-* Unique `Components`
-* Break adding/reoving components out of `update()`
-* Create custom Pong models
-  * Make the models
+* Tests
+  * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
+  * Is there proper component cleanup when an entity is removed?
+* core
+  * Entity.destroy() / world.destroy_entity()
+  * Break adding/removing components out of `update()`, executing them after it
+  * Unique `Components`
+  * Rename `world.add_entity()` to `world.create_entity()`
+* panda3d-pong
+  * Create custom models
   * Remove positioning hacks from `Model` after creating Pong models
+  * Hoist `Components` / `Systems` into `panda3d.py` where applicable
+* panda3d
+  * Check the `task_mgr` for tasks already existing at a given sort
+  * If that's not possible, `System`ify existing Panda3D `tasks`

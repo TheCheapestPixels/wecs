@@ -2,10 +2,21 @@ import types
 import dataclasses
 
 
+# Right now, we don't even need a number, until we deal with
+# databases, network, savefiles, any serialization at all.
+class UID:
+    pass
+
+
+class NoSuchUID(Exception):
+    pass
+
+
 class Entity:
     def __init__(self, world):
         self.world = world
         self.components = set()
+        self._uid = UID()
 
     def add_component(self, component):
         if any([isinstance(c, type(component)) for c in self.components]):
@@ -35,6 +46,13 @@ class Entity:
         component = self.get_component(component_type)
         self.components.remove(component)
         self.world.remove_entity_from_filters(self, component)
+
+    def destroy(self):
+        self.world.remove_entity(self)
+        # FIXME: Needs to be refactored when components are created
+        # indirectly, outside update()
+        for component in set(self.get_components()):
+            self.remove_component()
 
     def __repr__(self):
         names = [repr(c) for c in self.components]
@@ -125,7 +143,10 @@ class System:
 
 class World:
     def __init__(self):
+        # FIXME: One of these (probably self.entities) is redundant,
+        # and should be phased out.
         self.entities = set()
+        self.entities_by_uid = {}
         self.systems = {} # {sort: System}
         self.entity_filters = {}  # {Filter: set([Entities]}
         self.system_of_filter = {}
@@ -133,7 +154,37 @@ class World:
     def add_entity(self):
         entity = Entity(self)
         self.entities.add(entity)
+        self.entities_by_uid[entity._uid] = entity
         return entity
+
+    def get_entity(self, uid):
+        try:
+            entity = self.entities_by_uid[uid]
+        except KeyError:
+            raise NoSuchUID
+        return entity
+
+    def destroy_entity(self, uid_or_entity):
+        if isinstance(uid_or_entity, Entity):
+            entity = uid_or_entity
+        elif isinstance(uid_or_entity, UID):
+            entity = entity_by_uid[uid_or_entity]
+        else:
+            raise ValueError("Entity or UID must be given")
+        entity.destroy()
+
+    def remove_entity(self, uid_or_entity):
+        if isinstance(uid_or_entity, Entity):
+            entity = uid_or_entity
+            uid = uid_or_entity._uid
+        elif isinstance(uid_or_entity, UID):
+            entity = entity_by_uid[uid_or_entity]
+            uid = uid_or_entity
+        else:
+            raise ValueError("Entity or UID must be given")
+
+        del self.entities_by_uid[uid]
+        self.entities.remove(entity)
 
     def add_system(self, system, sort):
         if self.has_system(type(system)):

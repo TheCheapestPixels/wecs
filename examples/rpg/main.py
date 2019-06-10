@@ -117,9 +117,11 @@ def generate_dependency_graphs():
     system_component_dependency(world, systems_groups=systems_groups)
 
 
+generate_dependency_graphs()
+
+
 i = 0
 while True:
     i += 1
     print("\n--- Timestep {}".format(i))
-    # generate_dependency_graphs()
     world.update()

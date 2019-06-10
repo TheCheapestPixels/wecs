@@ -1,3 +1,5 @@
+import random
+
 from graphviz import Graph
 
 
@@ -36,6 +38,13 @@ from graphviz import Graph
 # )
 
 
+def random_color():
+    hue = random.random()
+    saturation = 1
+    value = 1
+    return "{:1.3f} {:1.3f} {:1.3f}".format(hue, saturation, value)
+
+
 def system_component_dependency(world, filename=None,
                                 omit_systems=None, systems_groups=None):
     assert omit_systems is None or systems_groups is None
@@ -69,6 +78,11 @@ def draw_graph(filename, world, systems):
     for s in dependency_graph.values():
         components.update(s)
 
+    # Assign colors for systems / components
+    system_colors = {s: random_color() for s in systems}
+    component_colors = {c: random_color() for c in components}
+
+    # Create the graph
     dot = Graph(
         comment="System Component Dependencies",
         graph_attr=dict(
@@ -81,11 +95,22 @@ def draw_graph(filename, world, systems):
     )
 
     for system in systems:
-        dot.node(repr(system))
+        dot.node(
+            repr(system),
+            # color=system_colors[system],
+        )
     for component in components:
-        dot.node(repr(component))
+        dot.node(
+            repr(component),
+            color=component_colors[component],
+        )
     for system in systems:
-        for dependency in dependency_graph[system]:
-            dot.edge(repr(system), repr(dependency))
+        for component in dependency_graph[system]:
+            dot.edge(
+                repr(system),
+                repr(component),
+                color=component_colors[component],
+            )
 
+    # Render the graph
     dot.render(filename=filename, format='png')

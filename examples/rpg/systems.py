@@ -209,15 +209,46 @@ class PrintOutput(System):
             if entity in filtered_entities['print_room']:
                 own_name = entity.get_component(Name).name
                 presences = entity.get_component(RoomPresence).presences
-                other_names = set()
-                for presence in presences:
+                other_names = []
+                for idx, presence in enumerate(presences):
                     present_entity = self.world.get_entity(presence)
-                    if present_entity.has_component(Name):
-                        other_names.add(present_entity.get_component(Name).name)
-                other_names.remove(own_name)
-                print("{} is in a room with: {}.".format(
-                    own_name,
-                    ', '.join(other_names),
+                    if present_entity.has_component(Name) and present_entity is not entity:
+                        id_and_name = "({}) {}".format(
+                            str(idx),
+                            present_entity.get_component(Name).name,
+                        )
+                        other_names.append(id_and_name)
+                room = self.world.get_entity(
+                    entity.get_component(RoomPresence).room,
+                )
+                if room.has_component(Name):
+                    print("{} is the room '{}' with: {}.".format(
+                        own_name,
+                        room.get_component(Name).name,
+                        ', '.join(other_names),
+                    ))
+                else:
+                    print("{} is a room with: {}.".format(
+                        own_name,
+                        room.get_component(Name).name,
+                        ', '.join(other_names),
+                    ))
+                nearby_rooms = room.get_component(Room).adjacent
+                nearby_room_names = []
+                for idx, nearby_room in enumerate(nearby_rooms):
+                    nearby_room_entity = self.world.get_entity(nearby_room)
+                    if nearby_room_entity.has_component(Name):
+                        id_and_name = "({}) {}".format(
+                            str(idx),
+                            nearby_room_entity.get_component(Name).name,
+                        )
+                        nearby_room_names.append(id_and_name)
+                    else:
+                        nearby_room_names.append("({}) (unnamed)".format(
+                            str(idx),
+                        ))
+                print("Nearby rooms: {}".format(
+                    ', '.join(nearby_room_names),
                 ))
 
 
@@ -229,11 +260,29 @@ class ReadInput(System):
     def update(self, filtered_entities):
         for entity in filtered_entities['act']:
             name = entity.get_component(Name).name
-            query = "Command for {} (enter spell name or nothing): ".format(
+            query = "Command for {}: ".format(
                 name,
             )
             command = input(query)
             entity.get_component(Action).plan = command
+
+
+class ChangeRoom(System):
+    entity_filters = {
+        'act': and_filter([Action, RoomPresence])
+    }
+
+    def update(self, filtered_entities):
+        for entity in filtered_entities['act']:
+            plan = entity.get_component(Action).plan
+            if plan.startswith("go "):
+                room = self.world.get_entity(
+                    entity.get_component(RoomPresence).room,
+                )
+                nearby_rooms = room.get_component(Room).adjacent
+                target_idx = int(plan[3:])
+                target_room = nearby_rooms[target_idx]
+                entity.get_component(RoomPresence).room = target_room
 
 
 class SpellcastingMixin:

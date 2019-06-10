@@ -15,6 +15,7 @@ system_queue = [
     systems.ReadySpells,
     systems.PrintOutput,
     systems.ReadInput,
+    systems.ChangeRoom,
     systems.CastRejuvenationSpell,
     systems.CastRestoreHealthSpell,
     systems.CastLichdomSpell,
@@ -53,12 +54,23 @@ def make_player_character_components():
 
 # The room
 room = world.create_entity()
+other_room = world.create_entity()
 room.add_component(components.Room(
+    adjacent=[other_room._uid],
     presences=[],
     arrived=[],
     continued=[],
     gone=[],
 ))
+room.add_component(components.Name(name="Hall"))
+other_room.add_component(components.Room(
+    adjacent=[room._uid],
+    presences=[],
+    arrived=[],
+    continued=[],
+    gone=[],
+))
+other_room.add_component(components.Name(name="Balcony"))
 
 # Bob the wizard
 entity = world.create_entity()
@@ -85,6 +97,17 @@ entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
 entity.add_component(components.Name(name="Ugu the Barbarian"))
+
+
+# Sasa the Innocent Bystander
+entity = world.create_entity()
+for c in make_basic_character_components():
+    entity.add_component(c)
+entity.add_component(components.RoomPresence(
+    room=other_room._uid,
+    presences=[],
+))
+entity.add_component(components.Name(name="Sasa the Innocent Bystander"))
 
 
 def generate_dependency_graphs():
@@ -125,7 +148,12 @@ def generate_dependency_graphs():
 
 # generate_dependency_graphs()
 
-
+commands = """
+Commands:
+  spell name to cast spell.
+  go <room id> to go into a room.
+"""
+print(commands)
 i = 0
 while True:
     i += 1

@@ -77,6 +77,7 @@ class Mana:
 # Rooms, and being in a room
 @Component()
 class Room:
+    adjacent: list # Neighboring room entities
     presences: list # Entities (thought to be) in the room
     arrived: list # Presence entered the room
     continued: list # Presence continues to be present

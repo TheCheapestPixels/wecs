@@ -92,6 +92,8 @@ def generate_dependency_graphs():
             systems.BecomeLich,
             systems.RegenerateMana,
             systems.ReadySpells,
+        ],
+        'Casting_spells': [
             systems.CastRejuvenationSpell,
             systems.CastRestoreHealthSpell,
             systems.CastLichdomSpell,

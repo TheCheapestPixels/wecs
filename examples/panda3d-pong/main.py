@@ -26,7 +26,7 @@ if __name__ == '__main__':
     base.add_system(systems.StartBallMotion(), 5)
 
     # Paddles and ball
-    paddle_left = base.ecs_world.add_entity()
+    paddle_left = base.ecs_world.create_entity()
     paddle_left.add_component(components.Position(value=Vec3(-1.1, 0, 0)))
     paddle_left.add_component(components.Movement(value=Vec3(0, 0, 0)))
     paddle_left.add_component(components.Model(
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     paddle_left.add_component(components.Scene(root=base.aspect2d))
     paddle_left.add_component(components.Paddle(player=0, size=0.5, speed=0.2))
 
-    paddle_right = base.ecs_world.add_entity()
+    paddle_right = base.ecs_world.create_entity()
     paddle_right.add_component(components.Position(value=Point3(1.1, 0, 0)))
     paddle_right.add_component(components.Movement(value=Vec3(0, 0, 0)))
     paddle_right.add_component(components.Model(
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         speed=0.2,
     ))
 
-    ball = base.ecs_world.add_entity()
+    ball = base.ecs_world.create_entity()
     ball.add_component(components.Position(value=Point3(0, 0, 0)))
     ball.add_component(components.Model(
         model_name='models/smiley',

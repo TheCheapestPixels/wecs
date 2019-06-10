@@ -56,7 +56,7 @@ def world():
 
 @pytest.fixture
 def entity(world):
-    return world.add_entity()
+    return world.create_entity()
 
 
 @pytest.fixture

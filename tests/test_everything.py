@@ -11,8 +11,8 @@ def test_create_world():
     world = World()
 
 
-def test_add_entity(world):
-    entity = world.add_entity()
+def test_create_entity(world):
+    entity = world.create_entity()
 
 
 def test_basic_component_handling(entity):

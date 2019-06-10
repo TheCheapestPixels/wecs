@@ -148,14 +148,14 @@ below, with the references referring to `Entities`.
 In a world, there is a thing, and it has the property of being a room:
 
     ```
-    entity = world.add_entity()
+    entity = world.create_entity()
     entity.add_property(Room())
     ```
 
 In the world, there is another thing, and it's Bob:
 
     ```
-    bob = world.add_entity()
+    bob = world.create_entity()
     ```
 
 Bob has the property of being in a room:
@@ -331,7 +331,6 @@ present. This leads to easy management of the system:
   * Entity.destroy() / world.destroy_entity()
   * Break adding/removing components out of `update()`, executing them after it
   * Unique `Components`
-  * Rename `world.add_entity()` to `world.create_entity()`
 * panda3d-pong
   * Create custom models
   * Remove positioning hacks from `Model` after creating Pong models

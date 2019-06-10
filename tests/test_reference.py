@@ -26,16 +26,16 @@ def test_reference():
 
 
 def test_resolving_reference(world):
-    to_entity = world.add_entity()
-    from_entity = world.add_entity()
+    to_entity = world.create_entity()
+    from_entity = world.create_entity()
     from_entity.add_component(Reference(uid=to_entity._uid))
     reference = world.get_entity(from_entity.get_component(Reference).uid)
     assert reference is to_entity
 
 
 def test_resolving_dangling_reference(world):
-    to_entity = world.add_entity()
-    from_entity = world.add_entity()
+    to_entity = world.create_entity()
+    from_entity = world.create_entity()
     from_entity.add_component(Reference(uid=to_entity._uid))
     to_entity.destroy()
     with pytest.raises(NoSuchUID):

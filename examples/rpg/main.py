@@ -57,7 +57,7 @@ def make_non_player_character_components():
     return player_character_components
 
 
-entity = world.add_entity()
+entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
 for c in make_standard_wizard_components():
@@ -67,7 +67,7 @@ for c in make_player_character_components():
 entity.add_component(components.Name(name="Bob the Wizard"))
 
 
-entity = world.add_entity()
+entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
 for c in make_non_player_character_components():
@@ -75,7 +75,7 @@ for c in make_non_player_character_components():
 #entity.add_component(components.Name(name="Obo the Barbarian"))
 
 
-entity = world.add_entity()
+entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
 for c in make_non_player_character_components():

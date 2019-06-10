@@ -151,7 +151,7 @@ class World:
         self.entity_filters = {}  # {Filter: set([Entities]}
         self.system_of_filter = {}
 
-    def add_entity(self):
+    def create_entity(self):
         entity = Entity(self)
         self.entities.add(entity)
         self.entities_by_uid[entity._uid] = entity

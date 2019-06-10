@@ -1,3 +1,4 @@
+from wecs.core import UID
 from wecs.core import Component
 
 
@@ -71,6 +72,21 @@ class Mana:
     max_mana: int
     mana: int
     spells_ready: list
+
+
+# Rooms, and being in a room
+@Component()
+class Room:
+    presences: list # Entities (thought to be) in the room
+    arrived: list # Presence entered the room
+    continued: list # Presence continues to be present
+    gone: list # Presences that left the room
+
+
+@Component()
+class RoomPresence:
+    room: UID
+    presences: list # Entities perceived
 
 
 # Spells.

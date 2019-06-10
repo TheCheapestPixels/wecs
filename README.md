@@ -331,6 +331,8 @@ present. This leads to easy management of the system:
   * Entity.destroy() / world.destroy_entity()
   * Break adding/removing components out of `update()`, executing them after it
   * Unique `Components`
+* rpg
+  * Hoist `Room` / `RoomPresence` into `wecs`, maybe some standard C/S file?
 * panda3d-pong
   * Create custom models
   * Remove positioning hacks from `Model` after creating Pong models

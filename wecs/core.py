@@ -192,6 +192,7 @@ class World:
         if sort in self.systems:
             raise KeyError("sort already in use.")
         self.systems[sort] = system
+        system.world = self
         system._sort = sort
         # Prefilter for system
         for filter_name, filter_func in system.entity_filters.items():

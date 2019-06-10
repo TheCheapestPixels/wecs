@@ -6,6 +6,7 @@ import components
 
 world = World()
 system_queue = [
+    systems.PerceiveRoom,
     systems.Aging,
     systems.DieFromHealthLoss,
     systems.BecomeLich,
@@ -50,13 +51,16 @@ def make_player_character_components():
     return player_character_components
 
 
-def make_non_player_character_components():
-    player_character_components = [
-        components.Output(),
-    ]
-    return player_character_components
+# The room
+room = world.create_entity()
+room.add_component(components.Room(
+    presences=[],
+    arrived=[],
+    continued=[],
+    gone=[],
+))
 
-
+# Bob the wizard
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
@@ -64,23 +68,23 @@ for c in make_standard_wizard_components():
     entity.add_component(c)
 for c in make_player_character_components():
     entity.add_component(c)
+entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
 entity.add_component(components.Name(name="Bob the Wizard"))
 
 
+# Obo the Barbarian
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-for c in make_non_player_character_components():
-    entity.add_component(c)
-#entity.add_component(components.Name(name="Obo the Barbarian"))
+entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(components.Name(name="Obo the Barbarian"))
 
 
+# Ugu the Barbarian (not in the room)
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-for c in make_non_player_character_components():
-    entity.add_component(c)
-#entity.add_component(components.Name(name="Ugu the Barbarian"))
+entity.add_component(components.Name(name="Ugu the Barbarian"))
 
 
 def generate_dependency_graphs():
@@ -119,7 +123,7 @@ def generate_dependency_graphs():
     system_component_dependency(world, systems_groups=systems_groups)
 
 
-generate_dependency_graphs()
+# generate_dependency_graphs()
 
 
 i = 0

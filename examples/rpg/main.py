@@ -13,8 +13,8 @@ system_queue = [
     systems.Die,
     systems.RegenerateMana,
     systems.ReadySpells,
-    systems.PrintOutput,
-    systems.ReadInput,
+    systems.Shell,
+    systems.HaveDialogue,
     systems.ChangeRoom,
     systems.CastRejuvenationSpell,
     systems.CastRestoreHealthSpell,
@@ -108,6 +108,7 @@ entity.add_component(components.RoomPresence(
     presences=[],
 ))
 entity.add_component(components.Name(name="Sasa the Innocent Bystander"))
+entity.add_component(components.Dialogue(phrase="What a beautiful sight."))
 
 
 def generate_dependency_graphs():
@@ -151,7 +152,8 @@ def generate_dependency_graphs():
 commands = """
 Commands:
   spell name to cast spell.
-  go <room id> to go into a room.
+  go <id> to go into a room.
+  talk <id> to talk to someone.
 """
 print(commands)
 i = 0

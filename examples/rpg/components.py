@@ -90,6 +90,13 @@ class RoomPresence:
     presences: list # Entities perceived
 
 
+# Character interaction
+
+@Component()
+class Dialogue:
+    phrase: str
+
+
 # Spells.
 # FooSpell is a character's knowledge of a spell.
 # FooSpellEffect is the effect of a spell that's lingering on an

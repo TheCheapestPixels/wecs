@@ -17,6 +17,7 @@ from components import LichdomSpellEffect
 from components import Output
 from components import Input
 from components import Action
+from components import Dialogue
 
 
 # Used by ReadySpells
@@ -156,115 +157,160 @@ class Die(System):
             entity.add_component(Dead())
 
 
-class PrintOutput(System):
+class TextOutputMixin():
+    def print_entity_state(self, entity):
+        o = "" # Output accumulator
+
+        # Name
+        if entity.has_component(Name):
+            name = entity.get_component(Name).name
+        else:
+            name = "Avatar"
+
+        # Lifecycle status
+        if entity.has_component(Alive):
+            o += "{} is alive.\n".format(name)
+        if entity.has_component(Dead):
+            o += "{} is dead.\n".format(name)
+        if entity.has_component(Undead):
+            o += "{} is undead.\n".format(name)
+
+        # Age
+        if entity.has_component(Age):
+            age = entity.get_component(Age).age,
+            frailty = entity.get_component(Age).age_of_frailty,
+            o += "{}'s age: ".format(name)
+            o += "{}/{}".format(age, frailty)
+            if age >= frailty:
+                o += "(frail)"
+            o += "\n"
+
+        # Health
+        if entity.has_component(Health):
+            o += "{}'s health: {}/{}.\n".format(
+                entity.get_component(Name).name,
+                entity.get_component(Health).health,
+                entity.get_component(Health).max_health,
+            )
+
+        # Mana
+        if entity.has_component(Mana):
+            o += "{}'s mana: {}/{}.\n".format(
+                entity.get_component(Name).name,
+                entity.get_component(Mana).mana,
+                entity.get_component(Mana).max_mana,
+            )
+
+        # Castable spells
+        if entity.has_component(Mana):
+            o += "{} can cast: {}\n".format(
+                entity.get_component(Name).name,
+                ', '.join(entity.get_component(Mana).spells_ready),
+            )
+
+        # That's it about the avatar, now come its surroundings. If we
+        # have written any text yet, let's add a readability newline.
+        if o != "":
+            o += "\n"
+
+        # Presence in a room
+        if entity.has_component(RoomPresence):
+            # The room itself
+            room_ref = entity.get_component(RoomPresence).room
+            room = self.world.get_entity(room_ref)
+            if not room.has_component(Name):
+                o += "{} is in a nameless room\n".format(name)
+            else:
+                room_name = room.get_component(Name).name
+                o += "{} is the room '{}'\n".format(name, room_name)
+
+            # Other presences in the room
+            presences = entity.get_component(RoomPresence).presences
+            if presences:
+                names = []
+                for idx, presence in enumerate(presences):
+                    present_entity = self.world.get_entity(presence)
+                    if present_entity.has_component(Name):
+                        names.append("({}) {}".format(
+                            str(idx),
+                            present_entity.get_component(Name).name,
+                        ))
+                o += "In the room are: {}\n".format(', '.join(names))
+
+            # Adjacent rooms
+            nearby_rooms = room.get_component(Room).adjacent
+            nearby_room_names = []
+            for idx, nearby_room in enumerate(nearby_rooms):
+                nearby_room_entity = self.world.get_entity(nearby_room)
+                if nearby_room_entity.has_component(Name):
+                    nearby_room_names.append("({}) {}".format(
+                        str(idx),
+                        nearby_room_entity.get_component(Name).name,
+                    ))
+                else:
+                    nearby_room_names.append("({}) (unnamed)".format(str(idx)))
+            o += "Nearby rooms: {}\n".format(', '.join(nearby_room_names))
+
+        # We're done, now let's get it on the screen.
+        print(o)
+
+
+class ShellMixin():
+    def shell(self, entity):
+        if entity.has_component(Name):
+            name = entity.get_component(Name).name
+        else:
+            name = "Avatar"
+        query = "Command for {}: ".format(
+            name,
+        )
+        command = input(query)
+        entity.get_component(Action).plan = command
+
+
+class Shell(TextOutputMixin, ShellMixin, System):
     entity_filters = {
-        'all_outputters': and_filter([Name, Output]),
-        'print_alive': and_filter([Alive, Name, Output]),
-        'print_dead': and_filter([Dead, Name, Output]),
-        'print_undead': and_filter([Undead, Name, Output]),
-        'print_age': and_filter([Age, Name, Output]),
-        'print_mana': and_filter([Mana, Name, Output]),
-        'print_health': and_filter([Health, Name, Output]),
-        'print_can_cast': and_filter([Mana, Name, Output]),
-        'print_room': and_filter([RoomPresence, Name, Output]),
+        'outputs': and_filter([Output]),
+        'act': and_filter([Input])
     }
 
     def update(self, filtered_entities):
-        for entity in filtered_entities['all_outputters']:
-            if entity in filtered_entities['print_age']:
-                print("{}'s age: {} (growing frail at {})".format(
-                    entity.get_component(Name).name,
-                    entity.get_component(Age).age,
-                    entity.get_component(Age).age_of_frailty,
-                ))
-            if entity in filtered_entities['print_alive']:
-                print("{} is alive.".format(
-                    entity.get_component(Name).name,
-                ))
-            if entity in filtered_entities['print_dead']:
-                print("{} is dead.".format(
-                    entity.get_component(Name).name,
-                ))
-            if entity in filtered_entities['print_undead']:
-                print("{} is undead.".format(
-                    entity.get_component(Name).name,
-                ))
-            if entity in filtered_entities['print_health']:
-                print("{}'s health: {}/{}.".format(
-                    entity.get_component(Name).name,
-                    entity.get_component(Health).health,
-                    entity.get_component(Health).max_health,
-                ))
-            if entity in filtered_entities['print_mana']:
-                print("{}'s mana: {}/{}".format(
-                    entity.get_component(Name).name,
-                    entity.get_component(Mana).mana,
-                    entity.get_component(Mana).max_mana,
-                ))
-            if entity in filtered_entities['print_can_cast']:
-                print("{} can cast: {}".format(
-                    entity.get_component(Name).name,
-                    ', '.join(entity.get_component(Mana).spells_ready),
-                ))
-            if entity in filtered_entities['print_room']:
-                own_name = entity.get_component(Name).name
-                presences = entity.get_component(RoomPresence).presences
-                other_names = []
-                for idx, presence in enumerate(presences):
-                    present_entity = self.world.get_entity(presence)
-                    if present_entity.has_component(Name) and present_entity is not entity:
-                        id_and_name = "({}) {}".format(
-                            str(idx),
-                            present_entity.get_component(Name).name,
-                        )
-                        other_names.append(id_and_name)
-                room = self.world.get_entity(
-                    entity.get_component(RoomPresence).room,
-                )
-                if room.has_component(Name):
-                    print("{} is the room '{}' with: {}.".format(
-                        own_name,
-                        room.get_component(Name).name,
-                        ', '.join(other_names),
-                    ))
-                else:
-                    print("{} is a room with: {}.".format(
-                        own_name,
-                        room.get_component(Name).name,
-                        ', '.join(other_names),
-                    ))
-                nearby_rooms = room.get_component(Room).adjacent
-                nearby_room_names = []
-                for idx, nearby_room in enumerate(nearby_rooms):
-                    nearby_room_entity = self.world.get_entity(nearby_room)
-                    if nearby_room_entity.has_component(Name):
-                        id_and_name = "({}) {}".format(
-                            str(idx),
-                            nearby_room_entity.get_component(Name).name,
-                        )
-                        nearby_room_names.append(id_and_name)
-                    else:
-                        nearby_room_names.append("({}) (unnamed)".format(
-                            str(idx),
-                        ))
-                print("Nearby rooms: {}".format(
-                    ', '.join(nearby_room_names),
-                ))
+        outputters = filtered_entities['outputs']
+        actors = filtered_entities['act']
+        for entity in outputters:
+            self.print_entity_state(entity)
+            if entity in filtered_entities['act']:
+                self.shell(entity)
+        # Also give the actors without output a shell
+        for entity in [e for e in actors if e not in outputters]:
+            self.shell(entity)
 
 
-class ReadInput(System):
+class HaveDialogue(System):
     entity_filters = {
-        'act': and_filter([Input, Action, Name])
+        'act': and_filter([Action, RoomPresence])
     }
 
     def update(self, filtered_entities):
         for entity in filtered_entities['act']:
-            name = entity.get_component(Name).name
-            query = "Command for {}: ".format(
-                name,
-            )
-            command = input(query)
-            entity.get_component(Action).plan = command
+            plan = entity.get_component(Action).plan
+            if plan.startswith("talk "):
+                room = self.world.get_entity(
+                    entity.get_component(RoomPresence).room,
+                )
+                target_idx = int(plan[5:])
+                presences = room.get_component(Room).presences
+                target = self.world.get_entity(presences[target_idx])
+                if target.has_component(Dialogue):
+                    if target.has_component(Name):
+                        print("> {} says: \"{}\"".format(
+                            target.get_component(Name).name,
+                            target.get_component(Dialogue).phrase,
+                        ))
+                    else:
+                        print("> " + target.get_component(Dialogue).phrase)
+                else:
+                    print("> \"...\"")
 
 
 class ChangeRoom(System):

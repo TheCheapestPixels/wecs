@@ -90,6 +90,28 @@ class RoomPresence:
     presences: list # Entities perceived
 
 
+# Inventory
+
+@Component()
+class Inventory:
+    contents: list
+
+
+@Component()
+class Takeable:
+    pass
+
+
+@Component()
+class TakeAction:
+    item: UID
+
+
+@Component()
+class DropAction:
+    item: UID
+
+
 # Character interaction
 
 @Component()

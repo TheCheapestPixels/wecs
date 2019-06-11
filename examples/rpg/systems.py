@@ -3,6 +3,8 @@ from wecs.core import System, and_filter, or_filter
 from components import Name
 from components import Room
 from components import RoomPresence
+from components import Inventory
+from components import Takeable
 from components import Age
 from components import Alive
 from components import Dying
@@ -264,8 +266,94 @@ class ShellMixin():
         query = "Command for {}: ".format(
             name,
         )
-        command = input(query)
-        entity.get_component(Action).plan = command
+        while not self.run_command(input(query), entity):
+            pass
+
+    def run_command(self, command, entity):
+        if command in ("i", "inventory"):
+            self.show_inventory(entity)
+            return False # Instant action
+        elif command.startswith("take "):
+            return self.take(entity, int(command[5:]))
+        elif command.startswith("drop "):
+            return self.drop(entity, int(command[5:]))
+        else:
+            entity.get_component(Action).plan = command
+            return True
+        print("Unknown command \"{}\"".format(command))
+        return False
+
+    def take(self, entity, object_id):
+        if not entity.has_component(Inventory):
+            print("{} has no inventory.".format(name))
+            return False
+
+        presences = entity.get_component(RoomPresence).presences
+        object_entity = self.world.get_entity(presences[object_id])
+        if not object_entity.has_component(Takeable):
+            print("That can't be taken.")
+            return False
+
+        object_entity.remove_component(RoomPresence)
+        entity.get_component(Inventory).contents.append(object_entity._uid)
+        return True
+
+    def drop(self, entity, object_id):
+        # If I have an inventory...
+        if not entity.has_component(Inventory):
+            print("{} has no inventory.".format(name))
+            return False
+        inventory = entity.get_component(Inventory).contents
+
+        # ...with an item that can be dropped...
+        object_entity = self.world.get_entity(inventory[object_id])
+        if not object_entity.has_component(Takeable):
+            print("That can't be dropped.")
+            return False
+
+        # ...and there is somewhere to drop it into, ...
+        if not entity.has_component(RoomPresence):
+            print("Can't drop objects into the roomless void.")
+            return False
+        room = self.world.get_entity(entity.get_component(RoomPresence).room)
+
+        # ...then drop it like it's hot, drop it like it's hot.
+        del inventory[object_id]
+        object_entity.add_component(RoomPresence(room=room._uid, presences=[]))
+        return True
+
+    def show_inventory(self, entity):
+        if entity.has_component(Name):
+            name = entity.get_component(Name).name
+        else:
+            name = "Avatar"
+
+        if not entity.has_component(Inventory):
+            print("{} has no inventory.".format(name))
+            return False
+
+        # FIXME: try/except NoSuchUID:
+        contents = [self.world.get_entity(e)
+                    for e in entity.get_component(Inventory).contents]
+        if len(contents) == 0:
+            print("{}'s inventory is empty".format(name))
+            return False
+
+        content_names = []
+        for idx, content in enumerate(contents):
+            if content.has_component(Name):
+                content_names.append(
+                    "({}) {}".format(
+                        str(idx),
+                        content.get_component(Name).name,
+                    )
+                )
+            else:
+                content_names.append("({}) (unnamed)".format(str(idx)))
+
+        for entry in content_names:
+            print(entry)
+        return True
 
 
 class Shell(TextOutputMixin, ShellMixin, System):

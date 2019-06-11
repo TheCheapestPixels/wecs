@@ -82,6 +82,7 @@ for c in make_player_character_components():
     entity.add_component(c)
 entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
 entity.add_component(components.Name(name="Bob the Wizard"))
+entity.add_component(components.Inventory(contents=[]))
 
 
 # Obo the Barbarian
@@ -109,6 +110,13 @@ entity.add_component(components.RoomPresence(
 ))
 entity.add_component(components.Name(name="Sasa the Innocent Bystander"))
 entity.add_component(components.Dialogue(phrase="What a beautiful sight."))
+
+
+# A flask
+entity = world.create_entity()
+entity.add_component(components.Name(name="a potion flask"))
+entity.add_component(components.Takeable())
+entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
 
 
 def generate_dependency_graphs():
@@ -150,10 +158,14 @@ def generate_dependency_graphs():
 # generate_dependency_graphs()
 
 commands = """
-Commands:
-  spell name to cast spell.
-  go <id> to go into a room.
-  talk <id> to talk to someone.
+Actions that take time:
+  spell name: cast spell.
+  go <id>: go into a room.
+  talk <id>: talk to someone.
+  take <id>: take object and put it in the inventory
+  drop <id>: take object out of the inventory and drop it
+Instant actions:
+  i, inventory: show inventory contents
 """
 print(commands)
 i = 0

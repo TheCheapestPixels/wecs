@@ -32,7 +32,7 @@ world.update()
 # also make it a printer, but I want to show you entity references,
 # so we'll do this unnecessarily complicated. There'll be a system
 # that does printing for every entity *referenced by* a printing
-# entity. 
+# entity.
 
 @Component()
 class Printer:

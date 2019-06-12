@@ -328,9 +328,13 @@ present. This leads to easy management of the system:
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?
 * core
-  * Entity.destroy() / world.destroy_entity()
+  * API improvements
+    * `entity = world[entity_uid]`
+    * `entity = other_entity.get_component(Reference).uid`
+    * `component = entity[Reference]`
   * Break adding/removing components out of `update()`, executing them after it
   * Unique `Components`
+  * Archetypes: Make it easy to compose typical entities
 * rpg
   * Hoist `Room` / `RoomPresence` into `wecs`, maybe some standard C/S file?
 * panda3d-pong

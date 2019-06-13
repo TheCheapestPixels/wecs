@@ -1,12 +1,17 @@
-from wecs.core import System, and_filter, or_filter
+from wecs.core import System
+from wecs.core import and_filter
+from wecs.core import or_filter
+from wecs.rooms import Room
+from wecs.rooms import RoomPresence
+from wecs.rooms import ChangeRoomAction
+from wecs.inventory import Inventory
+from wecs.inventory import Takeable
+from wecs.inventory import TakeAction
+from wecs.inventory import DropAction
+from wecs.inventory import TakeDropMixin
 
 from components import Name
-from components import Room
-from components import RoomPresence
-from components import Inventory
-from components import Takeable
-from components import TakeAction
-from components import DropAction
+from components import TalkAction
 from components import Age
 from components import Alive
 from components import Dying
@@ -26,46 +31,6 @@ from components import Dialogue
 
 # Used by ReadySpells
 spells = [RejuvenationSpell, RestoreHealthSpell, LichdomSpell]
-
-
-class PerceiveRoom(System):
-    entity_filters = {
-        'room': and_filter([Room]),
-        'presences': and_filter([RoomPresence]),
-    }
-
-    def update(self, filtered_entities):
-        # Clean the bookkeeping lists
-        for entity in filtered_entities['room']:
-            room = entity.get_component(Room)
-            room.arrived = []
-            room.continued = []
-            room.gone = []
-        # New arrivals to rooms, and continued presences
-        for entity in filtered_entities['presences']:
-            room_uid = entity.get_component(RoomPresence).room
-            room_entity = self.world.get_entity(room_uid)
-            room = room_entity.get_component(Room)
-            if entity._uid not in room.presences:
-                room.arrived.append(entity._uid)
-            else:
-                room.continued.append(entity._uid)
-        # Checking who is gone
-        for entity in filtered_entities['room']:
-            room = entity.get_component(Room)
-            for presence in room.presences:
-                if presence not in room.continued:
-                    room.gone.append(presence)
-        # Rebuilding the presencce lists
-        for entity in filtered_entities['room']:
-            room = entity.get_component(Room)
-            room.presences = room.arrived + room.continued
-        # Let the presences perceive the presences in the room
-        for entity in filtered_entities['presences']:
-            presence = entity.get_component(RoomPresence)
-            room_entity = self.world.get_entity(presence.room)
-            room = room_entity.get_component(Room)
-            presence.presences = room.presences
 
 
 class Aging(System):
@@ -259,70 +224,6 @@ class TextOutputMixin():
         print(o)
 
 
-class TakeDropMixin:
-    def can_take(self, item, entity):
-        # If I have an inventory...
-        if not entity.has_component(Inventory):
-            print("{} has no inventory.".format(name))
-            return False
-        inventory = entity.get_component(Inventory).contents
-
-        # ...and I am somewhere...
-        if not entity.has_component(RoomPresence):
-            print("Can't take objects from the roomless void.")
-            return False
-        presence = entity.get_component(RoomPresence)
-
-        # ...and there is also an item there...
-        if not item._uid in presence.presences:
-            print("Item is not in the same room.")
-            return False
-
-        # ...that can be taken...
-        if not item.has_component(Takeable):
-            print("That can't be taken.")
-            return False
-
-        # ...then the item can be taken.
-        return True
-
-    def can_drop(self, item, entity):
-        # If I have an inventory...
-        if not entity.has_component(Inventory):
-            print("{} has no inventory.".format(name))
-            return False
-        inventory = entity.get_component(Inventory).contents
-
-        # ...with an item...
-        if item._uid not in inventory:
-            print("Item is not in inventory anymore.")
-            return False
-
-        # ...that can be dropped...
-        if not item.has_component(Takeable):
-            print("That can't be dropped.")
-            return False
-
-        # ...and there is somewhere to drop it into, ...
-        if not entity.has_component(RoomPresence):
-            print("Can't drop objects into the roomless void.")
-            return False
-
-        # ...then drop it like it's hot, drop it like it's hot.
-        return True
-
-    def take(self, item, entity):
-        item.remove_component(RoomPresence)
-        entity.get_component(Inventory).contents.append(item._uid)
-
-    def drop(self, item, entity):
-        room = self.world.get_entity(entity.get_component(RoomPresence).room)
-        inventory = entity.get_component(Inventory).contents
-        idx = inventory.index(item._uid)
-        del inventory[idx]
-        item.add_component(RoomPresence(room=room._uid, presences=[]))
-
-
 class ShellMixin(TakeDropMixin):
     def shell(self, entity):
         if entity.has_component(Name):
@@ -343,11 +244,13 @@ class ShellMixin(TakeDropMixin):
             return self.take_command(entity, int(command[5:]))
         elif command.startswith("drop "):
             return self.drop_command(entity, int(command[5:]))
+        elif command.startswith("go "):
+            return self.change_room_command(entity, int(command[3:]))
+        elif command.startswith("talk "):
+            return self.talk_command(entity, int(command[5:]))
         else:
             # FIXME: Replace this by individual FooAction components.
             # Currently pending:
-            # * HaveDialogue
-            # * ChangeRoom
             # * SpellcastingMixin
             # * Individual spells
             entity.get_component(Action).plan = command
@@ -382,6 +285,27 @@ class ShellMixin(TakeDropMixin):
             return True
 
         return False
+
+    def change_room_command(self, entity, target_idx):
+        if not entity.has_component(RoomPresence):
+            print("You have no presence that could be somewhere.")
+            return False
+
+        room_e = self.world.get_entity(entity.get_component(RoomPresence).room)
+        room = room_e.get_component(Room)
+        if target_idx < 0 or target_idx > len(room.adjacent):
+            print("No such room.")
+            return False
+
+        target = room.adjacent[target_idx]
+        entity.add_component(ChangeRoomAction(room=target))
+        return True
+
+    def talk_command(self, entity, target_idx):
+        # FIXME: Sooo many assumptions in this line...
+        talker = entity.get_component(RoomPresence).presences[target_idx]
+        entity.add_component(TalkAction(talker=talker))
+        return True
 
     def show_inventory(self, entity):
         if entity.has_component(Name):
@@ -437,66 +361,28 @@ class Shell(TextOutputMixin, ShellMixin, System):
 
 class HaveDialogue(System):
     entity_filters = {
-        'act': and_filter([Action, RoomPresence])
+        'act': and_filter([TalkAction])
     }
 
     def update(self, filtered_entities):
         for entity in filtered_entities['act']:
-            plan = entity.get_component(Action).plan
-            if plan.startswith("talk "):
-                room = self.world.get_entity(
-                    entity.get_component(RoomPresence).room,
-                )
-                target_idx = int(plan[5:])
-                presences = room.get_component(Room).presences
-                target = self.world.get_entity(presences[target_idx])
-                if target.has_component(Dialogue):
-                    if target.has_component(Name):
-                        print("> {} says: \"{}\"".format(
-                            target.get_component(Name).name,
-                            target.get_component(Dialogue).phrase,
-                        ))
-                    else:
-                        print("> " + target.get_component(Dialogue).phrase)
+            talker = self.world.get_entity(
+                entity.get_component(TalkAction).talker,
+            )
+
+            # FIXME: Are they in the same room?
+
+            if talker.has_component(Dialogue):
+                if talker.has_component(Name):
+                    print("> {} says: \"{}\"".format(
+                        talker.get_component(Name).name,
+                        talker.get_component(Dialogue).phrase,
+                    ))
                 else:
-                    print("> \"...\"")
-
-
-class TakeOrDrop(TakeDropMixin, System):
-    entity_filters = {
-        'take': and_filter([TakeAction]),
-        'drop': and_filter([DropAction]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['take']:
-            item = self.world.get_entity(entity.get_component(TakeAction).item)
-            entity.remove_component(TakeAction)
-            if self.can_take(item, entity):
-                self.take(item, entity)
-        for entity in entities_by_filter['drop']:
-            item = self.world.get_entity(entity.get_component(DropAction).item)
-            entity.remove_component(DropAction)
-            if self.can_drop(item, entity):
-                self.drop(item, entity)
-
-
-class ChangeRoom(System):
-    entity_filters = {
-        'act': and_filter([Action, RoomPresence])
-    }
-
-    def update(self, filtered_entities):
-        for entity in filtered_entities['act']:
-            plan = entity.get_component(Action).plan
-            if plan.startswith("go "):
-                room = self.world.get_entity(
-                    entity.get_component(RoomPresence).room,
-                )
-                nearby_rooms = room.get_component(Room).adjacent
-                target_idx = int(plan[3:])
-                target_room = nearby_rooms[target_idx]
-                entity.get_component(RoomPresence).room = target_room
+                    print("> " + talker.get_component(Dialogue).phrase)
+            else:
+                print("> \"...\"")
+            entity.remove_component(TalkAction)
 
 
 class SpellcastingMixin:

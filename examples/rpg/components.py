@@ -24,6 +24,11 @@ class Action:
 
 
 @Component()
+class TalkAction:
+    talker: UID
+
+
+@Component()
 class Name:
     name: str
 
@@ -74,42 +79,6 @@ class Mana:
     spells_ready: list
 
 
-# Rooms, and being in a room
-@Component()
-class Room:
-    adjacent: list # Neighboring room entities
-    presences: list # Entities (thought to be) in the room
-    arrived: list # Presence entered the room
-    continued: list # Presence continues to be present
-    gone: list # Presences that left the room
-
-
-@Component()
-class RoomPresence:
-    room: UID
-    presences: list # Entities perceived
-
-
-# Inventory
-
-@Component()
-class Inventory:
-    contents: list
-
-
-@Component()
-class Takeable:
-    pass
-
-
-@Component()
-class TakeAction:
-    item: UID
-
-
-@Component()
-class DropAction:
-    item: UID
 
 
 # Character interaction

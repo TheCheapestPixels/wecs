@@ -1,4 +1,5 @@
 from wecs.core import World, Component, System
+from wecs import rooms, inventory
 
 import systems
 import components
@@ -6,7 +7,7 @@ import components
 
 world = World()
 system_queue = [
-    systems.PerceiveRoom,
+    rooms.PerceiveRoom,
     systems.Aging,
     systems.DieFromHealthLoss,
     systems.BecomeLich,
@@ -15,11 +16,11 @@ system_queue = [
     systems.ReadySpells,
     systems.Shell,
     systems.HaveDialogue,
-    systems.TakeOrDrop,
-    systems.ChangeRoom,
+    inventory.TakeOrDrop,
     systems.CastRejuvenationSpell,
     systems.CastRestoreHealthSpell,
     systems.CastLichdomSpell,
+    rooms.ChangeRoom,
 ]
 for sort, system in enumerate(system_queue):
     world.add_system(system(), sort)
@@ -56,7 +57,7 @@ def make_player_character_components():
 # The room
 room = world.create_entity()
 other_room = world.create_entity()
-room.add_component(components.Room(
+room.add_component(rooms.Room(
     adjacent=[other_room._uid],
     presences=[],
     arrived=[],
@@ -64,7 +65,7 @@ room.add_component(components.Room(
     gone=[],
 ))
 room.add_component(components.Name(name="Hall"))
-other_room.add_component(components.Room(
+other_room.add_component(rooms.Room(
     adjacent=[room._uid],
     presences=[],
     arrived=[],
@@ -81,16 +82,16 @@ for c in make_standard_wizard_components():
     entity.add_component(c)
 for c in make_player_character_components():
     entity.add_component(c)
-entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 entity.add_component(components.Name(name="Bob the Wizard"))
-entity.add_component(components.Inventory(contents=[]))
+entity.add_component(inventory.Inventory(contents=[]))
 
 
 # Obo the Barbarian
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 entity.add_component(components.Name(name="Obo the Barbarian"))
 
 
@@ -105,7 +106,7 @@ entity.add_component(components.Name(name="Ugu the Barbarian"))
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-entity.add_component(components.RoomPresence(
+entity.add_component(rooms.RoomPresence(
     room=other_room._uid,
     presences=[],
 ))
@@ -116,8 +117,8 @@ entity.add_component(components.Dialogue(phrase="What a beautiful sight."))
 # A flask
 entity = world.create_entity()
 entity.add_component(components.Name(name="a potion flask"))
-entity.add_component(components.Takeable())
-entity.add_component(components.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(inventory.Takeable())
+entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 
 
 def generate_dependency_graphs():

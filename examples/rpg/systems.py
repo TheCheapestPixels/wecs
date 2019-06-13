@@ -344,6 +344,12 @@ class ShellMixin(TakeDropMixin):
         elif command.startswith("drop "):
             return self.drop_command(entity, int(command[5:]))
         else:
+            # FIXME: Replace this by individual FooAction components.
+            # Currently pending:
+            # * HaveDialogue
+            # * ChangeRoom
+            # * SpellcastingMixin
+            # * Individual spells
             entity.get_component(Action).plan = command
             return True
         print("Unknown command \"{}\"".format(command))
@@ -465,10 +471,12 @@ class TakeOrDrop(TakeDropMixin, System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['take']:
             item = self.world.get_entity(entity.get_component(TakeAction).item)
+            entity.remove_component(TakeAction)
             if self.can_take(item, entity):
                 self.take(item, entity)
         for entity in entities_by_filter['drop']:
             item = self.world.get_entity(entity.get_component(DropAction).item)
+            entity.remove_component(DropAction)
             if self.can_drop(item, entity):
                 self.drop(item, entity)
 

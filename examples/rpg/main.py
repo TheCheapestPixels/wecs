@@ -15,6 +15,7 @@ system_queue = [
     systems.ReadySpells,
     systems.Shell,
     systems.HaveDialogue,
+    systems.TakeOrDrop,
     systems.ChangeRoom,
     systems.CastRejuvenationSpell,
     systems.CastRestoreHealthSpell,

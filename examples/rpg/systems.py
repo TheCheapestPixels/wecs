@@ -5,6 +5,8 @@ from components import Room
 from components import RoomPresence
 from components import Inventory
 from components import Takeable
+from components import TakeAction
+from components import DropAction
 from components import Age
 from components import Alive
 from components import Dying
@@ -257,7 +259,71 @@ class TextOutputMixin():
         print(o)
 
 
-class ShellMixin():
+class TakeDropMixin:
+    def can_take(self, item, entity):
+        # If I have an inventory...
+        if not entity.has_component(Inventory):
+            print("{} has no inventory.".format(name))
+            return False
+        inventory = entity.get_component(Inventory).contents
+
+        # ...and I am somewhere...
+        if not entity.has_component(RoomPresence):
+            print("Can't take objects from the roomless void.")
+            return False
+        presence = entity.get_component(RoomPresence)
+
+        # ...and there is also an item there...
+        if not item._uid in presence.presences:
+            print("Item is not in the same room.")
+            return False
+
+        # ...that can be taken...
+        if not item.has_component(Takeable):
+            print("That can't be taken.")
+            return False
+
+        # ...then the item can be taken.
+        return True
+
+    def can_drop(self, item, entity):
+        # If I have an inventory...
+        if not entity.has_component(Inventory):
+            print("{} has no inventory.".format(name))
+            return False
+        inventory = entity.get_component(Inventory).contents
+
+        # ...with an item...
+        if item._uid not in inventory:
+            print("Item is not in inventory anymore.")
+            return False
+
+        # ...that can be dropped...
+        if not item.has_component(Takeable):
+            print("That can't be dropped.")
+            return False
+
+        # ...and there is somewhere to drop it into, ...
+        if not entity.has_component(RoomPresence):
+            print("Can't drop objects into the roomless void.")
+            return False
+
+        # ...then drop it like it's hot, drop it like it's hot.
+        return True
+
+    def take(self, item, entity):
+        item.remove_component(RoomPresence)
+        entity.get_component(Inventory).contents.append(item._uid)
+
+    def drop(self, item, entity):
+        room = self.world.get_entity(entity.get_component(RoomPresence).room)
+        inventory = entity.get_component(Inventory).contents
+        idx = inventory.index(item._uid)
+        del inventory[idx]
+        item.add_component(RoomPresence(room=room._uid, presences=[]))
+
+
+class ShellMixin(TakeDropMixin):
     def shell(self, entity):
         if entity.has_component(Name):
             name = entity.get_component(Name).name
@@ -274,53 +340,42 @@ class ShellMixin():
             self.show_inventory(entity)
             return False # Instant action
         elif command.startswith("take "):
-            return self.take(entity, int(command[5:]))
+            return self.take_command(entity, int(command[5:]))
         elif command.startswith("drop "):
-            return self.drop(entity, int(command[5:]))
+            return self.drop_command(entity, int(command[5:]))
         else:
             entity.get_component(Action).plan = command
             return True
         print("Unknown command \"{}\"".format(command))
         return False
 
-    def take(self, entity, object_id):
-        if not entity.has_component(Inventory):
-            print("{} has no inventory.".format(name))
+    def take_command(self, entity, object_id):
+        if not entity.has_component(RoomPresence):
+            print("Can't take objects from the roomless void.")
             return False
-
         presences = entity.get_component(RoomPresence).presences
-        object_entity = self.world.get_entity(presences[object_id])
-        if not object_entity.has_component(Takeable):
-            print("That can't be taken.")
-            return False
 
-        object_entity.remove_component(RoomPresence)
-        entity.get_component(Inventory).contents.append(object_entity._uid)
-        return True
+        item = self.world.get_entity(presences[object_id])
+        if self.can_take(item, entity):
+            entity.add_component(TakeAction(item=item._uid))
+            return True
 
-    def drop(self, entity, object_id):
+        return False
+
+    def drop_command(self, entity, object_id):
         # If I have an inventory...
         if not entity.has_component(Inventory):
             print("{} has no inventory.".format(name))
             return False
+
         inventory = entity.get_component(Inventory).contents
+        item = self.world.get_entity(inventory[object_id])
 
-        # ...with an item that can be dropped...
-        object_entity = self.world.get_entity(inventory[object_id])
-        if not object_entity.has_component(Takeable):
-            print("That can't be dropped.")
-            return False
+        if self.can_drop(item, entity):
+            entity.add_component(DropAction(item=item._uid))
+            return True
 
-        # ...and there is somewhere to drop it into, ...
-        if not entity.has_component(RoomPresence):
-            print("Can't drop objects into the roomless void.")
-            return False
-        room = self.world.get_entity(entity.get_component(RoomPresence).room)
-
-        # ...then drop it like it's hot, drop it like it's hot.
-        del inventory[object_id]
-        object_entity.add_component(RoomPresence(room=room._uid, presences=[]))
-        return True
+        return False
 
     def show_inventory(self, entity):
         if entity.has_component(Name):
@@ -399,6 +454,23 @@ class HaveDialogue(System):
                         print("> " + target.get_component(Dialogue).phrase)
                 else:
                     print("> \"...\"")
+
+
+class TakeOrDrop(TakeDropMixin, System):
+    entity_filters = {
+        'take': and_filter([TakeAction]),
+        'drop': and_filter([DropAction]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['take']:
+            item = self.world.get_entity(entity.get_component(TakeAction).item)
+            if self.can_take(item, entity):
+                self.take(item, entity)
+        for entity in entities_by_filter['drop']:
+            item = self.world.get_entity(entity.get_component(DropAction).item)
+            if self.can_drop(item, entity):
+                self.drop(item, entity)
 
 
 class ChangeRoom(System):

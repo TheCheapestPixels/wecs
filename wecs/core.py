@@ -299,8 +299,11 @@ class World:
 
     def update(self):
         for sort in sorted(self.systems):
-            self.flush_component_updates()
             system = self.systems[sort]
+            self.update_system(system)
+
+    def update_system(self, system):
+            self.flush_component_updates()
             entities_by_filter = {
                 filter_name: self.entity_filters[filter_func]
                 for filter_name, filter_func in system.entity_filters.items()

@@ -34,9 +34,6 @@ class Movement:
 @Component()
 class Model:
     model_name: str
-    position: Vec3
-    rotation: Vec3
-    scale: Vec3
 
 
 @Component()

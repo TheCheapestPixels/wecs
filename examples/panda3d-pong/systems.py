@@ -20,33 +20,46 @@ class LoadModels(System):
         'model': and_filter([Model, Position, Scene]),
     }
 
+    # TODO
+    # Only Model is needed for loading, which then could be done
+    # asynchronously.
     def init_entity(self, filter_name, entity):
         # Load
-        model_c = entity.get_component(Model)
-        model_node = base.loader.load_model(model_c.model_name)
+        model_name = entity.get_component(Model).model_name
+        model = base.loader.load_model(model_name)
+        entity.get_component(Model).node = model
 
         # Add to scene under a new
-        scene_root = entity.get_component(Scene).root
-        model_root = scene_root.attach_new_node("model_component_root")
-        model_node.reparent_to(model_root)
-        model_c.node = model_root
+        model.reparent_to(entity.get_component(Scene).root)
 
-        model_node.set_pos(model_c.position)
-        model_node.set_hpr(model_c.rotation)
-        model_node.set_scale(model_c.scale)
-
+    # TODO
+    # Destroy node if and only if the Model is removed.
     def destroy_entity(self, filter_name, entity, component):
         # Remove from scene
-        # FIXME: ...and the root node that init_entity created
         if isinstance(component, Model):
             component.node.destroy_node()
         else:
             entity.get_component(Model).node.destroy_node()
 
 
+class ResizePaddles(System):
+    entity_filters = {
+        'paddle': and_filter([
+            Model,
+            Paddle,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['paddle']:
+            model = entity.get_component(Model).node
+            size = entity.get_component(Paddle).size
+            model.set_scale(size)
+
+
 class GivePaddlesMoveCommands(System):
     entity_filters = {
-        'paddle':and_filter([
+        'paddle': and_filter([
             Model,
             Scene,
             Position,
@@ -147,7 +160,7 @@ class BallTouchesPaddleLine(System):
                 paddle = paddle_entities[0]
                 paddle_z = paddle.get_component(Position).value.z
                 paddle_size = paddle.get_component(Paddle).size
-                if abs(paddle_z - pos.value.z) > paddle_size / 2:
+                if abs(paddle_z - pos.value.z) > paddle_size:
                     print("SCORE RIGHT!")
                     entity.remove_component(Movement)
                     entity.add_component(Resting())
@@ -155,7 +168,7 @@ class BallTouchesPaddleLine(System):
                 else:
                     entity.get_component(Movement).value.x *= -1
                     dist_to_center = paddle_z - pos.value.z
-                    normalized_dist = dist_to_center / (paddle_size / 2)
+                    normalized_dist = dist_to_center / (paddle_size)
                     movement = entity.get_component(Movement).value
                     speed = abs(movement.x)
                     movement.z -= normalized_dist * speed
@@ -163,7 +176,7 @@ class BallTouchesPaddleLine(System):
                 paddle = paddle_entities[1]
                 paddle_z = paddle.get_component(Position).value.z
                 paddle_size = paddle.get_component(Paddle).size
-                if abs(paddle_z - pos.value.z) > paddle_size / 2:
+                if abs(paddle_z - pos.value.z) > paddle_size:
                     print("SCORE LEFT!")
                     entity.remove_component(Movement)
                     entity.add_component(Resting())
@@ -171,7 +184,7 @@ class BallTouchesPaddleLine(System):
                 else:
                     entity.get_component(Movement).value.x *= -1
                     dist_to_center = paddle_z - pos.value.z
-                    normalized_dist = dist_to_center / (paddle_size / 2)
+                    normalized_dist = dist_to_center / paddle_size
                     movement = entity.get_component(Movement).value
                     speed = abs(movement.x)
                     movement.z -= normalized_dist * speed
@@ -191,12 +204,12 @@ class PaddleTouchesBoundary(System):
         for entity in set(entities_by_filter['paddles']):
             pos = entity.get_component(Position).value
             size = entity.get_component(Paddle).size
-            if pos.z + size / 2 > 1:
-                pos.z = 1 - size / 2
+            if pos.z + size  > 1:
+                pos.z = 1 - size
                 np = entity.get_component(Model).node
                 np.set_z(pos.z)
-            if pos.z - size / 2 < -1:
-                pos.z = -1 + size / 2
+            if (pos.z - size) < -1:
+                pos.z = -1 + size
                 np = entity.get_component(Model).node
                 np.set_z(pos.z)
 

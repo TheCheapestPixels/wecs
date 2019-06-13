@@ -34,10 +34,10 @@ class IncreaseCount(System):
             entity.get_component(Counter).inited = True
             self.init_done += 1
 
-    def destroy_entity(self, filter_name, entity, component):
+    def destroy_entity(self, filter_name, entity, components_by_type):
         self.destroy_called += 1
         if filter_name == 'has_counter':
-            component.inited = False
+            components_by_type[Counter].inited = False
             self.destroy_done += 1
         elif filter_name == 'init_enabled':
             if entity.has_component(Counter):

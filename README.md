@@ -332,7 +332,6 @@ present. This leads to easy management of the system:
     * `entity = world[entity_uid]`
     * `entity = other_entity.get_component(Reference).uid`
     * `component = entity[Reference]`
-  * Break adding/removing components out of `update()`, executing them after it
   * Unique `Components`
   * Archetypes: Make it easy to compose typical entities
 * rpg
@@ -344,3 +343,9 @@ present. This leads to easy management of the system:
 * panda3d
   * Check the `task_mgr` for tasks already existing at a given sort
   * If that's not possible, `System`ify existing Panda3D `tasks`
+* All code
+  * Change `filtered_entities` to `entities_by_filter`
+  * `system.destroy_entity()` now gets `components_by_type` argument.
+  * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
+  * `system.init_entity()` is also misleading. Maybe change it to
+    `system.init_components()`, and give it a `components_by_type` argument too?

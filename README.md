@@ -337,8 +337,6 @@ present. This leads to easy management of the system:
 * rpg
   * Hoist `Room` / `RoomPresence` into `wecs`, maybe some standard C/S file?
 * panda3d-pong
-  * Create custom models
-  * Remove positioning hacks from `Model` after creating Pong models
   * Hoist `Components` / `Systems` into `panda3d.py` where applicable
 * panda3d
   * Check the `task_mgr` for tasks already existing at a given sort

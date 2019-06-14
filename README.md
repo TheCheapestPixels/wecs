@@ -325,8 +325,11 @@ present. This leads to easy management of the system:
 # TODO
 
 * Tests
+  * `wecs.rooms`
+  * `wecs.inventory`
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?
+  * Does removing entities affect the currently running system?
 * core
   * API improvements
     * `entity = world[entity_uid]`
@@ -335,7 +338,8 @@ present. This leads to easy management of the system:
   * Unique `Components`
   * Archetypes: Make it easy to compose typical entities
 * rpg
-  * Hoist `Room` / `RoomPresence` into `wecs`, maybe some standard C/S file?
+  * Refactor `Action` out of `magic.py`
+  * Add slotted inventory
 * panda3d-pong
   * Hoist `Components` / `Systems` into `panda3d.py` where applicable
 * panda3d

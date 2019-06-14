@@ -1,25 +1,30 @@
 from wecs.core import World, Component, System
 from wecs import rooms, inventory
 
-import systems
+# Game mechanics
 import components
+import lifecycle
+import magic
+import dialogue
+import aging
+import textio
 
 
 world = World()
 system_queue = [
     rooms.PerceiveRoom,
-    systems.Aging,
-    systems.DieFromHealthLoss,
-    systems.BecomeLich,
-    systems.Die,
-    systems.RegenerateMana,
-    systems.ReadySpells,
-    systems.Shell,
-    systems.HaveDialogue,
+    aging.Aging,
+    lifecycle.DieFromHealthLoss,
+    magic.BecomeLich,
+    lifecycle.Die,
+    magic.RegenerateMana,
+    magic.ReadySpells,
+    textio.Shell,
+    dialogue.HaveDialogue,
     inventory.TakeOrDrop,
-    systems.CastRejuvenationSpell,
-    systems.CastRestoreHealthSpell,
-    systems.CastLichdomSpell,
+    magic.CastRejuvenationSpell,
+    magic.CastRestoreHealthSpell,
+    magic.CastLichdomSpell,
     rooms.ChangeRoom,
 ]
 for sort, system in enumerate(system_queue):
@@ -28,9 +33,9 @@ for sort, system in enumerate(system_queue):
 
 def make_basic_character_components():
     character_components = [
-        components.Alive(),
-        components.Age(age=0, age_of_frailty=8),
-        components.Health(health=10, max_health=10),
+        lifecycle.Alive(),
+        aging.Age(age=0, age_of_frailty=8),
+        lifecycle.Health(health=10, max_health=10),
         components.Action(plan=''),
     ]
     return character_components
@@ -38,18 +43,18 @@ def make_basic_character_components():
 
 def make_standard_wizard_components():
     wizard_components = [
-        components.Mana(mana=5, max_mana=10, spells_ready=[]),
-        components.RejuvenationSpell(mana_cost=4, time_restored=5),
-        components.RestoreHealthSpell(mana_cost=2, health_restored=4),
-        components.LichdomSpell(mana_cost=10),
+        magic.Mana(mana=5, max_mana=10, spells_ready=[]),
+        magic.RejuvenationSpell(mana_cost=4, time_restored=5),
+        magic.RestoreHealthSpell(mana_cost=2, health_restored=4),
+        magic.LichdomSpell(mana_cost=10),
     ]
     return wizard_components
 
 
 def make_player_character_components():
     player_character_components = [
-        components.Output(),
-        components.Input(),
+        textio.Output(),
+        textio.Input(),
     ]
     return player_character_components
 
@@ -64,7 +69,7 @@ room.add_component(rooms.Room(
     continued=[],
     gone=[],
 ))
-room.add_component(components.Name(name="Hall"))
+room.add_component(textio.Name(name="Hall"))
 other_room.add_component(rooms.Room(
     adjacent=[room._uid],
     presences=[],
@@ -72,7 +77,7 @@ other_room.add_component(rooms.Room(
     continued=[],
     gone=[],
 ))
-other_room.add_component(components.Name(name="Balcony"))
+other_room.add_component(textio.Name(name="Balcony"))
 
 # Bob the wizard
 entity = world.create_entity()
@@ -83,7 +88,7 @@ for c in make_standard_wizard_components():
 for c in make_player_character_components():
     entity.add_component(c)
 entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
-entity.add_component(components.Name(name="Bob the Wizard"))
+entity.add_component(textio.Name(name="Bob the Wizard"))
 entity.add_component(inventory.Inventory(contents=[]))
 
 
@@ -92,14 +97,14 @@ entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
 entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
-entity.add_component(components.Name(name="Obo the Barbarian"))
+entity.add_component(textio.Name(name="Obo the Barbarian"))
 
 
 # Ugu the Barbarian (not in the room)
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-entity.add_component(components.Name(name="Ugu the Barbarian"))
+entity.add_component(textio.Name(name="Ugu the Barbarian"))
 
 
 # Sasa the Innocent Bystander
@@ -110,20 +115,20 @@ entity.add_component(rooms.RoomPresence(
     room=other_room._uid,
     presences=[],
 ))
-entity.add_component(components.Name(name="Sasa the Innocent Bystander"))
-entity.add_component(components.Dialogue(phrase="What a beautiful sight."))
+entity.add_component(textio.Name(name="Sasa the Innocent Bystander"))
+entity.add_component(dialogue.Dialogue(phrase="What a beautiful sight."))
 
 
 # A flask
 entity = world.create_entity()
-entity.add_component(components.Name(name="a potion flask"))
+entity.add_component(textio.Name(name="a potion flask"))
 entity.add_component(inventory.Takeable())
 entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 
 
 # A necklace
 entity = world.create_entity()
-entity.add_component(components.Name(name="a necklace"))
+entity.add_component(textio.Name(name="a necklace"))
 entity.add_component(inventory.Takeable())
 entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
 
@@ -134,23 +139,23 @@ def generate_dependency_graphs():
     # Systems grouped by... well, grouped.
     systems_groups={
         'Magic': [
-            systems.BecomeLich,
-            systems.RegenerateMana,
-            systems.ReadySpells,
+            magic.BecomeLich,
+            magic.RegenerateMana,
+            magic.ReadySpells,
         ],
         'Casting_spells': [
-            systems.CastRejuvenationSpell,
-            systems.CastRestoreHealthSpell,
-            systems.CastLichdomSpell,
+            magic.CastRejuvenationSpell,
+            magic.CastRestoreHealthSpell,
+            magic.CastLichdomSpell,
         ],
         'IO': [
-            systems.PrintOutput,
-            systems.ReadInput,
+            textio.PrintOutput,
+            textio.ReadInput,
         ],
         'Lifecycle': [
-            systems.Aging,
-            systems.DieFromHealthLoss,
-            systems.Die,
+            aging.Aging,
+            lifecycle.DieFromHealthLoss,
+            lifecycle.Die,
         ],
     }
 

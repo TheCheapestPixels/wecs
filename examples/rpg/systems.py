@@ -10,8 +10,11 @@ from wecs.inventory import TakeAction
 from wecs.inventory import DropAction
 from wecs.inventory import TakeDropMixin
 
+from components import Output
 from components import Name
+from components import Input
 from components import TalkAction
+from components import Dialogue
 from components import Age
 from components import Alive
 from components import Dying
@@ -23,10 +26,7 @@ from components import RejuvenationSpell
 from components import RestoreHealthSpell
 from components import LichdomSpell
 from components import LichdomSpellEffect
-from components import Output
-from components import Input
 from components import Action
-from components import Dialogue
 
 
 # Used by ReadySpells

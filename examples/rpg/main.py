@@ -121,6 +121,13 @@ entity.add_component(inventory.Takeable())
 entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 
 
+# A necklace
+entity = world.create_entity()
+entity.add_component(components.Name(name="a necklace"))
+entity.add_component(inventory.Takeable())
+entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
+
+
 def generate_dependency_graphs():
     from wecs.graphviz import system_component_dependency
 

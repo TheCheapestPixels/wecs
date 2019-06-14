@@ -10,6 +10,12 @@ class Output:
     pass
 
 
+# Characters and items can have names, producing prettier output,
+@Component()
+class Name:
+    name: str
+
+
 # This component will make a system ask for command input. Needs two
 # enablers, Name (to query for the character to control) and Action
 # (to store the given command).
@@ -18,19 +24,11 @@ class Input:
     pass
 
 
+# FIXME: This is obsolete and will be replaced by individual component
+# types for specific actions.
 @Component()
 class Action:
     plan: str
-
-
-@Component()
-class TalkAction:
-    talker: UID
-
-
-@Component()
-class Name:
-    name: str
 
 
 # Character life states. A character is one of Alive, Dying, Dead, or
@@ -79,9 +77,11 @@ class Mana:
     spells_ready: list
 
 
+# Trivial monologue.
+@Component()
+class TalkAction:
+    talker: UID
 
-
-# Character interaction
 
 @Component()
 class Dialogue:

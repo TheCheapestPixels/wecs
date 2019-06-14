@@ -38,7 +38,6 @@ def make_basic_character_components():
         lifecycle.Alive(),
         aging.Age(age=0, age_of_frailty=8),
         lifecycle.Health(health=10, max_health=10),
-        components.Action(plan=''),
     ]
     return character_components
 
@@ -175,7 +174,7 @@ def generate_dependency_graphs():
 
 commands = """
 Actions that take time:
-  spell name: cast spell.
+  cast <spell name>: cast spell.
   go <id>: go into a room.
   talk <id>: talk to someone.
   take <id>: take object and put it in the inventory

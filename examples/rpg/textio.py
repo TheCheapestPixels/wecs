@@ -18,10 +18,11 @@ from lifecycle import Health
 from lifecycle import Dead
 from lifecycle import Undead
 from magic import Mana
+from magic import spells
+from magic import SpellcastingMixin
 from aging import Age
 from character import Name
 from dialogue import TalkAction
-from components import Action
 
 
 # This component will try trigger printin data about itself, but it
@@ -86,9 +87,10 @@ class TextOutputMixin():
 
         # Castable spells
         if entity.has_component(Mana):
+            readied_spells = entity.get_component(Mana).spells_ready
             o += "{} can cast: {}\n".format(
                 entity.get_component(Name).name,
-                ', '.join(entity.get_component(Mana).spells_ready),
+                ', '.join(spell.name for spell in readied_spells),
             )
         return o
 
@@ -160,7 +162,7 @@ class TextOutputMixin():
             o += "\n"
 
 
-class ShellMixin(TakeDropMixin):
+class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
     def shell(self, entity):
         if entity.has_component(Name):
             name = entity.get_component(Name).name
@@ -176,10 +178,13 @@ class ShellMixin(TakeDropMixin):
         if entity.has_component(Dead):
             print("You are dead. You do nothing.")
             return True
-        if command in ("i", "inventory"):
+        elif command == "":
+            print("You do nothing.")
+            return True
+        elif command in ("i", "inventory"):
             self.show_inventory(entity)
             return False # Instant action
-        if command == "l" or command.startswith("look "):
+        elif command == "l" or command.startswith("look "):
             self.look_at(entity, int(command[5:]))
             return False # Instant action
         elif command.startswith("take "):
@@ -190,14 +195,9 @@ class ShellMixin(TakeDropMixin):
             return self.change_room_command(entity, int(command[3:]))
         elif command.startswith("talk "):
             return self.talk_command(entity, int(command[5:]))
-        else:
-            # FIXME: Replace this by individual FooAction components.
-            # Currently pending:
-            # * SpellcastingMixin
-            # * Individual spells
-            # Then systems.py and components.py can be retired.
-            entity.get_component(Action).plan = command
-            return True
+        elif command.startswith("cast "):
+            return self.cast_command(entity, command[5:])
+
         print("Unknown command \"{}\"".format(command))
         return False
 
@@ -249,6 +249,18 @@ class ShellMixin(TakeDropMixin):
         talker = entity.get_component(RoomPresence).presences[target_idx]
         entity.add_component(TalkAction(talker=talker))
         return True
+
+    def cast_command(self, entity, spell_name):
+        for spell in spells:
+            if spell.name == spell_name:
+                if self.can_cast(entity, spell):
+                    entity.add_component(spell.casting_action())
+                    return True
+                else:
+                    return False
+
+        print("No such spell exists.")
+        return False
 
     def show_inventory(self, entity):
         if entity.has_component(Name):
@@ -303,7 +315,7 @@ class ShellMixin(TakeDropMixin):
         return True
 
 
-class Shell(TextOutputMixin, ShellMixin, System):
+class Shell(ShellMixin, System):
     entity_filters = {
         'outputs': and_filter([Output]),
         'act': and_filter([Input])

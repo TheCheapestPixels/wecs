@@ -58,8 +58,8 @@ class TextOutputMixin():
 
         # Age
         if entity.has_component(Age):
-            age = entity.get_component(Age).age,
-            frailty = entity.get_component(Age).age_of_frailty,
+            age = entity.get_component(Age).age
+            frailty = entity.get_component(Age).age_of_frailty
             o += "{}'s age: ".format(name)
             o += "{}/{}".format(age, frailty)
             if age >= frailty:

@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name='wecs',
-    version='0.1.dev',
+    version='0.1.1dev',
     description='An ECS (entity component system)',
     url='https://github.com/TheCheapestPixels/wecs',
     author='TheCheapestPixels',
@@ -22,9 +22,10 @@ setup(
     keywords='ecs',
     packages=find_packages(exclude=['tests', 'examples']),
     python_requires='>=3.7, <4',
-    install_requires=[],  # Optional
+    install_requires=[],
     extras_require={
         'panda3d': ['panda3d'],
         'graphviz': ['graphviz'],
+        'bobthewizard': ['crayons'],
     },
 )

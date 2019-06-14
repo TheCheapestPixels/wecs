@@ -1,3 +1,5 @@
+import crayons
+
 from wecs.core import World, Component, System
 from wecs import rooms, inventory
 
@@ -185,5 +187,5 @@ print(commands)
 i = 0
 while True:
     i += 1
-    print("\n--- Timestep {}".format(i))
+    print(crayons.cyan("\n--- Timestep {}".format(i)))
     world.update()

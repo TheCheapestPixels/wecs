@@ -1,3 +1,5 @@
+import crayons
+
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
@@ -167,7 +169,7 @@ class ShellMixin(TakeDropMixin):
         query = "Command for {}: ".format(
             name,
         )
-        while not self.run_command(input(query), entity):
+        while not self.run_command(input(crayons.red(query)), entity):
             pass
 
     def run_command(self, command, entity):

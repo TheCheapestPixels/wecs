@@ -25,6 +25,7 @@ class HaveDialogue(System):
             talker = self.world.get_entity(
                 entity.get_component(TalkAction).talker,
             )
+            entity.remove_component(TalkAction)
 
             if talker.has_component(Dead):
                 print("Dead people don't talk.")

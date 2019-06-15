@@ -24,6 +24,7 @@ system_queue = [
     textio.Shell,
     dialogue.HaveDialogue,
     inventory.TakeOrDrop,
+    equipment.EquipOrUnequip,
     magic.CastRejuvenationSpell,
     magic.CastRestoreHealthSpell,
     magic.CastLichdomSpell,
@@ -39,16 +40,6 @@ class Head:
     name = "head"
 class Neck:
     name = "neck"
-class Chest:
-    name = "chest"
-class Arm:
-    name = "arm"
-class Hand:
-    name = "hand"
-class Leg:
-    name = "leg"
-class Foot:
-    name = "foot"
 
 
 # Entity archetypes
@@ -62,15 +53,6 @@ def make_basic_character_components():
         equipment.Equipment(slots=[
             world.create_entity(equipment.Slot(type=Head, content=None))._uid,
             world.create_entity(equipment.Slot(type=Neck, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Chest, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Arm, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Hand, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Arm, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Hand, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Leg, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Foot, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Leg, content=None))._uid,
-            world.create_entity(equipment.Slot(type=Foot, content=None))._uid,
         ]),
     ]
     return character_components
@@ -122,7 +104,7 @@ for c in make_standard_wizard_components():
     entity.add_component(c)
 for c in make_player_character_components():
     entity.add_component(c)
-entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
 entity.add_component(textio.Name(name="Bob the Wizard"))
 
 
@@ -161,11 +143,20 @@ entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 
 
 # A necklace
-entity = world.create_entity()
-entity.add_component(textio.Name(name="a necklace"))
-entity.add_component(inventory.Takeable())
-entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
-entity.add_component(equipment.Equippable(type=Neck))
+entity = world.create_entity(
+    textio.Name(name="a necklace"),
+    inventory.Takeable(),
+    rooms.RoomPresence(room=other_room._uid, presences=[]),
+    equipment.Equippable(type=Neck),
+)
+
+# A medallion
+entity = world.create_entity(
+    textio.Name(name="a medallion"),
+    inventory.Takeable(),
+    equipment.Equippable(type=Neck),
+    rooms.RoomPresence(room=other_room._uid, presences=[]),
+)
 
 
 def generate_dependency_graphs():
@@ -213,8 +204,13 @@ Actions that take time:
   talk <id>: talk to someone.
   take <id>: take object and put it in the inventory
   drop <id>: take object out of the inventory and drop it
+  equip r<id> <id>: Equip item from room into slot
+  equip i<id> <id>: Equip item from inventory into slot
+  unequip <id> r: Unequip item and drop it into the room
+  unequip <id> i: Unequip item and drop it into the inventory
 Instant actions:
   i, inventory: show inventory contents
+  look <id>: look at thing or person in the room
 """
 print(commands)
 i = 0

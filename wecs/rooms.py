@@ -1,5 +1,6 @@
 from wecs.core import Component, System, UID, and_filter
 
+
 # Rooms, and being in a room
 @Component()
 class Room:
@@ -19,6 +20,17 @@ class RoomPresence:
 @Component()
 class ChangeRoomAction:
     room: UID # Room to change to
+
+
+def is_in_room(item, entity):
+    if not entity.has_component(RoomPresence):
+        return False
+    presence = entity.get_component(RoomPresence)
+
+    if item._uid not in presence.presences:
+        return False
+
+    return True
 
 
 class PerceiveRoom(System):

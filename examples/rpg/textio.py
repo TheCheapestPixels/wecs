@@ -10,9 +10,14 @@ from wecs.rooms import ChangeRoomAction
 from wecs.inventory import Inventory
 from wecs.inventory import TakeAction
 from wecs.inventory import DropAction
-from wecs.inventory import TakeDropMixin
+from wecs.inventory import can_drop
+from wecs.inventory import can_take
 from wecs.equipment import Equipment
 from wecs.equipment import Slot
+from wecs.equipment import EquipAction
+from wecs.equipment import UnequipAction
+from wecs.equipment import can_equip
+from wecs.equipment import can_unequip
 
 from lifecycle import Alive
 from lifecycle import Health
@@ -163,7 +168,25 @@ class TextOutputMixin():
             o += "\n"
 
 
-class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
+class Shell(SpellcastingMixin, TextOutputMixin, System):
+    entity_filters = {
+        'outputs': and_filter([Output]),
+        'inputs': and_filter([Input])
+    }
+
+    def update(self, filtered_entities):
+        # First, produce output and get input for the outputter if it
+        # is also an inputter.
+        outputters = filtered_entities['outputs']
+        for entity in outputters:
+            self.print_entity_state(entity)
+            if entity in filtered_entities['inputs']:
+                self.shell(entity)
+        # Also give the actors without output a shell
+        actors = filtered_entities['inputs']
+        for entity in [e for e in actors if e not in outputters]:
+            self.shell(entity)
+
     def shell(self, entity):
         if entity.has_component(Name):
             name = entity.get_component(Name).name
@@ -186,13 +209,17 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
             self.show_equipment(entity)
             self.show_inventory(entity)
             return False # Instant action
-        elif command == "l" or command.startswith("look "):
+        elif command.startswith("look "):
             self.look_at(entity, int(command[5:]))
             return False # Instant action
         elif command.startswith("take "):
             return self.take_command(entity, int(command[5:]))
         elif command.startswith("drop "):
             return self.drop_command(entity, int(command[5:]))
+        elif command.startswith("equip "):
+            return self.equip_command(entity, command[6:])
+        elif command.startswith("unequip "):
+            return self.unequip_command(entity, command[8:])
         elif command.startswith("go "):
             return self.change_room_command(entity, int(command[3:]))
         elif command.startswith("talk "):
@@ -210,7 +237,7 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
         presences = entity.get_component(RoomPresence).presences
 
         item = self.world.get_entity(presences[object_id])
-        if self.can_take(item, entity):
+        if can_take(item, entity):
             entity.add_component(TakeAction(item=item._uid))
             return True
 
@@ -225,11 +252,56 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
         inventory = entity.get_component(Inventory).contents
         item = self.world.get_entity(inventory[object_id])
 
-        if self.can_drop(item, entity):
+        if can_drop(item, entity):
             entity.add_component(DropAction(item=item._uid))
             return True
 
         return False
+
+    def equip_command(self, entity, code):
+        item_id, _, slot_id = code.partition(" ")
+        if item_id.startswith("r"):
+            in_room = True
+        elif item_id.startswith("i"):
+            in_room = False
+        else:
+            print("Invalid item location, which must start with 'r' or 'i'.")
+            return False
+
+        item_idx = int(item_id[1:])
+        if in_room:
+            item_uid = entity.get_component(RoomPresence).presences[item_idx]
+        else:
+            item_uid = entity.get_component(Inventory).contents[item_idx]
+        item = self.world.get_entity(item_uid)
+
+        slot_idx = int(slot_id)
+        slot_uid = entity.get_component(Equipment).slots[slot_idx]
+        slot = self.world.get_entity(slot_uid)
+        if not can_equip(item, slot, entity):
+            print("Can't equip.")
+            return False
+
+        entity.add_component(EquipAction(item=item_uid, slot=slot_uid))
+        return True
+
+    def unequip_command(self, entity, code):
+        slot_id, _, target_id = code.partition(" ")
+        if target_id == "r":
+            target = self.world.get_entity(
+                entity.get_component(RoomPresence).room,
+            )
+        elif target_id == "i":
+            target = entity
+        else:
+            print("Invalid target location, must be 'r' or 'i'.")
+            return False
+
+        slot_idx = int(slot_id)
+        slot_uid = entity.get_component(Equipment).slots[slot_idx]
+
+        entity.add_component(UnequipAction(slot=slot_uid, target=target._uid))
+        return True
 
     def change_room_command(self, entity, target_idx):
         if not entity.has_component(RoomPresence):
@@ -285,7 +357,7 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
             if item is None:
                 item_name = "(empty)"
             else:
-                item_e = self.world.get_entity(slot.content)
+                item_e = self.world.get_entity(slot_cmpt.content)
                 if item_e.has_component(Name):
                     item_name = item_e.get_component(Name).name
                 else:
@@ -344,21 +416,3 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
 
         print(o)
         return True
-
-
-class Shell(ShellMixin, System):
-    entity_filters = {
-        'outputs': and_filter([Output]),
-        'act': and_filter([Input])
-    }
-
-    def update(self, filtered_entities):
-        outputters = filtered_entities['outputs']
-        actors = filtered_entities['act']
-        for entity in outputters:
-            self.print_entity_state(entity)
-            if entity in filtered_entities['act']:
-                self.shell(entity)
-        # Also give the actors without output a shell
-        for entity in [e for e in actors if e not in outputters]:
-            self.shell(entity)

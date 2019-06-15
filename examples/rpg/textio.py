@@ -8,10 +8,11 @@ from wecs.rooms import Room
 from wecs.rooms import RoomPresence
 from wecs.rooms import ChangeRoomAction
 from wecs.inventory import Inventory
-from wecs.inventory import Takeable
 from wecs.inventory import TakeAction
 from wecs.inventory import DropAction
 from wecs.inventory import TakeDropMixin
+from wecs.equipment import Equipment
+from wecs.equipment import Slot
 
 from lifecycle import Alive
 from lifecycle import Health
@@ -182,6 +183,7 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
             print("You do nothing.")
             return True
         elif command in ("i", "inventory"):
+            self.show_equipment(entity)
             self.show_inventory(entity)
             return False # Instant action
         elif command == "l" or command.startswith("look "):
@@ -261,6 +263,35 @@ class ShellMixin(TakeDropMixin, SpellcastingMixin, TextOutputMixin):
 
         print("No such spell exists.")
         return False
+
+    def show_equipment(self, entity):
+        if entity.has_component(Name):
+            name = entity.get_component(Name).name
+        else:
+            name = "Avatar"
+
+        if not entity.has_component(Equipment):
+            print("{} has no equipment slots.".format(name))
+            return False
+
+        slots = [self.world.get_entity(e)
+                 for e in entity.get_component(Equipment).slots]
+
+        for idx, slot in enumerate(slots):
+            slot_cmpt = slot.get_component(Slot)
+            slot_name = slot_cmpt.type.name
+
+            item = slot_cmpt.content
+            if item is None:
+                item_name = "(empty)"
+            else:
+                item_e = self.world.get_entity(slot.content)
+                if item_e.has_component(Name):
+                    item_name = item_e.get_component(Name).name
+                else:
+                    item_name = "(no description)"
+
+            print("(Slot {}: {}) {}".format(idx, slot_name, item_name))
 
     def show_inventory(self, entity):
         if entity.has_component(Name):

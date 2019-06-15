@@ -1,10 +1,9 @@
 import crayons
 
 from wecs.core import World, Component, System
-from wecs import rooms, inventory
+from wecs import rooms, inventory, equipment
 
 # Game mechanics
-import components
 import lifecycle
 import magic
 import dialogue
@@ -12,6 +11,7 @@ import aging
 import textio
 
 
+# The world's systems
 world = World()
 system_queue = [
     rooms.PerceiveRoom,
@@ -33,11 +33,45 @@ for sort, system in enumerate(system_queue):
     world.add_system(system(), sort)
 
 
+# Slot types for equippable items
+
+class Head:
+    name = "head"
+class Neck:
+    name = "neck"
+class Chest:
+    name = "chest"
+class Arm:
+    name = "arm"
+class Hand:
+    name = "hand"
+class Leg:
+    name = "leg"
+class Foot:
+    name = "foot"
+
+
+# Entity archetypes
+
 def make_basic_character_components():
     character_components = [
         lifecycle.Alive(),
         aging.Age(age=0, age_of_frailty=8),
         lifecycle.Health(health=10, max_health=10),
+        inventory.Inventory(contents=[]),
+        equipment.Equipment(slots=[
+            world.create_entity(equipment.Slot(type=Head, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Neck, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Chest, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Arm, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Hand, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Arm, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Hand, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Leg, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Foot, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Leg, content=None))._uid,
+            world.create_entity(equipment.Slot(type=Foot, content=None))._uid,
+        ]),
     ]
     return character_components
 
@@ -90,7 +124,6 @@ for c in make_player_character_components():
     entity.add_component(c)
 entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
 entity.add_component(textio.Name(name="Bob the Wizard"))
-entity.add_component(inventory.Inventory(contents=[]))
 
 
 # Obo the Barbarian
@@ -132,6 +165,7 @@ entity = world.create_entity()
 entity.add_component(textio.Name(name="a necklace"))
 entity.add_component(inventory.Takeable())
 entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
+entity.add_component(equipment.Equippable(type=Neck))
 
 
 def generate_dependency_graphs():

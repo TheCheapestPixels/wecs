@@ -180,10 +180,13 @@ class World:
         self.system_of_filter = {}
         self.entities_that_update_components= [] # deferred operation
 
-    def create_entity(self):
+    def create_entity(self, *args):
         entity = Entity(self)
         self.entities.add(entity)
         self.entities_by_uid[entity._uid] = entity
+        for arg in args:
+            # assert isinstance(arg, Component)
+            entity.add_component(arg)
         return entity
 
     def get_entity(self, uid):

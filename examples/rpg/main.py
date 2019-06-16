@@ -49,7 +49,7 @@ def make_basic_character_components():
         lifecycle.Alive(),
         aging.Age(age=0, age_of_frailty=8),
         lifecycle.Health(health=10, max_health=10),
-        inventory.Inventory(contents=[]),
+        inventory.Inventory(),
         equipment.Equipment(slots=[
             world.create_entity(equipment.Slot(type=Head, content=None))._uid,
             world.create_entity(equipment.Slot(type=Neck, content=None))._uid,
@@ -60,7 +60,7 @@ def make_basic_character_components():
 
 def make_standard_wizard_components():
     wizard_components = [
-        magic.Mana(mana=5, max_mana=10, spells_ready=[]),
+        magic.Mana(mana=5, max_mana=10),
         magic.RejuvenationSpell(mana_cost=4, time_restored=5),
         magic.RestoreHealthSpell(mana_cost=2, health_restored=4),
         magic.LichdomSpell(mana_cost=10),
@@ -81,18 +81,10 @@ room = world.create_entity()
 other_room = world.create_entity()
 room.add_component(rooms.Room(
     adjacent=[other_room._uid],
-    presences=[],
-    arrived=[],
-    continued=[],
-    gone=[],
 ))
 room.add_component(textio.Name(name="Hall"))
 other_room.add_component(rooms.Room(
     adjacent=[room._uid],
-    presences=[],
-    arrived=[],
-    continued=[],
-    gone=[],
 ))
 other_room.add_component(textio.Name(name="Balcony"))
 
@@ -104,7 +96,7 @@ for c in make_standard_wizard_components():
     entity.add_component(c)
 for c in make_player_character_components():
     entity.add_component(c)
-entity.add_component(rooms.RoomPresence(room=other_room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=other_room._uid))
 entity.add_component(textio.Name(name="Bob the Wizard"))
 
 
@@ -112,7 +104,7 @@ entity.add_component(textio.Name(name="Bob the Wizard"))
 entity = world.create_entity()
 for c in make_basic_character_components():
     entity.add_component(c)
-entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=room._uid))
 entity.add_component(textio.Name(name="Obo the Barbarian"))
 
 
@@ -129,7 +121,6 @@ for c in make_basic_character_components():
     entity.add_component(c)
 entity.add_component(rooms.RoomPresence(
     room=other_room._uid,
-    presences=[],
 ))
 entity.add_component(textio.Name(name="Sasa the Innocent Bystander"))
 entity.add_component(dialogue.Dialogue(phrase="What a beautiful sight."))
@@ -139,14 +130,14 @@ entity.add_component(dialogue.Dialogue(phrase="What a beautiful sight."))
 entity = world.create_entity()
 entity.add_component(textio.Name(name="a potion flask"))
 entity.add_component(inventory.Takeable())
-entity.add_component(rooms.RoomPresence(room=room._uid, presences=[]))
+entity.add_component(rooms.RoomPresence(room=room._uid))
 
 
 # A necklace
 entity = world.create_entity(
     textio.Name(name="a necklace"),
     inventory.Takeable(),
-    rooms.RoomPresence(room=other_room._uid, presences=[]),
+    rooms.RoomPresence(room=other_room._uid),
     equipment.Equippable(type=Neck),
 )
 
@@ -155,7 +146,7 @@ entity = world.create_entity(
     textio.Name(name="a medallion"),
     inventory.Takeable(),
     equipment.Equippable(type=Neck),
-    rooms.RoomPresence(room=other_room._uid, presences=[]),
+    rooms.RoomPresence(room=other_room._uid),
 )
 
 

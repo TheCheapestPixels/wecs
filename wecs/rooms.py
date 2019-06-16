@@ -1,20 +1,28 @@
+from dataclasses import field
+
 from wecs.core import Component, System, UID, and_filter
 
 
 # Rooms, and being in a room
 @Component()
 class Room:
-    adjacent: list # Neighboring room entities
-    presences: list # Entities (thought to be) in the room
-    arrived: list # Presence entered the room
-    continued: list # Presence continues to be present
-    gone: list # Presences that left the room
+    # Neighboring room entities
+    adjacent: list = field(default_factory=list)
+    # Entities (thought to be) in the room
+    presences: list = field(default_factory=list)
+    # Presence entered the room
+    arrived: list = field(default_factory=list)
+    # Presence continues to be present
+    continued: list = field(default_factory=list)
+    # Presences that left the room
+    gone: list = field(default_factory=list)
 
 
 @Component()
 class RoomPresence:
     room: UID
-    presences: list # Entities perceived
+    # Entities perceived
+    presences: list = field(default_factory=list)
 
 
 @Component()

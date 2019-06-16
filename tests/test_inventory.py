@@ -26,20 +26,14 @@ from wecs.inventory import TakeOrDrop
 @pytest.fixture
 def room(world):
     return world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
 
 
 @pytest.fixture
 def item(world, room):
     return world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         Takeable(),
     )
 
@@ -49,7 +43,7 @@ def test_is_in_inventory(world, room):
         Takeable(),
     )
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         Inventory(contents=[item._uid]),
     )
     world.flush_component_updates()
@@ -59,8 +53,8 @@ def test_is_in_inventory(world, room):
 
 def test_is_not_in_inventory(world, room, item):
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
     )
     world.flush_component_updates()
 
@@ -72,8 +66,8 @@ def test_take_item(world, room, item):
     world.add_system(TakeOrDrop(), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     world.update()
@@ -91,7 +85,7 @@ def test_drop_item(world, room):
         Takeable(),
     )
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         Inventory(contents=[item._uid]),
         DropAction(item=item._uid),
     )
@@ -108,17 +102,11 @@ def test_can_not_take_item_from_other_room(world, room, item):
     world.add_system(TakeOrDrop(), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     other_room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity(
-        RoomPresence(room=other_room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=other_room._uid),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     world.update()
@@ -133,17 +121,11 @@ def test_can_not_take_item_from_other_room_exception(world, room, item):
     world.add_system(TakeOrDrop(throw_exc=True), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     other_room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity(
-        RoomPresence(room=other_room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=other_room._uid),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     with pytest.raises(ItemNotInRoom):
@@ -155,7 +137,7 @@ def test_can_not_take_without_an_inventory(world, room, item):
     world.add_system(TakeOrDrop(), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         TakeAction(item=item._uid),
     )
     world.update()
@@ -169,7 +151,7 @@ def test_can_not_take_without_an_inventory_exception(world, room, item):
     world.add_system(TakeOrDrop(throw_exc=True), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         TakeAction(item=item._uid),
     )
     with pytest.raises(ActorHasNoInventory):
@@ -181,8 +163,8 @@ def test_can_not_take_nonexistant_item(world, room):
     world.add_system(TakeOrDrop(), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         TakeAction(item=UID()),
     )
     world.update()
@@ -195,8 +177,8 @@ def test_can_not_take_nonexistant_item_exception(world, room):
     world.add_system(PerceiveRoom(), 0)
     world.add_system(TakeOrDrop(throw_exc=True), 1)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         TakeAction(item=UID()),
     )
     with pytest.raises(NoSuchUID):
@@ -208,8 +190,8 @@ def test_can_not_drop_item_that_actor_does_not_have(world, room, item):
     world.add_system(TakeOrDrop(), 1)
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         DropAction(item=item._uid),
     )
     world.update()
@@ -223,8 +205,8 @@ def test_can_not_drop_item_that_actor_does_not_have_exception(world, room, item)
     world.add_system(PerceiveRoom(), 0)
     world.add_system(TakeOrDrop(throw_exc=True), 1)
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         DropAction(item=item._uid),
     )
     with pytest.raises(ItemNotInInventory):
@@ -237,11 +219,11 @@ def can_not_take_untakeable_item(world, room):
     world.add_system(PerceiveRoom(), 2, add_duplicates=True)
 
     item =  world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
     )
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     world.update()
@@ -256,11 +238,11 @@ def can_not_take_untakeable_item_exception(world, room):
     world.add_system(TakeOrDrop(throw_exc=True), 1)
 
     item =  world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
     )
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
-        Inventory(contents=[]),
+        RoomPresence(room=room._uid),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     with pytest.raises(NotTakeable):
@@ -274,7 +256,7 @@ def can_not_drop_untakeable_item(world, room):
 
     item =  world.create_entity()
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         Inventory(contents=[item._uid]),
         DropAction(item=item._uid),
     )
@@ -291,7 +273,7 @@ def can_not_drop_untakeable_item_exception(world, room):
 
     item =  world.create_entity()
     actor = world.create_entity(
-        RoomPresence(room=room._uid, presences=[]),
+        RoomPresence(room=room._uid),
         Inventory(contents=[item._uid]),
         DropAction(item=item._uid),
     )
@@ -308,7 +290,7 @@ def test_can_not_take_from_the_void(world):
         Takeable(),
     )
     actor = world.create_entity(
-        Inventory(contents=[]),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     world.update()
@@ -325,7 +307,7 @@ def test_can_not_take_from_the_void_exception(world):
         Takeable(),
     )
     actor = world.create_entity(
-        Inventory(contents=[]),
+        Inventory(),
         TakeAction(item=item._uid),
     )
     with pytest.raises(ActorNotInRoom):

@@ -17,18 +17,11 @@ def test_creation(world):
     world.add_system(PerceiveRoom(), 0)
 
     room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     world.update()
@@ -63,27 +56,14 @@ def test_change_room(world):
     other_room = world.create_entity()
 
     room.add_component(
-        Room(
-            adjacent=[other_room._uid],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(adjacent=[other_room._uid]),
     )
     other_room.add_component(
-        Room(
-            adjacent=[room._uid],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(adjacent=[room._uid]),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     world.update()
@@ -125,31 +105,21 @@ def test_mutual_perception(world):
     room.add_component(
         Room(
             adjacent=[other_room._uid],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
         ),
     )
     other_room.add_component(
         Room(
             adjacent=[room._uid],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
         ),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     other_actor = world.create_entity(
         RoomPresence(
             room=other_room._uid,
-            presences=[],
         ),
     )
 
@@ -187,13 +157,7 @@ def test_is_in_room(world):
 
     # A room, and an actor and an item in the roomless void.
     room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity()
     item = world.create_entity()
@@ -206,7 +170,6 @@ def test_is_in_room(world):
     actor.add_component(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     world.update()
@@ -219,7 +182,6 @@ def test_is_in_room(world):
     item.add_component(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     world.update()
@@ -233,27 +195,14 @@ def test_cant_change_to_non_adjacent_room(world):
 
     # Two connected rooms, an actor in each
     room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     other_room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
         ChangeRoomAction(
             room=other_room._uid,
@@ -271,18 +220,11 @@ def test_cant_change_to_current_room(world):
     world.add_system(ChangeRoom(throw_exc=True), 0)
     world.add_system(PerceiveRoom(), 1)
     room = world.create_entity(
-        Room(
-            adjacent=[],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
-        ),
+        Room(),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
         ChangeRoomAction(
             room=room._uid,
@@ -303,16 +245,11 @@ def test_can_change_to_current_room(world):
     room.add_component(
         Room(
             adjacent=[room._uid],
-            presences=[],
-            arrived=[],
-            continued=[],
-            gone=[],
         ),
     )
     actor = world.create_entity(
         RoomPresence(
             room=room._uid,
-            presences=[],
         ),
     )
     # Let's update to have a clean room state.

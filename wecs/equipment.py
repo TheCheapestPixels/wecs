@@ -1,4 +1,5 @@
 from typing import List
+from dataclasses import field
 
 from wecs.core import Component
 from wecs.core import System
@@ -14,7 +15,7 @@ from wecs.inventory import is_in_inventory
 @Component()
 class Equipment:
     # Contains entities with Slot component
-    slots: List[UID]
+    slots: List[UID] = field(default_factory=list)
 
 
 @Component()
@@ -111,7 +112,7 @@ def unequip(slot, target, entity, world):
     if target.has_component(Room):
         slot_cmpt.content = None
         item = world.get_entity(item_uid)
-        item.add_component(RoomPresence(room=target._uid, presences=[]))
+        item.add_component(RoomPresence(room=target._uid))
     elif target.has_component(Inventory):
         inventory = target.get_component(Inventory)
         slot_cmpt.content = None

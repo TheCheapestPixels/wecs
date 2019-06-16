@@ -1,10 +1,12 @@
+from dataclasses import field
+
 from wecs.core import Component, System, UID, NoSuchUID, and_filter
 from wecs.rooms import RoomPresence
 
 
 @Component()
 class Inventory:
-    contents: list
+    contents: list = field(default_factory=list)
 
 
 @Component()
@@ -118,7 +120,7 @@ def drop(item, entity):
     inventory = entity.get_component(Inventory).contents
     idx = inventory.index(item._uid)
     del inventory[idx]
-    item.add_component(RoomPresence(room=room_uid, presences=[]))
+    item.add_component(RoomPresence(room=room_uid))
 
 
 class TakeOrDrop(System):

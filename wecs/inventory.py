@@ -1,4 +1,4 @@
-from wecs.core import Component, System, UID, and_filter
+from wecs.core import Component, System, UID, NoSuchUID, and_filter
 from wecs.rooms import RoomPresence
 
 
@@ -22,67 +22,86 @@ class DropAction:
     item: UID
 
 
-def is_in_inventory(item, entity):
+class ItemNotInRoom(Exception): pass
+class ItemNotInInventory(Exception): pass
+class ActorHasNoInventory(Exception): pass
+class ActorNotInRoom(Exception): pass
+class NotTakeable(Exception): pass
+
+
+def is_in_inventory(item, entity, throw_exc=False):
     # If I have an inventory...
     if not entity.has_component(Inventory):
+        if throw_exc:
+            raise ActorHasNoInventory
         return False
     inventory = entity.get_component(Inventory).contents
 
     # ...and the item is in it...
     if item._uid not in inventory:
+        if throw_exc:
+            raise ItemNotInInventory
         return False
 
     # ...then it... is in the inventory.
     return True
 
 
-def can_take(item, entity):
+def can_take(item, entity, throw_exc=False):
     # If I have an inventory...
     if not entity.has_component(Inventory):
-        print("{} has no inventory.".format(name))
+        if throw_exc:
+            raise ActorHasNoInventory
         return False
     inventory = entity.get_component(Inventory).contents
 
     # ...and I am somewhere...
     if not entity.has_component(RoomPresence):
-        print("Can't take objects from the roomless void.")
+        if throw_exc:
+            raise ActorNotInRoom
         return False
     presence = entity.get_component(RoomPresence)
 
     # ...and there is also an item there...
     if not item._uid in presence.presences:
-        print("Item is not in the same room.")
+        if throw_exc:
+            raise ItemNotInRoom
         return False
 
     # ...that can be taken...
     if not item.has_component(Takeable):
-        print("That can't be taken.")
+        if throw_exc:
+            raise NotTakeable
         return False
 
     # ...then the item can be taken.
     return True
 
 
-def can_drop(item, entity):
+def can_drop(item, entity, throw_exc=False):
     # If I have an inventory...
     if not entity.has_component(Inventory):
-        print("{} has no inventory.".format(name))
+        if throw_exc:
+            raise ActorHasNoInventory
         return False
     inventory = entity.get_component(Inventory).contents
 
     # ...with an item...
     if item._uid not in inventory:
-        print("Item is not in inventory anymore.")
+        if throw_exc:
+            raise ItemNotInInventory
         return False
 
     # ...that can be dropped...
     if not item.has_component(Takeable):
-        print("That can't be dropped.")
+        if throw_exc:
+            raise NotTakeable
         return False
 
     # ...and there is somewhere to drop it into, ...
     if not entity.has_component(RoomPresence):
-        print("Can't drop objects into the roomless void.")
+        if throw_exc:
+            raise ActorNotInRoom
         return False
 
     # ...then drop it like it's hot, drop it like it's hot.
@@ -110,12 +129,17 @@ class TakeOrDrop(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['take']:
-            item = self.world.get_entity(entity.get_component(TakeAction).item)
+            action = entity.get_component(TakeAction)
+            try:
+                item = self.world.get_entity(action.item)
+                if can_take(item, entity, self.throw_exc):
+                    take(item, entity)
+            except NoSuchUID:
+                if self.throw_exc:
+                    raise
             entity.remove_component(TakeAction)
-            if can_take(item, entity):
-                take(item, entity)
         for entity in entities_by_filter['drop']:
             item = self.world.get_entity(entity.get_component(DropAction).item)
             entity.remove_component(DropAction)
-            if can_drop(item, entity):
+            if can_drop(item, entity, self.throw_exc):
                 drop(item, entity)

@@ -325,8 +325,7 @@ present. This leads to easy management of the system:
 # TODO
 
 * Tests
-  * `wecs.rooms`
-  * `wecs.inventory`
+  * `wecs.equipment`
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?
   * Does removing entities affect the currently running system?
@@ -335,11 +334,10 @@ present. This leads to easy management of the system:
     * `entity = world[entity_uid]`
     * `entity = other_entity.get_component(Reference).uid`
     * `component = entity[Reference]`
-  * Unique `Components`
+  * Unique `Components`; Only one per type in the world at any given time, to
+    be tested between removing old and adding new components?
   * Archetypes: Make it easy to compose typical entities
-* rpg
-  * Refactor `Action` out of `magic.py`
-  * Add slotted inventory
+  * De-/serialize world state
 * panda3d-pong
   * Hoist `Components` / `Systems` into `panda3d.py` where applicable
 * panda3d

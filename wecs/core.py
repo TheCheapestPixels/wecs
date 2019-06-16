@@ -144,7 +144,8 @@ def or_filter(types_and_filters):
 
 
 class System:
-    def __init__(self):
+    def __init__(self, throw_exc=False):
+        self.throw_exc = throw_exc
         self.filter_names = {
             filter_func: filter_name
             for filter_name, filter_func in self.entity_filters.items()
@@ -218,8 +219,8 @@ class World:
         del self.entities_by_uid[uid]
         self.entities.remove(entity)
 
-    def add_system(self, system, sort):
-        if self.has_system(type(system)):
+    def add_system(self, system, sort, add_duplicates=False):
+        if self.has_system(type(system)) and not add_duplicates:
             raise KeyError("System of that type already on world.")
         if sort in self.systems:
             raise KeyError("sort already in use.")

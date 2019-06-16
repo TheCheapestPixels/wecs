@@ -22,13 +22,24 @@ class ChangeRoomAction:
     room: UID # Room to change to
 
 
-def is_in_room(item, entity):
+class EntityNotInARoom(Exception): pass
+class ItemNotInARoom(Exception): pass
+class RoomsNotAdjacent(Exception): pass
+
+
+def is_in_room(item, entity, throw_exc=False):
     if not entity.has_component(RoomPresence):
-        return False
+        if throw_exc:
+            raise EntityNotInARoom
+        else:
+            return False
     presence = entity.get_component(RoomPresence)
 
     if item._uid not in presence.presences:
-        return False
+        if throw_exc:
+            raise ItemNotInARoom
+        else:
+            return False
 
     return True
 
@@ -86,7 +97,8 @@ class ChangeRoom(System):
             target = entity.get_component(ChangeRoomAction).room
 
             if target not in room.get_component(Room).adjacent:
-                print("Target room is not adjacent.")
+                if self.throw_exc:
+                    raise RoomsNotAdjacent
             else:
                 entity.get_component(RoomPresence).room = target
 

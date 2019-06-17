@@ -1,8 +1,14 @@
+from panda3d.core import Vec3
+from panda3d.core import NodePath
+
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 
-
 from wecs.core import World
+from wecs.core import Component
+from wecs.core import System
+from wecs.core import and_filter
+
 
 class ECSShowBase(ShowBase):
     def __init__(self, *args, **kwargs):
@@ -22,3 +28,45 @@ class ECSShowBase(ShowBase):
     def run_system(self, system):
         base.ecs_world.update_system(system)
         return Task.cont
+
+
+@Component()
+class Model:
+    model_name: str
+
+
+@Component()
+class Scene:
+    root: NodePath
+
+
+@Component()
+class Position:
+    value: Vec3
+
+
+class LoadModels(System):
+    entity_filters = {
+        'model': and_filter([Model, Position, Scene]),
+    }
+
+    # TODO
+    # Only Model is needed for loading, which then could be done
+    # asynchronously.
+    def init_entity(self, filter_name, entity):
+        # Load
+        model_name = entity.get_component(Model).model_name
+        model = base.loader.load_model(model_name)
+        entity.get_component(Model).node = model
+
+        # Add to scene under a new
+        model.reparent_to(entity.get_component(Scene).root)
+
+    # TODO
+    # Destroy node if and only if the Model is removed.
+    def destroy_entity(self, filter_name, entity, component):
+        # Remove from scene
+        if isinstance(component, Model):
+            component.node.destroy_node()
+        else:
+            entity.get_component(Model).node.destroy_node()

@@ -1,3 +1,5 @@
+from dataclasses import field
+
 from wecs.core import Component, System, and_filter, or_filter
 
 from aging import Age
@@ -8,7 +10,8 @@ from lifecycle import Health, Alive, Dying, Dead, Undead
 class Mana:
     max_mana: int
     mana: int
-    spells_ready: list # Currently castable spells
+    # Currently castable spells
+    spells_ready: list = field(default_factory=list)
 
 
 # Spells

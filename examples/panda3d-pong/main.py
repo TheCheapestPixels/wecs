@@ -2,13 +2,19 @@
 
 import sys
 
-from panda3d.core import Vec3, Point3, VBase3
+from panda3d.core import Vec3
+from panda3d.core import Point3
+from panda3d.core import VBase3
 
-from wecs.core import World, Component, System
+from wecs.core import World
+from wecs.core import Component
+from wecs.core import System
 from wecs.panda3d import ECSShowBase as ShowBase
+from wecs import panda3d
 
-import systems
-import components
+import movement
+import paddles
+import ball
 
 
 if __name__ == '__main__':
@@ -18,48 +24,49 @@ if __name__ == '__main__':
     base.cam.set_pos(0, -5, 0)
 
     system_types = [
-        systems.LoadModels,
-        systems.ResizePaddles,
-        systems.GivePaddlesMoveCommands,
-        systems.MoveObject,
-        systems.PaddleTouchesBoundary,
-        systems.BallTouchesBoundary,
-        systems.BallTouchesPaddleLine,
-        systems.StartBallMotion,
+        panda3d.LoadModels,
+        paddles.ResizePaddles,
+        paddles.GivePaddlesMoveCommands,
+        movement.MoveObject,
+        paddles.PaddleTouchesBoundary,
+        ball.BallTouchesBoundary,
+        ball.BallTouchesPaddleLine,
+        ball.StartBallMotion,
     ]
     for sort, system_type in enumerate(system_types):
         base.add_system(system_type(), sort)
 
     # Paddles and ball
-    paddle_left = base.ecs_world.create_entity()
-    paddle_left.add_component(components.Position(value=Vec3(-1.1, 0, 0)))
-    paddle_left.add_component(components.Movement(value=Vec3(0, 0, 0)))
-    paddle_left.add_component(components.Model(
-        model_name='paddle.bam',
-    ))
-    paddle_left.add_component(components.Scene(root=base.aspect2d))
-    paddle_left.add_component(components.Paddle(player=0, size=0.3, speed=0.2))
+    paddle_left = base.ecs_world.create_entity(
+        panda3d.Model(model_name='paddle.bam'),
+        panda3d.Scene(root=base.aspect2d),
+        panda3d.Position(value=Vec3(-1.1, 0, 0)),
+        movement.Movement(value=Vec3(0, 0, 0)),
+        paddles.Paddle(
+            player=0,
+            size=0.3,
+            speed=0.2,
+        ),
+    )
 
-    paddle_right = base.ecs_world.create_entity()
-    paddle_right.add_component(components.Position(value=Point3(1.1, 0, 0)))
-    paddle_right.add_component(components.Movement(value=Vec3(0, 0, 0)))
-    paddle_right.add_component(components.Model(
-        model_name='paddle.bam',
-    ))
-    paddle_right.add_component(components.Scene(root=base.aspect2d))
-    paddle_right.add_component(components.Paddle(
-        player=1,
-        size=0.3,
-        speed=0.2,
-    ))
+    paddle_right = base.ecs_world.create_entity(
+        panda3d.Model(model_name='paddle.bam'),
+        panda3d.Scene(root=base.aspect2d),
+        panda3d.Position(value=Point3(1.1, 0, 0)),
+        movement.Movement(value=Vec3(0, 0, 0)),
+        paddles.Paddle(
+            player=1,
+            size=0.3,
+            speed=0.2,
+        ),
+    )
 
-    ball = base.ecs_world.create_entity()
-    ball.add_component(components.Position(value=Point3(0, 0, 0)))
-    ball.add_component(components.Model(
-        model_name='ball.bam',
-    ))
-    ball.add_component(components.Scene(root=base.aspect2d))
-    ball.add_component(components.Ball())
-    ball.add_component(components.Resting())
+    ball = base.ecs_world.create_entity(
+        panda3d.Position(value=Point3(0, 0, 0)),
+        panda3d.Model(model_name='ball.bam'),
+        panda3d.Scene(root=base.aspect2d),
+        ball.Ball(),
+        ball.Resting(),
+    )
 
     base.run()

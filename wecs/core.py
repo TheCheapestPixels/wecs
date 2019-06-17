@@ -158,7 +158,7 @@ class System:
         pass
 
     def update(self, filtered_entities):
-        super().update(self, filtered_entities)
+        pass
 
     def get_component_dependencies(self):
         dependencies = set()

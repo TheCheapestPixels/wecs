@@ -82,6 +82,24 @@ class Entity:
         for component in set(self.get_components()):
             self.remove_component()
 
+
+    def __setitem__(self, component_type, component):
+        assert isinstance(component, component_type)
+        return self.add_component(component)
+
+
+    def __getitem__(self, component_type):
+        return self.get_component(component_type)
+
+
+    def __delitem__(self, component_type):
+        return self.remove_component(component_type)
+
+
+    def __contains__(self, component_type):
+        return self.has_component(component_type)
+
+
     def __repr__(self):
         names = [repr(c) for c in self.components]
         return "<Entity ({})>".format(', '.join(names))

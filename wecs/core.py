@@ -39,13 +39,19 @@ class Entity:
         self._new_components[type(component)] = component
 
     def get_components(self):
-        return self.components
+        all_components = set()
+        all_components.update(self.components)
+        all_components.update(set(self._new_components.values()))
+        return  all_components
 
     def get_component(self, component_type):
+        all_components = set()
+        all_components.update(self.components)
+        all_components.update(set(self._new_components.values()))
         component = list(
             filter(
                 lambda c: isinstance(c, component_type),
-                self.components,
+                all_components,
             )
         )
         if not component:
@@ -54,7 +60,8 @@ class Entity:
         return component[0]
 
     def has_component(self, component_type):
-        return any([type(c) is component_type for c in self.components])
+        return any([type(c) is component_type for c in self.get_components()])
+
 
     def remove_component(self, component_type):
         if not self._new_components and not self._dropped_components:

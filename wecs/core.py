@@ -157,7 +157,7 @@ class System:
     def destroy_entity(self, filter_name, entity, components_by_type):
         pass
 
-    def update(self, filtered_entities):
+    def update(self, entities_by_filter):
         pass
 
     def get_component_dependencies(self):
@@ -285,15 +285,18 @@ class World:
         self.entities_that_update_components = []
 
     def update_entity_filters(self, entities):
+        # Each filter now takes a look at each modified entity.
         for filter_func, entities_in_filter in self.entity_filters.items():
             for entity in entities:
                 is_in_filter = entity in entities_in_filter
                 should_be_in_filter = filter_func(entity)
+                # If one newly fits the filter, add it and init it.
                 if should_be_in_filter and not is_in_filter:
                     entities_in_filter.add(entity)
                     system = self.system_of_filter[filter_func]
                     filter_name = system.filter_names[filter_func]
                     system.init_entity(filter_name, entity)
+                # But if it has dropped out, remove it and destroy.
                 elif is_in_filter and not should_be_in_filter:
                     entities_in_filter.remove(entity)
                     system = self.system_of_filter[filter_func]

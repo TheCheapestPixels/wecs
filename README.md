@@ -1,27 +1,16 @@
 # WECS
 
 WECS stands for World, Entities, Components, Systems, and is an implementation
-of an ECS system. For a detailed description, see the Design chapter below.
+of an ECS system.
 
-
-## Bob the Wizard
-
-WECS comes with an example of a not-totally-trivial game in the form of a little
-RPG.
-
-Bob the Wizard is alive. Bob is aging. When Bob gets too old, his health will
-deteriorate. If his health is gone, he dies. Bob knows a few spells. He knows
-Rejuvenation and Restore Health, which make him younger and healthier, keeping
-him alive, but they cost mana, which Bob gets only very slowly.
-
-But there's something about Bob. Bob really doesn't want to die. Bob knows the
-spell Lichdom, and one day, he may be able to cast it...
-
-
-# Design
 
 ## ECS definition
 
+* `World`
+  * has a set of `Entities`
+  * has a set of `Systems`
+  * causes `Systems` to process their relevant `Entities` in an appropriate
+    running order
 * `Entities`
   * have a set of `Components`
   * are, with regard to how they are processed, typeless
@@ -30,28 +19,97 @@ spell Lichdom, and one day, he may be able to cast it...
   * have a type
 * `Systems`
   * have filters which have
-    * a name identifying
+    * a name identifying them
     * a function testing for the presence of component types
   * process `Entities` when
     * a `Component` is added to the entity so that it now satisfies a filter.
       The System's `init_entity(filter_name, entity)` is called. This allows
       for setup, i.e. loading models into Panda3D's scene graph.
     * a `Component` is removed, so that the entity now does not satisfy a filter
-      anymore. `destroy_component(filter_name, entity, component)` is called, .
-      This allows for necessary breakdown. Do note that the component that has
-      been removed is already not on the entity anymore, which is why it is
-      passed as an extra argument.
+      anymore. `destroy_entity(filter_name, entity, components_by_type)` is
+      called. This allows for necessary breakdown. Do note that the components
+      that have been removed are already not on the entity anymore, which is why
+      they are passed as an extra argument.
     * the `System` is added to or removed from the `World`. This calls
       `init_entity()` or `destroy_entity()` respectively.
     * the `System`'s game logic is being run, caused by
       * `World.update()`
       * a task that is created when the `System` is added to the `World`
-* `World`
-  * has a set of `Entities`
-  * has a set of `Systems`
-  * causes `Systems` to process their relevant `Entities` in an appropriate
-    running order
 
+
+## API
+
+NOTE: `wecs/examples/minimal/main.py` offers a more complete overview of the
+API, including systems, but doesn't incorporate the syntactic sugar mentioned
+below yet.
+
+Create a world, an entity, a component, and tie it all together:
+```
+from wecs.core import World, Component
+
+
+@Component()
+class Foo:
+  pass
+
+
+world = World()
+entity = world.create_entity()
+foo_component = Foo()
+entity.add_component(foo_component)
+```
+
+Entity creation can also take components to be added as arguments:
+```
+world.create_entity(Foo(), ...)
+```
+
+Getting and removing components, and checking for their presence:
+```
+is_present = entity.has_component(Foo)
+foo_component = entity.get_component(Foo)
+entity.remove_component(Foo)
+```
+
+A bit of syntactic sugar later:
+```
+entity[Foo] = foo_component
+is_present = Foo in entity
+foo_component = entity[Foo]
+del entity[Foo]
+```
+
+The `Foo` in `entity[Foo] = foo_component` is something that doesn't have to be
+given to `entity.add_component(foo_component)`, since its type is known. It's
+needed here merely because `entity[] = foo_component` isn't syntactically valid
+Python.
+
+
+## Deferred `Component` addition / removal
+
+Do note that additions / removals of components are deferred, and only take
+effect once `world.flush_component_updates()` is called, which happens
+automatically when (before) a `System` is being run. Thus you can let a `System`
+process one entity, let that processing cause the removal of a component of
+another entity, then let the `System` go on to do the same the other way
+around, even if the system depends on the presence of the now "removed"
+component. That way, when processing each `Entity`, the system is presented
+with the state (of component presence) from when the system is started.
+
+However, if you *add* components, on one hand, they won't e added to any
+filter immediately, just like they won't be removed by dropping a component
+(since those updates are deferred). But you *can* still access them through
+`entity.has_component(ComponentType)` and
+`entity.get_component(ComponentType)`, as those functions use the sets of both
+existing and newly added components.
+
+Do also note that none of this magic holds true for the values of state;
+You're on your own in that regard. Splitting systems into "This can be done",
+"This is being done", and "Now we're cleaning up weird states that could have
+come about" seems to be a workable pattern.
+
+
+# Design questions and arguments
 
 ## User story: Need for AND- and OR-based component selection
 
@@ -260,6 +318,9 @@ staggering amount of per-player content of the game world.
 
 ## Implementational detail: Systems threading
 
+CURRENT STATE: When a system is added, an `int` is provided. `world.update()`
+will run the task in order of ascending numbers.
+
 One advantage of ECSes seems to be parallelization. Systems can run in parallel
 as they are independent of each other. I think that that's Snake Oil, and I
 won't buy it that easily.
@@ -286,9 +347,6 @@ I have no idea how to square these with each other elegantly, though within
 Panda3D, the task manager can solve this. Long-running systems into separate
 task chains to run asynchronous, while "every frame" tasks are put into the
 default task chain.
-
-CURRENT STATE: When a system is added, an `int` is provided. `world.update()`
-will run the task in order of ascending numbers.
 
 
 ## Note: Component inheritance
@@ -333,7 +391,6 @@ present. This leads to easy management of the system:
   * API improvements
     * `entity = world[entity_uid]`
     * `entity = other_entity.get_component(Reference).uid`
-    * `component = entity[Reference]`
   * Unique `Components`; Only one per type in the world at any given time, to
     be tested between removing old and adding new components?
   * Archetypes: Make it easy to compose typical entities

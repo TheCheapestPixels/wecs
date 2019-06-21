@@ -1,3 +1,5 @@
+from dataclasses import field
+
 from panda3d.core import Vec3
 from panda3d.core import NodePath
 
@@ -16,6 +18,7 @@ class ECSShowBase(ShowBase):
         self.ecs_world = World()
 
     def add_system(self, system, sort):
+        print("Adding task")
         self.ecs_world.add_system(system, sort)
         task = base.task_mgr.add(
             self.run_system,
@@ -36,13 +39,18 @@ class Model:
 
 
 @Component()
+class Actor:
+    model_name: str
+
+
+@Component()
 class Scene:
     root: NodePath
 
 
 @Component()
 class Position:
-    value: Vec3
+    value: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
 
 
 class LoadModels(System):
@@ -56,11 +64,13 @@ class LoadModels(System):
     def init_entity(self, filter_name, entity):
         # Load
         model_name = entity.get_component(Model).model_name
+        print("Loading model {}".format(model_name))
         model = base.loader.load_model(model_name)
         entity.get_component(Model).node = model
 
         # Add to scene under a new
-        model.reparent_to(entity.get_component(Scene).root)
+        root = entity.get_component(Scene).root
+        model.reparent_to(root)
 
     # TODO
     # Destroy node if and only if the Model is removed.

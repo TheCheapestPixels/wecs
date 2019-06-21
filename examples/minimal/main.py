@@ -22,7 +22,8 @@ class Count(System):
         for entity in entities_by_filter['counts']:
             entity.get_component(Counter).value += 1
 
-# In this world, that is the case.
+# In this world, that is the case, and happens at time index 0 of the
+# frame.
 world.add_system(Count(), 0)
 
 # Let's make some time pass in the world.

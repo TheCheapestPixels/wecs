@@ -341,3 +341,9 @@ class World:
                 for filter_name, filter_func in system.entity_filters.items()
             }
             system.update(entities_by_filter)
+
+    def __getitem__(self, uid):
+        return self.get_entity(uid)
+
+    def __delitem__(self, uid):
+        return self.remove_entity(component_type)

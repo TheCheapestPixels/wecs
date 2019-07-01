@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name='wecs',
-    version='0.1.5dev',
+    version='0.1.6dev',
     description='An ECS (entity component system)',
     url='https://github.com/TheCheapestPixels/wecs',
     author='TheCheapestPixels',

@@ -1,0 +1,95 @@
+# NoClipFreeFloatCharacter (spectator mode)
+#   -Forward/Backward-
+#     Move in direction camera is at float_speed.
+#   -Left/Right-
+#       Strafe node left and right relative to camera at float_strafe.
+# FirstPersonInput
+
+
+# Jump
+# Crouch
+# Flying
+# Swimming
+# Walking
+#   -Mouse movement-
+#     FP: Rotate camera up and down, rotate node left and right.
+#     TP: Circle around node.
+#   -Forward/Backward-:
+#     Add/sub walk_accel to fwd_momentum untill walk_speed_max.
+#     Affects node in the direction of camera's Z-rotation
+#   -Left/Right-
+#     Add/sub walk_strafe_accel to strafe_momentum untill walk_strafe_max.
+#     Strafe left and right relative to camera's Z-rotation.
+#   -Crouch-
+#     Enters Crouching mode.
+#     A bool should determine wether it should be held or if it's toggled.
+#   -Sprint- with a stamina > 0
+#     Enters Sprinting mode.
+#   Fire ray ray from heels to floor:
+#     If not hit around soles:
+#       add gravity to fall_speed
+#   Else, touching the ground:
+#     ground_friction is added/subtracted from *_momentum.
+#     succesive_walljumps = 0
+#     fall_speed = 0
+#   If ground is sloped beyond a certain threshold, the body is pushed down the slope.
+# 
+# Crouching
+#   Same as walking, but the physics-body is scaled along Z and camera lowered so they don't exceed crouch_height.
+#   walk_speed_max is temporarely set to crouch_speed.
+# 
+# Sprinting
+#   Same as walking, but faster.
+#   Add/sub run_speed_acceleration from fwd_momentum logarithmically untill run_speed_maximum.
+#   Drains stamina by stamina_drain_sprint.
+#   If colliding with a shape below vault_height_max, trigger context vault
+# 
+# Jump
+#   Setting fall_speed to a negative value makes character jump.
+#   Up to jump_height_max, the longer jump is held the higher one jumps.
+#   fwd_momentum gets a small boost, jump_speed_accel.
+#   Take bite out of stamina, stamina_jump_drain.
+#   -Forward/Backward-
+#     Add/sub aircontrol to fwd_momentum.
+#   -Left/Right-
+#     Add/sub aircontrol to strafe_momentum.
+#   -Crouch-
+#     TODO: Move legs up to make yourself smaller?
+#   Fire 2 rays, one from from the scalp, one from the chin, towards the node's Z-rotation
+#     Enable climb context on collision with only the lower one.
+# 
+# 
+# Powerslide
+#   When foward, crouch and sprint are held after landing, and with high enough fwd_momentum, you enter powerslide mode.
+#   Ground_friction is set to a lower value, slide_friction, resulting in a sliding motion.
+#   When momentum is below crouch_speed it switches back to regular crouching mode.
+#   Stamina is drained stamina_drain_powerslide, higher then vanilla drain.
+#   Strafe speed is halved.
+# 
+# Wallrunning
+#   When
+#       fall_speed is outside some threshold
+#       fwd_momentum is above some threshold
+#       is colliding with wall to a side
+#       wall is sloped in some threshold (70-90 degrees?)
+#   you continue sprinting, and fall speed becomes (close to) zero
+#   Stamina is drained by stamina_drain_wallrunning, higher then vanilla drain
+#   fwd_momentum is drained by some amount
+#   Either triggered automatically or with -action-
+# 
+# Walljumping
+#   When
+#       fall_speed is outside some threshold
+#       is colliding with wall
+#       wall is sloped in some threshold (70-90 degrees?)
+#       this is not your Xth walljump
+# 
+#   You're allowed to Jump and *_momentum is mirrored from wall normal
+# 
+# Context Modes
+#   Some things are context sensitive, like vaulting over a chest-high wall or sitting on a chair.
+#   Usually triggered with -action-
+#   Ignore all input
+#   Play some character animation, possibly with a loop,
+#   Run some custom function
+#   Set new loc/rot when done?

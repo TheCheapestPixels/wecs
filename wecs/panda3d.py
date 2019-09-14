@@ -125,6 +125,8 @@ class LoadModels(System):
         if model.node is None:
             model.node = base.loader.load_model(model.model_name)
 
+        # Load hook
+        self.post_load_hook(model.node, entity)
         # Attach to PhysicsBody or Scene; former takes precedence.
         if PhysicsBody in entity:
             parent = entity[PhysicsBody].node
@@ -142,7 +144,10 @@ class LoadModels(System):
         else:
             entity.get_component(Model).node.destroy_node()
 
+    def post_load_hook(self, node, entity):
+        pass
 
+            
 # Bullet physics
 
 class SetUpPhysics(System):
@@ -274,6 +279,139 @@ class UpdateCameras(System):
 
 # Character controller
 
+from panda3d.core import CollisionTraverser
+from panda3d.core import CollisionHandlerQueue
+from panda3d.core import CollisionSphere
+from panda3d.core import CollisionNode
+
+
+@Component()
+class MoveChecker:
+    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
+    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+    moves: dict = field(default_factory=lambda:dict())
+    debug: bool = False
+
+
+class ClearMoveChecker(System):
+    entity_filters = {
+        'checkers': and_filter([MoveChecker]),
+    }
+
+    def init_entity(self, filter_name, entity):
+        checker = entity[MoveChecker]
+        if checker.debug:
+            checker.traverser.show_collisions(base.render)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['checkers']:
+            entity[MoveChecker].moves = {}
+
+
+@Component()
+class CharacterHull:
+    center: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    radius: float = 1.0
+    solid: CollisionSphere = None
+    node: NodePath = None
+    contacts: list = field(default_factory=list)
+    debug: bool = False
+
+
+class AddRemoveCharacterHull(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterHull,
+            Model,
+            MoveChecker,
+        ]),
+    }
+
+    def init_entity(self, filter_name, entity):
+        hull = entity[CharacterHull]
+        checker = entity[MoveChecker]
+        model = entity[Model]
+
+        hull.solid = CollisionSphere(hull.center, hull.radius)
+        hull.node = NodePath(CollisionNode("character_hull"))
+        hull.node.node().add_solid(hull.solid)
+        hull.node.reparent_to(entity[Model].node)
+        entity[MoveChecker].traverser.add_collider(hull.node, checker.queue)
+        hull.node.set_python_tag('collider', hull)
+        if hull.debug:
+            hull.node.show()
+
+    def destroy_entity(self, filter_name, entity, component):
+        if isinstance(component, MoveChecker):
+            checker = component
+        else:
+            checker = entity[MoveChecker]
+        if isinstance(component, CharacterHull):
+            hull = component
+        else:
+            hull = entity[CharacterHull]
+        checker.traverser.remove_collider(hull.node)
+        hull.solid.destroy()
+        hull.node.destroy()
+
+
+class CheckMovementSensors(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterHull,
+            Model,
+            MoveChecker,
+            Scene,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            entity[CharacterHull].contacts = []
+        for entity in entities_by_filter['character']:
+            checker = entity[MoveChecker]
+            checker.traverser.traverse(entity[Scene].node)
+            for entry in checker.queue.entries:
+                collider = entry.from_node.get_python_tag('collider')
+                collider.contacts.append(entry)
+
+
+@Component()
+class NullMovement:
+    pass
+
+
+class CheckNullMovement(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterHull,
+            MoveChecker,
+            NullMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            if entity[CharacterHull].contacts:
+                import pdb; pdb.set_trace()
+                print(len(entity[CharacterHull].contacts))
+            entity[MoveChecker].moves.update({
+                NullMovement: True,
+            })
+
+
+class PrintMovements(System):
+    entity_filters = {
+        'character': and_filter([
+            MoveChecker,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            print(entity[MoveChecker].moves)
+
+
 @Component()
 class CharacterController:
     heading: float = 0.0
@@ -344,21 +482,21 @@ class AcceptInput(System):
             character.heading = 0.0
             character.pitch = 0.0
 
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
-                character.move_y += 1
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
-                character.move_y -= 1
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.left()):
-                character.move_x -= 1
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
-                character.move_x += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
-                character.pitch += 1
+                character.move_y += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("s")):
-                character.pitch -= 1
+                character.move_y -= 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("a")):
-                character.heading += 1
+                character.move_x -= 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
+                character.move_x += 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
+                character.pitch += 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
+                character.pitch -= 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.left()):
+                character.heading += 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
 
             # if base.mouseWatcherNode.has_mouse():

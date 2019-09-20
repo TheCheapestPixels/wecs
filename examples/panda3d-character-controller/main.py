@@ -5,6 +5,7 @@ import sys
 from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import NodePath
+from panda3d.core import CollisionSphere
 
 from wecs.core import Component
 from wecs.panda3d import ECSShowBase as ShowBase
@@ -33,14 +34,16 @@ if __name__ == '__main__':
 
     system_types = [
         LoadMapsAndActors,
-        panda3d.AddRemoveCharacterHull,
         panda3d.DetermineTimestep,
-        panda3d.ClearMoveChecker,
+        # What movements *can* the character make right now?
         panda3d.CheckMovementSensors,
-        panda3d.CheckNullMovement,
-        #panda3d.PrintMovements,
+        # What movement does the player choose?
         panda3d.AcceptInput,
         panda3d.UpdateCharacter,
+        panda3d.PredictFalling,
+        panda3d.CheckCollisionSensors,
+        panda3d.ExecuteFalling,
+        panda3d.ExecuteMovement,
         panda3d.UpdateCameras,
     ]
     for sort, system_type in enumerate(system_types):
@@ -49,24 +52,33 @@ if __name__ == '__main__':
     character = base.ecs_world.create_entity(
         panda3d.Clock(clock=globalClock),
         panda3d.Position(value=Point3(0, 0, 0)),
-        # panda3d.Model(model_name='models/smiley'),
-        panda3d.Model(model_name='gal.bam'),
         # panda3d.Model(node=NodePath('spectator')),
+        panda3d.Model(model_name='models/smiley'),
+        # panda3d.Model(model_name='gal.bam'),
         panda3d.Scene(node=base.render),
         # Movement-related components
-        panda3d.MoveChecker(
-            debug=True,
+        panda3d.MovementSensors(
+            tag_name='movement_sensors',
+            # debug=True,
         ),
-        panda3d.CharacterHull(
-            center=Vec3(0.0, 0.0, 0.85),
-            radius=0.85,
-            debug=True,
+        panda3d.CollisionSensors(
+            solids={
+                'lifter': dict(
+                    shape=CollisionSphere,
+                    center=Vec3(0.0, 0.0, 0.0),
+                    radius=1.0,
+                    # debug=True,
+                ),
+            },
+            #debug=True,
         ),
-        panda3d.NullMovement(),
+        panda3d.FallingMovement(
+            #gravity=Vec3(0, 0, -1)
+        ),
         # Others
         panda3d.CharacterController(
-            max_move_x=100,
-            max_move_y=100,
+            max_move_x=35,
+            max_move_y=35,
         ),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

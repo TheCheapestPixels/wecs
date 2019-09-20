@@ -286,130 +286,14 @@ from panda3d.core import CollisionNode
 
 
 @Component()
-class MoveChecker:
+class MovementSensors:
+    tag_name: str = 'collision_sensors' # FIXME: Symbolify
+    solids: dict = field(default_factory=lambda:dict())
+    contacts: dict = field(default_factory=lambda:dict())
     traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
     queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
     moves: dict = field(default_factory=lambda:dict())
     debug: bool = False
-
-
-class ClearMoveChecker(System):
-    entity_filters = {
-        'checkers': and_filter([MoveChecker]),
-    }
-
-    def init_entity(self, filter_name, entity):
-        checker = entity[MoveChecker]
-        if checker.debug:
-            checker.traverser.show_collisions(base.render)
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['checkers']:
-            entity[MoveChecker].moves = {}
-
-
-@Component()
-class CharacterHull:
-    center: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    radius: float = 1.0
-    solid: CollisionSphere = None
-    node: NodePath = None
-    contacts: list = field(default_factory=list)
-    debug: bool = False
-
-
-class AddRemoveCharacterHull(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterHull,
-            Model,
-            MoveChecker,
-        ]),
-    }
-
-    def init_entity(self, filter_name, entity):
-        hull = entity[CharacterHull]
-        checker = entity[MoveChecker]
-        model = entity[Model]
-
-        hull.solid = CollisionSphere(hull.center, hull.radius)
-        hull.node = NodePath(CollisionNode("character_hull"))
-        hull.node.node().add_solid(hull.solid)
-        hull.node.reparent_to(entity[Model].node)
-        entity[MoveChecker].traverser.add_collider(hull.node, checker.queue)
-        hull.node.set_python_tag('collider', hull)
-        if hull.debug:
-            hull.node.show()
-
-    def destroy_entity(self, filter_name, entity, component):
-        if isinstance(component, MoveChecker):
-            checker = component
-        else:
-            checker = entity[MoveChecker]
-        if isinstance(component, CharacterHull):
-            hull = component
-        else:
-            hull = entity[CharacterHull]
-        checker.traverser.remove_collider(hull.node)
-        hull.solid.destroy()
-        hull.node.destroy()
-
-
-class CheckMovementSensors(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterHull,
-            Model,
-            MoveChecker,
-            Scene,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            entity[CharacterHull].contacts = []
-        for entity in entities_by_filter['character']:
-            checker = entity[MoveChecker]
-            checker.traverser.traverse(entity[Scene].node)
-            for entry in checker.queue.entries:
-                collider = entry.from_node.get_python_tag('collider')
-                collider.contacts.append(entry)
-
-
-@Component()
-class NullMovement:
-    pass
-
-
-class CheckNullMovement(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterHull,
-            MoveChecker,
-            NullMovement,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            if entity[CharacterHull].contacts:
-                import pdb; pdb.set_trace()
-                print(len(entity[CharacterHull].contacts))
-            entity[MoveChecker].moves.update({
-                NullMovement: True,
-            })
-
-
-class PrintMovements(System):
-    entity_filters = {
-        'character': and_filter([
-            MoveChecker,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            print(entity[MoveChecker].moves)
 
 
 @Component()
@@ -422,14 +306,97 @@ class CharacterController:
     max_pitch: float= 90.0
     max_move_x: float = 100.0
     max_move_y: float = 100.0
+    translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
 
 
-# FIXME: It should be possible to use a clock on another entity
+@Component()
+class FallingMovement:
+    gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
+
+
+@Component()
+class CollisionSensors:
+    tag_name: str = 'collision_sensors' # FIXME: Symbolify
+    solids: dict = field(default_factory=lambda:dict())
+    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
+    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+    debug: bool = False
+
+
+#
+
+class CollisionSystem(System):
+    def init_sensors(self, sensors, scene, model):
+        if sensors.debug:
+            sensors.traverser.show_collisions(scene.node)
+        
+        for tag, solid in sensors.solids.items():
+            solid['tag'] = tag
+            if solid['shape'] is CollisionSphere:
+                self.add_sphere(solid, sensors, model)
+
+    def add_sphere(self, solid, sensors, model):
+        shape = CollisionSphere(solid['center'], solid['radius'])
+        node = NodePath(CollisionNode(sensors.tag_name))
+        node.node().add_solid(shape)
+        node.reparent_to(model.node)
+        sensors.traverser.add_collider(node, sensors.queue)
+        node.set_python_tag(sensors.tag_name, solid['tag'])
+        solid['node'] = node
+        if sensors.debug:
+            node.show()
+
+    # def destroy_entity(self, filter_name, entity, component):
+    #     if isinstance(component, MoveChecker):
+    #         checker = component
+    #     else:
+    #         checker = entity[MoveChecker]
+    #     if isinstance(component, CharacterHull):
+    #         hull = component
+    #     else:
+    #         hull = entity[CharacterHull]
+    #     sensors.traverser.remove_collider(hull.node)
+    #     hull.solid.destroy()
+    #     hull.node.destroy()
+
+    def run_sensors(self, sensors, scene):
+        sensors.contacts = {tag: [] for tag in sensors.solids.keys()}
+        sensors.traverser.traverse(scene.node)
+        sensors.queue.sort_entries()
+        sensors.queue.sort_entries()
+        for entry in sensors.queue.entries:
+            tag = entry.from_node.get_python_tag(sensors.tag_name)
+            sensors.contacts[tag].append(entry)
+
+
+class CheckMovementSensors(CollisionSystem):
+    entity_filters = {
+        'sensors': and_filter([
+            MovementSensors,
+            Model,
+            Scene,
+        ]),
+    }
+
+    def init_entity(self, filter_name, entity):
+        sensors = entity[MovementSensors]
+        scene = entity[Scene]
+        model = entity[Model]
+        self.init_sensors(sensors, scene, model)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['sensors']:
+            sensors = entity[MovementSensors]
+            scene = entity[Scene]
+            self.run_sensors(sensors, scene)
+
+
 class UpdateCharacter(System):
     entity_filters = {
         'character': and_filter([
-            Model,
             CharacterController,
+            Model,
             Clock,
         ]),
     }
@@ -439,17 +406,140 @@ class UpdateCharacter(System):
             dt = entity[Clock].timestep
             controller = entity[CharacterController]
             model = entity[Model]
-            model.node.set_pos(
-                model.node,
+
+            controller.translation = Vec3(
                 controller.move_x * controller.max_move_x * dt,
                 controller.move_y * controller.max_move_y * dt,
-                0
+                0,
             )
-            model.node.set_h(model.node.get_h() + controller.heading * controller.max_heading * dt)
+            
+            heading_delta = controller.heading * controller.max_heading * dt
             preclamp_pitch = model.node.get_p() + controller.pitch * controller.max_pitch * dt
-            pitch = max(min(preclamp_pitch, 89.9), -89.9)
-            model.node.set_p(pitch)
+            clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
+            pitch_delta = clamped_pitch - preclamp_pitch
+            controller.rotation = Vec3(
+                heading_delta,
+                pitch_delta,
+                0,
+            )
 
+
+class PredictFalling(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            CollisionSensors,
+            FallingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            scene = entity[Scene]
+            clock = entity[Clock]
+
+            gravity = entity[FallingMovement].gravity * clock.timestep
+            local_gravity = model.node.get_relative_vector(
+                scene.node,
+                gravity,
+            )
+
+            sensors = entity[CollisionSensors]
+            controller = entity[CharacterController]
+            movement = controller.translation
+            if 'lifter' in sensors.solids.keys():
+                lifter = sensors.solids['lifter']
+                node = lifter['node']
+                node.set_pos(lifter['center'] + movement + local_gravity)
+
+
+class CheckCollisionSensors(CollisionSystem):
+    entity_filters = {
+        'sensors': and_filter([
+            CollisionSensors,
+            Model,
+            Scene,
+        ]),
+    }
+
+    def init_entity(self, filter_name, entity):
+        sensors = entity[CollisionSensors]
+        scene = entity[Scene]
+        model = entity[Model]
+        self.init_sensors(sensors, scene, model)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['sensors']:
+            sensors = entity[CollisionSensors]
+            scene = entity[Scene]
+            self.run_sensors(sensors, scene)
+
+
+class ExecuteFalling(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            CollisionSensors,
+            FallingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            sensors = entity[CollisionSensors]
+            controller = entity[CharacterController]
+            model = entity[Model]
+            scene = entity[Scene]
+            clock = entity[Clock]
+
+            # FIXME: This duplicates the prediction. We know that already.
+            gravity = entity[FallingMovement].gravity * clock.timestep
+            local_gravity = model.node.get_relative_vector(
+                scene.node,
+                gravity,
+            )
+
+            # if len(sensors.contacts['lifter']) > 0:
+            #     print(len(sensors.contacts['lifter']))
+            #     for contact in sensors.contacts['lifter']:
+            #         lifter = sensors.solids['lifter']['node']
+            #         contact_point = contact.get_surface_point(lifter)
+            #         import pdb; pdb.set_trace()
+            #         falling_component = local_gravity
+            if len(sensors.contacts['lifter']) > 0:
+                contact = sensors.contacts['lifter'][0]
+                lifter = sensors.solids['lifter']['node']
+                center = sensors.solids['lifter']['center']
+                radius = sensors.solids['lifter']['radius']
+                contact_point = contact.get_surface_point(lifter) - center
+                # import pdb; pdb.set_trace()
+                local_gravity += Vec3(0, 0, contact_point.get_z() + radius)
+
+            controller.translation += local_gravity
+            
+
+class ExecuteMovement(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            controller = entity[CharacterController]
+            model.node.set_pos(model.node, controller.translation)
+            model.node.set_hpr(model.node, controller.rotation)
+    
 
 # Input controller
 

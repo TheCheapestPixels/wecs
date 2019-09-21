@@ -73,7 +73,7 @@ if __name__ == '__main__':
             # debug=True,
         ),
         panda3d.FallingMovement(
-            #gravity=Vec3(0, 0, -1)
+            gravity=Vec3(0, 0, -1)
         ),
         # Others
         panda3d.CharacterController(
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         panda3d.ThirdPersonCamera(
             camera=base.cam,
             height=2.0,
-            focus_height=0.0, #1.8,
+            focus_height=1.8,
         ),
         # panda3d.FirstPersonCamera(camera=base.cam),
         panda3d.Input(),

@@ -315,6 +315,8 @@ class CharacterController:
 @Component()
 class FallingMovement:
     gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
+    inertia: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    local_gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
 
 
 @Component()
@@ -443,12 +445,15 @@ class PredictFalling(System):
             model = entity[Model]
             scene = entity[Scene]
             clock = entity[Clock]
+            falling_movement = entity[FallingMovement]
 
-            gravity = entity[FallingMovement].gravity * clock.timestep
+            gravity = falling_movement.gravity * clock.timestep
             local_gravity = model.node.get_relative_vector(
                 scene.node,
                 gravity,
             )
+            falling_movement.local_gravity = local_gravity
+            falling_movement.inertia += gravity
 
             sensors = entity[CollisionSensors]
             controller = entity[CharacterController]
@@ -456,7 +461,7 @@ class PredictFalling(System):
             if 'lifter' in sensors.solids.keys():
                 lifter = sensors.solids['lifter']
                 node = lifter['node']
-                node.set_pos(lifter['center'] + movement + local_gravity)
+                node.set_pos(lifter['center'] + movement + local_gravity + falling_movement.inertia)
 
 
 class CheckCollisionSensors(CollisionSystem):
@@ -500,13 +505,8 @@ class ExecuteFalling(System):
             model = entity[Model]
             scene = entity[Scene]
             clock = entity[Clock]
-
-            # FIXME: This duplicates the prediction. We know that already.
-            gravity = entity[FallingMovement].gravity * clock.timestep
-            local_gravity = model.node.get_relative_vector(
-                scene.node,
-                gravity,
-            )
+            falling_movement = entity[FallingMovement]
+            movement = falling_movement.inertia
 
             # if len(sensors.contacts['lifter']) > 0:
             #     print(len(sensors.contacts['lifter']))
@@ -532,9 +532,10 @@ class ExecuteFalling(System):
                         # import pdb; pdb.set_trace()
                         height_corrections.append(actual_z - expected_z)
                 if height_corrections:
-                    local_gravity += Vec3(0, 0, max(height_corrections))
+                    movement += Vec3(0, 0, max(height_corrections))
+                    falling_movement.inertia = Vec3(0, 0, 0)
 
-            controller.translation += local_gravity
+            controller.translation += movement
             
 
 class ExecuteMovement(System):

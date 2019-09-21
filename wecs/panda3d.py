@@ -521,14 +521,18 @@ class ExecuteFalling(System):
                 radius = sensors.solids['lifter']['radius']
                 height_corrections = []
                 for contact in sensors.contacts['lifter']:
-                    contact_point = contact.get_surface_point(lifter) - center
-                    x = contact_point.get_x()
-                    y = contact_point.get_y()
-                    expected_z = -sqrt(radius - (x**2 + y**2))
-                    actual_z = contact_point.get_z()
-                    # import pdb; pdb.set_trace()
-                    height_corrections.append(actual_z - expected_z)
-                local_gravity += Vec3(0, 0, min(height_corrections))
+                    if contact.get_surface_normal(lifter).get_z() > 0.0:
+                        contact_point = contact.get_surface_point(lifter) - center
+                        x = contact_point.get_x()
+                        y = contact_point.get_y()
+                        expected_z = -sqrt(radius - (x**2 + y**2))
+                        actual_z = contact_point.get_z()
+                        #if actual_z > 0.0:
+                        #    expected_z *= -1
+                        # import pdb; pdb.set_trace()
+                        height_corrections.append(actual_z - expected_z)
+                if height_corrections:
+                    local_gravity += Vec3(0, 0, max(height_corrections))
 
             controller.translation += local_gravity
             

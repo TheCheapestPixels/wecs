@@ -1,3 +1,5 @@
+from math import sqrt
+
 from dataclasses import field
 
 from panda3d.core import Point2
@@ -514,13 +516,19 @@ class ExecuteFalling(System):
             #         import pdb; pdb.set_trace()
             #         falling_component = local_gravity
             if len(sensors.contacts['lifter']) > 0:
-                contact = sensors.contacts['lifter'][0]
                 lifter = sensors.solids['lifter']['node']
                 center = sensors.solids['lifter']['center']
                 radius = sensors.solids['lifter']['radius']
-                contact_point = contact.get_surface_point(lifter) - center
-                # import pdb; pdb.set_trace()
-                local_gravity += Vec3(0, 0, contact_point.get_z() + radius)
+                height_corrections = []
+                for contact in sensors.contacts['lifter']:
+                    contact_point = contact.get_surface_point(lifter) - center
+                    x = contact_point.get_x()
+                    y = contact_point.get_y()
+                    expected_z = -sqrt(radius - (x**2 + y**2))
+                    actual_z = contact_point.get_z()
+                    # import pdb; pdb.set_trace()
+                    height_corrections.append(actual_z - expected_z)
+                local_gravity += Vec3(0, 0, min(height_corrections))
 
             controller.translation += local_gravity
             

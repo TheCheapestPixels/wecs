@@ -53,8 +53,8 @@ if __name__ == '__main__':
         panda3d.Clock(clock=globalClock),
         panda3d.Position(value=Point3(0, 0, 0)),
         # panda3d.Model(node=NodePath('spectator')),
-        panda3d.Model(model_name='models/smiley'),
-        # panda3d.Model(model_name='gal.bam'),
+        # panda3d.Model(model_name='models/smiley'),
+        panda3d.Model(model_name='rebecca.bam'),
         panda3d.Scene(node=base.render),
         # Movement-related components
         panda3d.MovementSensors(
@@ -65,7 +65,7 @@ if __name__ == '__main__':
             solids={
                 'lifter': dict(
                     shape=CollisionSphere,
-                    center=Vec3(0.0, 0.0, 0.0),
+                    center=Vec3(0.0, 0.0, 0.5),
                     radius=1.0,
                     # debug=True,
                 ),

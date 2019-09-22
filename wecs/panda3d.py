@@ -310,6 +310,8 @@ class CharacterController:
     max_move_y: float = 100.0
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    jumps: bool = False
+    jump_impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
@@ -317,6 +319,12 @@ class FallingMovement:
     gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
     inertia: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     local_gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
+    ground_contact: bool = False
+
+
+@Component()
+class JumpingMovement:
+    pass
 
 
 @Component()
@@ -447,21 +455,20 @@ class PredictFalling(System):
             clock = entity[Clock]
             falling_movement = entity[FallingMovement]
 
-            gravity = falling_movement.gravity * clock.timestep
-            local_gravity = model.node.get_relative_vector(
+            falling_movement.local_gravity = model.node.get_relative_vector(
                 scene.node,
-                gravity,
+                falling_movement.gravity,
             )
-            falling_movement.local_gravity = local_gravity
-            falling_movement.inertia += gravity
+            frame_gravity = falling_movement.local_gravity * clock.timestep
+            falling_movement.inertia += frame_gravity
 
             sensors = entity[CollisionSensors]
-            controller = entity[CharacterController]
-            movement = controller.translation
             if 'lifter' in sensors.solids.keys():
                 lifter = sensors.solids['lifter']
                 node = lifter['node']
-                node.set_pos(lifter['center'] + movement + local_gravity + falling_movement.inertia)
+                controller = entity[CharacterController]
+                frame_inertia = falling_movement.inertia * clock.timestep
+                node.set_pos(lifter['center'] + controller.translation + frame_inertia)
 
 
 class CheckCollisionSensors(CollisionSystem):
@@ -486,6 +493,27 @@ class CheckCollisionSensors(CollisionSystem):
             self.run_sensors(sensors, scene)
 
 
+class ExecuteJumping(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            CollisionSensors,
+            FallingMovement,
+            JumpingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            controller = entity[CharacterController]
+            falling_movement = entity[FallingMovement]
+            if controller.jumps and falling_movement.ground_contact:
+                falling_movement.inertia += controller.jump_impulse
+
+
 class ExecuteFalling(System):
     entity_filters = {
         'character': and_filter([
@@ -506,15 +534,9 @@ class ExecuteFalling(System):
             scene = entity[Scene]
             clock = entity[Clock]
             falling_movement = entity[FallingMovement]
-            movement = falling_movement.inertia
+            falling_movement.ground_contact = False
+            frame_falling = falling_movement.inertia * clock.timestep
 
-            # if len(sensors.contacts['lifter']) > 0:
-            #     print(len(sensors.contacts['lifter']))
-            #     for contact in sensors.contacts['lifter']:
-            #         lifter = sensors.solids['lifter']['node']
-            #         contact_point = contact.get_surface_point(lifter)
-            #         import pdb; pdb.set_trace()
-            #         falling_component = local_gravity
             if len(sensors.contacts['lifter']) > 0:
                 lifter = sensors.solids['lifter']['node']
                 center = sensors.solids['lifter']['center']
@@ -527,16 +549,14 @@ class ExecuteFalling(System):
                         y = contact_point.get_y()
                         expected_z = -sqrt(radius - (x**2 + y**2))
                         actual_z = contact_point.get_z()
-                        #if actual_z > 0.0:
-                        #    expected_z *= -1
-                        # import pdb; pdb.set_trace()
                         height_corrections.append(actual_z - expected_z)
                 if height_corrections:
-                    movement += Vec3(0, 0, max(height_corrections))
+                    frame_falling += Vec3(0, 0, max(height_corrections))
                     falling_movement.inertia = Vec3(0, 0, 0)
+                    falling_movement.ground_contact = True
 
-            controller.translation += movement
-            
+            controller.translation += frame_falling
+
 
 class ExecuteMovement(System):
     entity_filters = {
@@ -601,6 +621,13 @@ class AcceptInput(System):
                 character.heading += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
+                if FallingMovement in entity and JumpingMovement in entity:
+                    if entity[FallingMovement].ground_contact:
+                        character.jumps = True
+            else:
+                character.jumps = False
+
 
             # if base.mouseWatcherNode.has_mouse():
             #     mouse_pos = base.mouseWatcherNode.get_mouse()

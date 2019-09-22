@@ -42,6 +42,7 @@ if __name__ == '__main__':
         panda3d.UpdateCharacter,
         panda3d.PredictFalling,
         panda3d.CheckCollisionSensors,
+        panda3d.ExecuteJumping,
         panda3d.ExecuteFalling,
         panda3d.ExecuteMovement,
         panda3d.UpdateCameras,
@@ -73,12 +74,13 @@ if __name__ == '__main__':
             # debug=True,
         ),
         panda3d.FallingMovement(
-            gravity=Vec3(0, 0, -1)
+            gravity=Vec3(0, 0, -9.81)
         ),
+        panda3d.JumpingMovement(),
         # Others
         panda3d.CharacterController(
-            max_move_x=35,
-            max_move_y=35,
+            max_move_x=20,
+            max_move_y=20,
         ),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

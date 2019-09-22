@@ -76,7 +76,9 @@ if __name__ == '__main__':
         panda3d.FallingMovement(
             gravity=Vec3(0, 0, -9.81)
         ),
-        panda3d.JumpingMovement(),
+        panda3d.JumpingMovement(
+            impulse=Vec3(0, 0, 3),
+        ),
         # Others
         panda3d.CharacterController(
             max_move_x=20,

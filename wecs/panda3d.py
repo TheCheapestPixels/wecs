@@ -311,7 +311,6 @@ class CharacterController:
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
-    jump_impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
@@ -324,7 +323,7 @@ class FallingMovement:
 
 @Component()
 class JumpingMovement:
-    pass
+    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
@@ -514,8 +513,9 @@ class ExecuteJumping(System):
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             falling_movement = entity[FallingMovement]
+            jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
-                falling_movement.inertia += controller.jump_impulse
+                falling_movement.inertia += jumping_movement.impulse
 
 
 class ExecuteFalling(System):

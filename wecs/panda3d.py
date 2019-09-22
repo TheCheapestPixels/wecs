@@ -419,9 +419,13 @@ class UpdateCharacter(System):
             controller = entity[CharacterController]
             model = entity[Model]
 
+            xy_dist = sqrt(controller.move_x**2 + controller.move_y**2)
+            xy_scaling = 1.0
+            if xy_dist > 1:
+                xy_scaling = 1.0 / xy_dist
             controller.translation = Vec3(
-                controller.move_x * controller.max_move_x * dt,
-                controller.move_y * controller.max_move_y * dt,
+                controller.move_x * controller.max_move_x * xy_scaling * dt,
+                controller.move_y * controller.max_move_y * xy_scaling * dt,
                 0,
             )
             

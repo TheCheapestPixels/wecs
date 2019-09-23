@@ -551,7 +551,9 @@ class ExecuteFalling(System):
                         contact_point = contact.get_surface_point(lifter) - center
                         x = contact_point.get_x()
                         y = contact_point.get_y()
-                        expected_z = -sqrt(radius - (x**2 + y**2))
+                        # x**2 + y**2 + z**2 = radius**2
+                        # z**2 = radius**2 - (x**2 + y**2)
+                        expected_z = -sqrt(radius**2 - (x**2 + y**2))
                         actual_z = contact_point.get_z()
                         height_corrections.append(actual_z - expected_z)
                 if height_corrections:

@@ -66,8 +66,8 @@ if __name__ == '__main__':
             solids={
                 'lifter': dict(
                     shape=CollisionSphere,
-                    center=Vec3(0.0, 0.0, 0.5),
-                    radius=1.0,
+                    center=Vec3(0.0, 0.0, 0.25),
+                    radius=0.5,
                     # debug=True,
                 ),
             },
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             gravity=Vec3(0, 0, -9.81)
         ),
         panda3d.JumpingMovement(
-            impulse=Vec3(0, 0, 3),
+            impulse=Vec3(0, 0, 6),
         ),
         # Others
         panda3d.CharacterController(

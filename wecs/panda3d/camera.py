@@ -8,12 +8,6 @@ from .model import Model
 
 
 @Component()
-class ZeroCamera:
-    camera: NodePath
-    dirty: bool = True
-
-
-@Component()
 class FirstPersonCamera:
     camera: NodePath
     anchor_name: str = None

@@ -6,6 +6,13 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import CollisionSphere
+from panda3d.core import CollisionCapsule
+from panda3d.core import PStatClient
+from panda3d.core import loadPrcFileData
+ 
+loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
+
+# import simplepbr
 
 from wecs.core import Component
 from wecs.panda3d import ECSShowBase as ShowBase
@@ -26,20 +33,26 @@ class LoadMapsAndActors(panda3d.LoadModels):
 
 if __name__ == '__main__':
     ShowBase()
+    # simplepbr.init(max_lights=1)
     base.disable_mouse()
+    base.cTrav = False
+    
     base.accept('escape', sys.exit)
     def debug():
         import pdb; pdb.set_trace()
     base.accept('f11', debug)
+    def pstats():
+        base.pstats = True
+        PStatClient.connect()
+    base.accept('f12', pstats)
 
     system_types = [
         LoadMapsAndActors,
         panda3d.DetermineTimestep,
-        # What movements *can* the character make right now?
-        panda3d.CheckMovementSensors,
-        # What movement does the player choose?
-        panda3d.AcceptInput,
+        panda3d.CheckMovementSensors,  # What movements can be made?
+        panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,
+        panda3d.PredictBumping,
         panda3d.PredictFalling,
         panda3d.CheckCollisionSensors,
         panda3d.ExecuteJumping,
@@ -60,18 +73,22 @@ if __name__ == '__main__':
         # Movement-related components
         panda3d.MovementSensors(
             tag_name='movement_sensors',
-            # debug=True,
         ),
         panda3d.CollisionSensors(
             solids={
+                'bumper': dict(
+                    shape=CollisionCapsule,
+                    end_a=Vec3(0.0, 0.0, 0.8),
+                    end_b=Vec3(0.0, 0.0, 1.15),
+                    radius=0.6,
+                ),
                 'lifter': dict(
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 0.25),
                     radius=0.5,
-                    # debug=True,
                 ),
             },
-            # debug=True,
+            debug=True,
         ),
         panda3d.FallingMovement(
             gravity=Vec3(0, 0, -9.81)

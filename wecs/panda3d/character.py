@@ -6,6 +6,7 @@ from panda3d.core import NodePath
 from panda3d.core import CollisionTraverser
 from panda3d.core import CollisionHandlerQueue
 from panda3d.core import CollisionSphere
+from panda3d.core import CollisionCapsule
 from panda3d.core import CollisionNode
 
 from wecs.core import Component
@@ -76,9 +77,26 @@ class CollisionSystem(System):
             solid['tag'] = tag
             if solid['shape'] is CollisionSphere:
                 self.add_sphere(solid, sensors, model)
+            elif solid['shape'] is CollisionCapsule:
+                self.add_capsule(solid, sensors, model)
 
     def add_sphere(self, solid, sensors, model):
         shape = CollisionSphere(solid['center'], solid['radius'])
+        node = NodePath(CollisionNode(sensors.tag_name))
+        node.node().add_solid(shape)
+        node.reparent_to(model.node)
+        sensors.traverser.add_collider(node, sensors.queue)
+        node.set_python_tag(sensors.tag_name, solid['tag'])
+        solid['node'] = node
+        if sensors.debug:
+            node.show()
+
+    def add_capsule(self, solid, sensors, model):
+        shape = CollisionCapsule(
+            solid['end_a'],
+            solid['end_b'],
+            solid['radius'],
+        )
         node = NodePath(CollisionNode(sensors.tag_name))
         node.node().add_solid(shape)
         node.reparent_to(model.node)
@@ -104,7 +122,6 @@ class CollisionSystem(System):
     def run_sensors(self, sensors, scene):
         sensors.contacts = {tag: [] for tag in sensors.solids.keys()}
         sensors.traverser.traverse(scene.node)
-        sensors.queue.sort_entries()
         sensors.queue.sort_entries()
         for entry in sensors.queue.entries:
             tag = entry.from_node.get_python_tag(sensors.tag_name)
@@ -167,6 +184,24 @@ class UpdateCharacter(System):
                 pitch_delta,
                 0,
             )
+
+
+class PredictBumping(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            CollisionSensors,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            scene = entity[Scene]
+            clock = entity[Clock]
 
 
 class PredictFalling(System):

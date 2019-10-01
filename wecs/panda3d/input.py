@@ -33,19 +33,19 @@ class AcceptInput(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
-            character.move_x = 0.0
-            character.move_y = 0.0
+            character.move.x = 0.0
+            character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
 
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
-                character.move_y += 1
+                character.move.y += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("s")):
-                character.move_y -= 1
+                character.move.y -= 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("a")):
-                character.move_x -= 1
+                character.move.x -= 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
-                character.move_x += 1
+                character.move.x += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
                 character.pitch += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):

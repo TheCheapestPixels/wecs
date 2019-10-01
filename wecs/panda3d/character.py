@@ -32,16 +32,16 @@ class MovementSensors:
 @Component()
 class CharacterController:
     heading: float = 0.0
-    pitch: float= 0.0
-    move_x: float = 0.0
-    move_y: float = 0.0
+    pitch: float = 0.0
     max_heading: float = 90.0
-    max_pitch: float= 90.0
-    max_move_x: float = 100.0
-    max_move_y: float = 100.0
+    max_pitch: float = 90.0
+    move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
+    max_move: Vec3 = field(default_factory=lambda:Vec3(100,100,0))
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
+    sprints: bool = False
+    crouches: bool = False
 
 
 @Component()
@@ -70,10 +70,11 @@ class FallingMovement:
 
 @Component()
 class JumpingMovement:
+    stamina_drain: float = 0
     impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
-#
+# movement
 
 class UpdateCharacter(System):
     entity_filters = {
@@ -90,13 +91,13 @@ class UpdateCharacter(System):
             controller = entity[CharacterController]
             model = entity[Model]
 
-            xy_dist = sqrt(controller.move_x**2 + controller.move_y**2)
+            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
             xy_scaling = 1.0
             if xy_dist > 1:
                 xy_scaling = 1.0 / xy_dist
             controller.translation = Vec3(
-                controller.move_x * controller.max_move_x * xy_scaling * dt,
-                controller.move_y * controller.max_move_y * xy_scaling * dt,
+                controller.move.x * controller.max_move.x * xy_scaling * dt,
+                controller.move.y * controller.max_move.y * xy_scaling * dt,
                 0,
             )
             

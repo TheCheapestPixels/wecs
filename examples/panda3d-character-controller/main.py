@@ -3,7 +3,7 @@
 import sys
 
 from panda3d.core import Point3
-from panda3d.core import Vec3
+from panda3d.core import Vec2, Vec3
 from panda3d.core import NodePath
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionCapsule
@@ -56,6 +56,7 @@ if __name__ == '__main__':
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
+        panda3d.Accelerate, # Movement is accumulated instead of instant.
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
         # We're done with character movement now.
@@ -103,8 +104,12 @@ if __name__ == '__main__':
         ),
         # Others
         panda3d.CharacterController(
-            max_move_x=20,
-            max_move_y=20,
+            max_move=Vec3(10,20,0)
+        ),
+        panda3d.AcceleratedMovement(
+            accelerate = Vec2(0.5, 0.1),
+            slide = Vec2(0.08, 0.02),
+            brake = Vec2(0.5, 0.5),
         ),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

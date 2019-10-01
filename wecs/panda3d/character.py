@@ -45,11 +45,27 @@ class CharacterController:
 
 
 @Component()
+class BumpingMovement:
+    tag_name: str = 'bumping'
+    solids: dict = field(default_factory=lambda:dict())
+    contacts: list = field(default_factory=list)
+    traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
+    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
+    debug: bool = False
+
+
+@Component()
 class FallingMovement:
     gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
     inertia: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     local_gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
     ground_contact: bool = False
+    tag_name: str = 'falling'
+    solids: dict = field(default_factory=lambda:dict())
+    contacts: list = field(default_factory=list)
+    traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
+    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
+    debug: bool = False
 
 
 @Component()
@@ -57,98 +73,7 @@ class JumpingMovement:
     impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
-@Component()
-class CollisionSensors:
-    tag_name: str = 'collision_sensors' # FIXME: Symbolify
-    solids: dict = field(default_factory=lambda:dict())
-    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
-    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
-    debug: bool = False
-
-
 #
-
-class CollisionSystem(System):
-    def init_sensors(self, sensors, scene, model):
-        if sensors.debug:
-            sensors.traverser.show_collisions(scene.node)
-        
-        for tag, solid in sensors.solids.items():
-            solid['tag'] = tag
-            if solid['shape'] is CollisionSphere:
-                self.add_sphere(solid, sensors, model)
-            elif solid['shape'] is CollisionCapsule:
-                self.add_capsule(solid, sensors, model)
-
-    def add_sphere(self, solid, sensors, model):
-        shape = CollisionSphere(solid['center'], solid['radius'])
-        node = NodePath(CollisionNode(sensors.tag_name))
-        node.node().add_solid(shape)
-        node.reparent_to(model.node)
-        sensors.traverser.add_collider(node, sensors.queue)
-        node.set_python_tag(sensors.tag_name, solid['tag'])
-        solid['node'] = node
-        if sensors.debug:
-            node.show()
-
-    def add_capsule(self, solid, sensors, model):
-        shape = CollisionCapsule(
-            solid['end_a'],
-            solid['end_b'],
-            solid['radius'],
-        )
-        node = NodePath(CollisionNode(sensors.tag_name))
-        node.node().add_solid(shape)
-        node.reparent_to(model.node)
-        sensors.traverser.add_collider(node, sensors.queue)
-        node.set_python_tag(sensors.tag_name, solid['tag'])
-        solid['node'] = node
-        if sensors.debug:
-            node.show()
-
-    # def destroy_entity(self, filter_name, entity, component):
-    #     if isinstance(component, MoveChecker):
-    #         checker = component
-    #     else:
-    #         checker = entity[MoveChecker]
-    #     if isinstance(component, CharacterHull):
-    #         hull = component
-    #     else:
-    #         hull = entity[CharacterHull]
-    #     sensors.traverser.remove_collider(hull.node)
-    #     hull.solid.destroy()
-    #     hull.node.destroy()
-
-    def run_sensors(self, sensors, scene):
-        sensors.contacts = {tag: [] for tag in sensors.solids.keys()}
-        sensors.traverser.traverse(scene.node)
-        sensors.queue.sort_entries()
-        for entry in sensors.queue.entries:
-            tag = entry.from_node.get_python_tag(sensors.tag_name)
-            sensors.contacts[tag].append(entry)
-
-
-class CheckMovementSensors(CollisionSystem):
-    entity_filters = {
-        'sensors': and_filter([
-            MovementSensors,
-            Model,
-            Scene,
-        ]),
-    }
-
-    def init_entity(self, filter_name, entity):
-        sensors = entity[MovementSensors]
-        scene = entity[Scene]
-        model = entity[Model]
-        self.init_sensors(sensors, scene, model)
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['sensors']:
-            sensors = entity[MovementSensors]
-            scene = entity[Scene]
-            self.run_sensors(sensors, scene)
-
 
 class UpdateCharacter(System):
     entity_filters = {
@@ -186,88 +111,166 @@ class UpdateCharacter(System):
             )
 
 
-class PredictBumping(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            CollisionSensors,
-            Model,
-            Scene,
-            Clock,
-        ]),
-    }
+# Movements
 
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            model = entity[Model]
-            scene = entity[Scene]
-            clock = entity[Clock]
+class CollisionSystem(System):
+    def init_sensors(self, entity, movement):
+        solids = movement.solids
+        for tag, solid in solids.items():
+            solid['tag'] = tag
+            if solid['shape'] is CollisionSphere:
+                shape = CollisionSphere(solid['center'], solid['radius'])
+                self.add_shape(entity, movement, solid, shape)
+            elif solid['shape'] is CollisionCapsule:
+                shape = CollisionCapsule(
+                    solid['end_a'],
+                    solid['end_b'],
+                    solid['radius'],
+                )
+                self.add_shape(entity, movement, solid, shape)
+        if movement.debug:
+            movement.traverser.show_collisions(entity[Scene].node)
+            
 
-
-class PredictFalling(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            CollisionSensors,
-            FallingMovement,
-            Model,
-            Scene,
-            Clock,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            model = entity[Model]
-            scene = entity[Scene]
-            clock = entity[Clock]
-            falling_movement = entity[FallingMovement]
-
-            falling_movement.local_gravity = model.node.get_relative_vector(
-                scene.node,
-                falling_movement.gravity,
+    def add_shape(self, entity, movement, solid, shape):
+        model = entity[Model]
+        node = NodePath(CollisionNode(
+            '{}-{}'.format(
+                movement.tag_name,
+                solid['tag'],
             )
-            frame_gravity = falling_movement.local_gravity * clock.timestep
-            falling_movement.inertia += frame_gravity
+        ))
+        solid['node'] = node
+        node.node().add_solid(shape)
+        node.node().set_into_collide_mask(0)
+        node.reparent_to(model.node)
+        movement.traverser.add_collider(node, movement.queue)
+        node.set_python_tag(movement.tag_name, movement)
 
-            sensors = entity[CollisionSensors]
-            if 'lifter' in sensors.solids.keys():
-                lifter = sensors.solids['lifter']
-                node = lifter['node']
-                controller = entity[CharacterController]
-                frame_inertia = falling_movement.inertia * clock.timestep
-                node.set_pos(lifter['center'] + controller.translation + frame_inertia)
+    def run_sensors(self, entity, movement):
+        scene = entity[Scene]
+
+        movement.traverser.traverse(scene.node)
+        movement.queue.sort_entries()
+        movement.contacts = movement.queue.entries
 
 
-class CheckCollisionSensors(CollisionSystem):
+class Bumping(CollisionSystem):
     entity_filters = {
-        'sensors': and_filter([
-            CollisionSensors,
+        'character': and_filter([
+            CharacterController,
+            BumpingMovement,
             Model,
             Scene,
+            Clock,
         ]),
     }
 
     def init_entity(self, filter_name, entity):
-        sensors = entity[CollisionSensors]
-        scene = entity[Scene]
-        model = entity[Model]
-        self.init_sensors(sensors, scene, model)
+        self.init_sensors(entity, entity[BumpingMovement])
 
     def update(self, entities_by_filter):
-        for entity in entities_by_filter['sensors']:
-            sensors = entity[CollisionSensors]
-            scene = entity[Scene]
-            self.run_sensors(sensors, scene)
+        for entity in entities_by_filter['character']:
+            self.predict_movement(entity)
+            self.run_sensors(entity, entity[BumpingMovement])
+            self.adjust(entity)
+
+    def predict_movement(self, entity):
+        controller = entity[CharacterController]
+        movement = entity[BumpingMovement]
+        bumper = movement.solids['bumper']
+        node = bumper['node']
+        node.set_pos(controller.translation)
+
+    def adjust(self, entity):
+        movement = entity[BumpingMovement]
+        # if len(movement.contacts) > 0:
+        print(len(movement.contacts))
 
 
-class ExecuteJumping(System):
+class Falling(CollisionSystem):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            CollisionSensors,
             FallingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+        
+    def init_entity(self, filter_name, entity):
+        self.init_sensors(entity, entity[FallingMovement])
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            # Adjust the falling inertia by gravity, and position the
+            # lifter collider.
+            self.predict_falling(entity)
+            # Find collisions with the ground. 
+            self.run_sensors(entity, entity[FallingMovement])
+            # Adjust the character's intended translation so that his
+            # falling is stoppedby the ground.
+            self.fall_and_land(entity)
+
+    def predict_falling(self, entity):
+        model = entity[Model]
+        scene = entity[Scene]
+        clock = entity[Clock]
+        controller = entity[CharacterController]
+        falling_movement = entity[FallingMovement]
+
+        # Adjust inertia by gravity
+        falling_movement.local_gravity = model.node.get_relative_vector(
+            scene.node,
+            falling_movement.gravity,
+        )
+        frame_gravity = falling_movement.local_gravity * clock.timestep
+        falling_movement.inertia += frame_gravity
+
+        # Adjust lifter collider by inertia
+        frame_inertia = falling_movement.inertia * clock.timestep
+        lifter = falling_movement.solids['lifter']
+        node = lifter['node']
+        node.set_pos(lifter['center'] + controller.translation + frame_inertia)
+
+    def fall_and_land(self, entity):
+        falling_movement = entity[FallingMovement]
+        clock = entity[Clock]
+        controller = entity[CharacterController]
+
+        falling_movement.ground_contact = False
+        frame_falling = falling_movement.inertia * clock.timestep
+        if len(falling_movement.contacts) > 0:
+            lifter = falling_movement.solids['lifter']['node']
+            center = falling_movement.solids['lifter']['center']
+            radius = falling_movement.solids['lifter']['radius']
+            height_corrections = []
+            for contact in falling_movement.contacts:
+                if contact.get_surface_normal(lifter).get_z() > 0.0:
+                    contact_point = contact.get_surface_point(lifter) - center
+                    x = contact_point.get_x()
+                    y = contact_point.get_y()
+                    # x**2 + y**2 + z**2 = radius**2
+                    # z**2 = radius**2 - (x**2 + y**2)
+                    expected_z = -sqrt(radius**2 - (x**2 + y**2))
+                    actual_z = contact_point.get_z()
+                    height_corrections.append(actual_z - expected_z)
+            if height_corrections:
+                frame_falling += Vec3(0, 0, max(height_corrections))
+                falling_movement.inertia = Vec3(0, 0, 0)
+                falling_movement.ground_contact = True
+
+        # Now we know how falling / lifting influences the character move
+        controller.translation += frame_falling
+
+
+class Jumping(CollisionSystem):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
             JumpingMovement,
+            FallingMovement,
             Model,
             Scene,
             Clock,
@@ -281,52 +284,6 @@ class ExecuteJumping(System):
             jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
                 falling_movement.inertia += jumping_movement.impulse
-
-
-class ExecuteFalling(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            CollisionSensors,
-            FallingMovement,
-            Model,
-            Scene,
-            Clock,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            sensors = entity[CollisionSensors]
-            controller = entity[CharacterController]
-            model = entity[Model]
-            scene = entity[Scene]
-            clock = entity[Clock]
-            falling_movement = entity[FallingMovement]
-            falling_movement.ground_contact = False
-            frame_falling = falling_movement.inertia * clock.timestep
-
-            if len(sensors.contacts['lifter']) > 0:
-                lifter = sensors.solids['lifter']['node']
-                center = sensors.solids['lifter']['center']
-                radius = sensors.solids['lifter']['radius']
-                height_corrections = []
-                for contact in sensors.contacts['lifter']:
-                    if contact.get_surface_normal(lifter).get_z() > 0.0:
-                        contact_point = contact.get_surface_point(lifter) - center
-                        x = contact_point.get_x()
-                        y = contact_point.get_y()
-                        # x**2 + y**2 + z**2 = radius**2
-                        # z**2 = radius**2 - (x**2 + y**2)
-                        expected_z = -sqrt(radius**2 - (x**2 + y**2))
-                        actual_z = contact_point.get_z()
-                        height_corrections.append(actual_z - expected_z)
-                if height_corrections:
-                    frame_falling += Vec3(0, 0, max(height_corrections))
-                    falling_movement.inertia = Vec3(0, 0, 0)
-                    falling_movement.ground_contact = True
-
-            controller.translation += frame_falling
 
 
 class ExecuteMovement(System):

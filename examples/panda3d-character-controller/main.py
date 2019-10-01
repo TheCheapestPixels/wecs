@@ -49,15 +49,16 @@ if __name__ == '__main__':
     system_types = [
         LoadMapsAndActors,
         panda3d.DetermineTimestep,
-        panda3d.CheckMovementSensors,  # What movements can be made?
+        # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
-        panda3d.UpdateCharacter,
-        panda3d.PredictBumping,
-        panda3d.PredictFalling,
-        panda3d.CheckCollisionSensors,
-        panda3d.ExecuteJumping,
-        panda3d.ExecuteFalling,
+        panda3d.UpdateCharacter,  # Determine intended movement.
+        # The following systems adjust the intended movement
+        panda3d.Bumping, # FIXME: Stub for bumping into things
+        panda3d.Falling, # Falling, and standing on the ground
+        panda3d.Jumping, # Impart upward impulse. Executed by falling.
+        # Turn intention into actual movement
         panda3d.ExecuteMovement,
+        # We're done with character movement now.
         panda3d.UpdateCameras,
     ]
     for sort, system_type in enumerate(system_types):
@@ -74,14 +75,20 @@ if __name__ == '__main__':
         panda3d.MovementSensors(
             tag_name='movement_sensors',
         ),
-        panda3d.CollisionSensors(
+        panda3d.BumpingMovement(
             solids={
                 'bumper': dict(
                     shape=CollisionCapsule,
-                    end_a=Vec3(0.0, 0.0, 0.8),
-                    end_b=Vec3(0.0, 0.0, 1.15),
+                    end_a=Vec3(0.0, 0.0, 0.5),
+                    end_b=Vec3(0.0, 0.0, 1.0),
                     radius=0.6,
                 ),
+            },
+            debug=True,
+        ),
+        panda3d.FallingMovement(
+            gravity=Vec3(0, 0, -9.81),
+            solids={
                 'lifter': dict(
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 0.25),
@@ -89,9 +96,6 @@ if __name__ == '__main__':
                 ),
             },
             debug=True,
-        ),
-        panda3d.FallingMovement(
-            gravity=Vec3(0, 0, -9.81)
         ),
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),

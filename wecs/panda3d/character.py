@@ -146,6 +146,8 @@ class CollisionSystem(System):
         node.reparent_to(model.node)
         movement.traverser.add_collider(node, movement.queue)
         node.set_python_tag(movement.tag_name, movement)
+        if 'debug' in solid and solid['debug']:
+            node.show()
 
     def run_sensors(self, entity, movement):
         scene = entity[Scene]
@@ -185,7 +187,7 @@ class Bumping(CollisionSystem):
     def adjust(self, entity):
         movement = entity[BumpingMovement]
         # if len(movement.contacts) > 0:
-        print(len(movement.contacts))
+        # print(len(movement.contacts))
 
 
 class Falling(CollisionSystem):

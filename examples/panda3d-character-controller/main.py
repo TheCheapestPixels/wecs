@@ -79,9 +79,10 @@ if __name__ == '__main__':
             solids={
                 'bumper': dict(
                     shape=CollisionCapsule,
-                    end_a=Vec3(0.0, 0.0, 0.5),
-                    end_b=Vec3(0.0, 0.0, 1.0),
+                    end_a=Vec3(0.0, 0.0, 0.7),
+                    end_b=Vec3(0.0, 0.0, 1.1),
                     radius=0.6,
+                    debug=True,
                 ),
             },
             debug=True,
@@ -95,7 +96,7 @@ if __name__ == '__main__':
                     radius=0.5,
                 ),
             },
-            debug=True,
+            # debug=True,
         ),
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),

@@ -56,6 +56,8 @@ if __name__ == '__main__':
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
+        panda3d.SetStamina, # Movements cost stamina
+        panda3d.Multispeed, # Set different kinds of speeds
         panda3d.Accelerate, # Movement is accumulated instead of instant.
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
@@ -102,14 +104,20 @@ if __name__ == '__main__':
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),
         ),
-        # Others
-        panda3d.CharacterController(
-            max_move=Vec3(10,20,0)
+        panda3d.SprintMovement(
+            speed_multiplier = 2
+        ),
+        panda3d.CrouchMovement(
+            speed_multiplier = 0.1
         ),
         panda3d.AcceleratedMovement(
             accelerate = Vec2(0.5, 0.1),
-            slide = Vec2(0.08, 0.02),
-            brake = Vec2(0.5, 0.5),
+            slide = Vec2(0.08, 0.05),
+            brake = Vec2(0.09, 0.07),
+        ),
+        # Others
+        panda3d.CharacterController(
+            max_move=Vec3(10,20,0)
         ),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

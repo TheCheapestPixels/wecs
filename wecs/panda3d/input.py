@@ -37,6 +37,8 @@ class AcceptInput(System):
             character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
+            character.sprints = False
+            character.crouching = False
 
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
                 character.move.y += 1
@@ -54,6 +56,10 @@ class AcceptInput(System):
                 character.heading += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
+                character.sprints = True
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
+                character.crouching = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
                 if FallingMovement in entity and JumpingMovement in entity:
                     if entity[FallingMovement].ground_contact:

@@ -98,24 +98,24 @@ class SetStamina(System):
             stamina = entity[Stamina]
             dt = entity[Clock].timestep
             stamina.current += stamina.recovery * dt
+            av = (abs(character.move.x)+abs(character.move.y))/2
             if stamina.current > stamina.maximum:
                 stamina.current = stamina.maximum
             if character.move.x or character.move.y:                
-                av = (abs(character.move.x)+abs(character.move.y))/2
                 stamina.current -= stamina.move_drain * av * dt
             if character.sprints:
                 if stamina > stamina.sprint_drain * dt:
-                    stamina.current -= stamina.sprint_drain * dt
+                    stamina.current -= stamina.sprint_drain * av * dt
                 else:
                     character.sprints = False
             elif character.crouches:
                 if stamina > stamina.crouch_drain * dt:
-                    stamina.current -= stamina.crouch_drain * dt
+                    stamina.current -= stamina.crouch_drain * av * dt
                 else:
                     character.crouches = False
             if jump:
                 if stamina > stamina.jump_drain * dt:
-                    stamina.current -= stamina.jump_drain * dt
+                    stamina.current -= stamina.jump_drain * av * dt
                 else:
                     character.jumps = False
             if stamina.current < 0:

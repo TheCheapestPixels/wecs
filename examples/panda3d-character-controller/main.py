@@ -53,7 +53,7 @@ if __name__ == '__main__':
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
         panda3d.Multispeed, # Set different kinds of speeds
-        panda3d.LinearMovement, # Movement is accumulated instead of instant.
+        panda3d.Accelerate, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground

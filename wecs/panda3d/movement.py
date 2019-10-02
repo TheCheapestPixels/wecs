@@ -171,11 +171,7 @@ class Accelerate(System):
                     n = dest
                 return n
             for a, speed in enumerate(move.speed):
-                dest = 0
-                if character.move[a] < 0:
-                    dest = -1
-                elif character.move[a] > 0:
-                    dest = 1
+                dest = character.move[a]
                 if dest:
                     if ((dest > 0 and move.speed[a] < 0) or
                         (dest < 0 and move.speed[a] > 0)):
@@ -186,14 +182,16 @@ class Accelerate(System):
                     step = move.slide[a]
                 move.speed[a] = increment(speed, dest, step)
 
-        xy_dist = sqrt(move.speed.x**2 + move.speed.y**2)
+        mx = move.speed.x
+        my = move.speed.y
+
+        xy_dist = sqrt(mx**2 + my**2)
         xy_scaling = 1.0
         if xy_dist > 1:
             xy_scaling = 1.0 / xy_dist
-        x = character.max_move.x * xy_scaling
-        y = character.max_move.y * xy_scaling
-        character.translation.x = x * move.speed.x * dt
-        character.translation.y = y * move.speed.y * dt
+        x = mx * character.max_move.x * xy_scaling
+        y = my * character.max_move.y * xy_scaling
+        character.translation = Vec3(x * dt, y * dt, 0)
 
 
 class Multispeed(System):

@@ -8,15 +8,22 @@ from wecs.core import System
 from wecs.core import and_filter, or_filter
 
 from .character import CharacterController
+from .character import FallingMovement
 
 from .model import Model
 from .model import Clock
 
 
 @Component()
+class JumpingMovement:
+    stamina_drain: float = 0
+    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
+
+
+@Component()
 class SprintMovement:
     speed_multiplier: float = 1.5
-    
+
 
 @Component()
 class CrouchMovement:
@@ -29,10 +36,10 @@ class Stamina:
     current: 	float = 100.0
     maximum:	float = 100.0
     recovery: 	float = 1
-    move_drain: float = 1
-    jump_drain: float = 1
+    move_drain: float = 0.6
+    crouch_drain: float = 0.4
     sprint_drain: float = 1
-    crouch_drain: float = 1
+    jump_drain: float = 1
 
 
 @Component()
@@ -43,11 +50,33 @@ class AcceleratedMovement:
     speed: Vec2 = field(default_factory=lambda:Vec2(0, 0))
 
 
+class Jumping(CollisionSystem):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            JumpingMovement,
+            FallingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            controller = entity[CharacterController]
+            falling_movement = entity[FallingMovement]
+            jumping_movement = entity[JumpingMovement]
+            if controller.jumps and falling_movement.ground_contact:
+                falling_movement.inertia += jumping_movement.impulse
+
+
 class SetStamina(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
             Stamina,
+            Clock,
         ]),
     }
 
@@ -55,23 +84,25 @@ class SetStamina(System):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
             stamina = entity[Stamina]
-            if stamina.current < stamina.maximum:
-                stamina.current += stamina.recovery
+            dt = entity[Clock].timestep
+            stamina.current += stamina.recovery * dt
+            if stamina.current > stamina.maximum:
+                stamina.current = stamina.maximum
             if character.move.x or character.move.y:
-                stamina -= stamina.move_drain
+                stamina -= stamina.move_drain * dt
             if character.sprints:
-                if stamina > stamina.sprint_drain:
-                    stamina.current -= stamina.sprint_drain
+                if stamina > stamina.sprint_drain * dt:
+                    stamina.current -= stamina.sprint_drain * dt
                 else:
                     character.sprints = False
-            if crouch:
-                if stamina > stamina.crouch_drain:
-                    stamina.current -= stamina.crouch_drain
+            elif character.crouches:
+                if stamina > stamina.crouch_drain * dt:
+                    stamina.current -= stamina.crouch_drain * dt
                 else:
                     character.crouches = False
             if jump:
-                if stamina > stamina.jump_drain:
-                    stamina.current -= stamina.jump_drain
+                if stamina > stamina.jump_drain * dt:
+                    stamina.current -= stamina.jump_drain * dt
                 else:
                     character.jumps = False
 
@@ -90,19 +121,15 @@ class Accelerate(System):
             dt = entity[Clock].timestep
             character   = entity[CharacterController]
             acc	 = entity[AcceleratedMovement]
-            def clamp(n, min, max):
-                if n < min:
-                    n = min
-                elif n > max:
-                    n = max
-                return n
+            def clamp(x, floor, ceiling): 
+                return min(ceiling, max(x, floor))
 
             def increment(n, dest, step):
                 if n < dest-step:
                     n += step
-                elif n > dest+step: 
+                elif n > dest+step:
                     n -= step
-                else: 
+                else:
                     n = dest
                 return n
 
@@ -113,7 +140,7 @@ class Accelerate(System):
                 elif character.move[a] > 0:
                     dest = 1
                 if dest:
-                    if ((dest > 0 and acc.speed[a] < 0) or 
+                    if ((dest > 0 and acc.speed[a] < 0) or
                         (dest < 0 and acc.speed[a] > 0)):
                         step = acc.brake[a]
                     else:
@@ -150,4 +177,6 @@ class Multispeed(System):
             if character.sprints:
                 character.move_multiplier = sprint.speed_multiplier
             if character.crouches:
+                character.move_multiplier = crouch.speed_multiplier
+            if character.jumps:
                 character.move_multiplier = crouch.speed_multiplier

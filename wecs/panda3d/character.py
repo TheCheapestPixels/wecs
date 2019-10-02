@@ -69,12 +69,6 @@ class FallingMovement:
     debug: bool = False
 
 
-@Component()
-class JumpingMovement:
-    stamina_drain: float = 0
-    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
-
-
 # movement
 
 class UpdateCharacter(System):
@@ -129,7 +123,7 @@ class CollisionSystem(System):
                 self.add_shape(entity, movement, solid, shape)
         if movement.debug:
             movement.traverser.show_collisions(entity[Scene].node)
-            
+
 
     def add_shape(self, entity, movement, solid, shape):
         model = entity[Model]
@@ -199,7 +193,7 @@ class Falling(CollisionSystem):
             Clock,
         ]),
     }
-        
+
     def init_entity(self, filter_name, entity):
         self.init_sensors(entity, entity[FallingMovement])
 
@@ -208,7 +202,7 @@ class Falling(CollisionSystem):
             # Adjust the falling inertia by gravity, and position the
             # lifter collider.
             self.predict_falling(entity)
-            # Find collisions with the ground. 
+            # Find collisions with the ground.
             self.run_sensors(entity, entity[FallingMovement])
             # Adjust the character's intended translation so that his
             # falling is stoppedby the ground.
@@ -264,27 +258,6 @@ class Falling(CollisionSystem):
 
         # Now we know how falling / lifting influences the character move
         controller.translation += frame_falling
-
-
-class Jumping(CollisionSystem):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            JumpingMovement,
-            FallingMovement,
-            Model,
-            Scene,
-            Clock,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
-            falling_movement = entity[FallingMovement]
-            jumping_movement = entity[JumpingMovement]
-            if controller.jumps and falling_movement.ground_contact:
-                falling_movement.inertia += jumping_movement.impulse
 
 
 class ExecuteMovement(System):

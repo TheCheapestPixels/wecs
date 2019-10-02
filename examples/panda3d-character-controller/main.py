@@ -52,13 +52,13 @@ if __name__ == '__main__':
         # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
+        panda3d.Multispeed, # Set different kinds of speeds
+        panda3d.LinearMovement, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
         panda3d.SetStamina, # Movements cost stamina
-        panda3d.Multispeed, # Set different kinds of speeds
-        panda3d.Accelerate, # Movement is accumulated instead of instant.
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
         # We're done with character movement now.
@@ -104,21 +104,17 @@ if __name__ == '__main__':
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),
         ),
-        panda3d.SprintMovement(
-            speed_multiplier = 2
-        ),
-        panda3d.CrouchMovement(
-            speed_multiplier = 0.1
-        ),
-        panda3d.AcceleratedMovement(
+        panda3d.SprintingMovement(),
+        panda3d.ForwardMovement(),
+        panda3d.BackwardMovement(),
+        panda3d.CrouchingMovement(),
+        panda3d.AcceleratingMovement(
             accelerate = Vec2(0.5, 0.1),
             slide = Vec2(0.08, 0.05),
             brake = Vec2(0.09, 0.07),
         ),
         # Others
-        panda3d.CharacterController(
-            max_move=Vec3(10,20,0)
-        ),
+        panda3d.CharacterController(),
         panda3d.ThirdPersonCamera(
             camera=base.cam,
             height=2.0,

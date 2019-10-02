@@ -8,46 +8,58 @@ from wecs.core import System
 from wecs.core import and_filter, or_filter
 
 from .character import CharacterController
+from .character import CollisionSystem
 from .character import FallingMovement
 
 from .model import Model
 from .model import Clock
+from .model import Scene
 
 
 @Component()
-class JumpingMovement:
-    stamina_drain: float = 0
-    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
+class ForwardMovement:
+    speed: Vec3 = field(default_factory=lambda:Vec3(20,20,20))
+    run_threshold: float = 0.5
 
 
 @Component()
-class SprintMovement:
-    speed_multiplier: float = 1.5
+class BackwardMovement:
+    speed_multiplier: float = 0.5
 
 
 @Component()
-class CrouchMovement:
-    speed_multiplier: float = 0.3
+class SprintingMovement:
+    speed: Vec3 = field(default_factory=lambda:Vec3(30,30,30))
+
+
+@Component()
+class CrouchingMovement:
+    speed: Vec3 = field(default_factory=lambda:Vec3(5,5,5))
     height: float = 0.4
 
 
 @Component()
-class Stamina:
-    current: 	float = 100.0
-    maximum:	float = 100.0
-    recovery: 	float = 1
-    move_drain: float = 0.6
-    crouch_drain: float = 0.4
-    sprint_drain: float = 1
-    jump_drain: float = 1
+class JumpingMovement:
+    speed: Vec3 = field(default_factory=lambda:Vec3(1,1,0))
+    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
-class AcceleratedMovement:
+class AcceleratingMovement:
     accelerate: Vec2 = field(default_factory=lambda:Vec2(1, 1))
     slide: Vec2 = field(default_factory=lambda:Vec2(1, 1))
     brake: Vec2 = field(default_factory=lambda:Vec2(1, 1))
     speed: Vec2 = field(default_factory=lambda:Vec2(0, 0))
+
+
+@Component()
+class Stamina:
+    current: float = 100.0
+    maximum: float = 100.0
+    recovery: float = 1
+    move_drain: float = 0.8
+    sprint_drain: float = 2
+    jump_drain: float = 5
 
 
 class Jumping(CollisionSystem):
@@ -88,8 +100,9 @@ class SetStamina(System):
             stamina.current += stamina.recovery * dt
             if stamina.current > stamina.maximum:
                 stamina.current = stamina.maximum
-            if character.move.x or character.move.y:
-                stamina -= stamina.move_drain * dt
+            if character.move.x or character.move.y:                
+                av = (abs(character.move.x)+abs(character.move.y))/2
+                stamina.current -= stamina.move_drain * av * dt
             if character.sprints:
                 if stamina > stamina.sprint_drain * dt:
                     stamina.current -= stamina.sprint_drain * dt
@@ -105,13 +118,14 @@ class SetStamina(System):
                     stamina.current -= stamina.jump_drain * dt
                 else:
                     character.jumps = False
+            if stamina.current < 0:
+                stamina.current = 0
 
 
-class Accelerate(System):
+class LinearMovement(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            AcceleratedMovement,
             Clock,
         ]),
     }
@@ -119,11 +133,35 @@ class Accelerate(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].timestep
-            character   = entity[CharacterController]
-            acc	 = entity[AcceleratedMovement]
+            controller   = entity[CharacterController]
+            print("translating ", controller.max_move)
+
+            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
+            xy_scaling = 1.0
+            if xy_dist > 1:
+                xy_scaling = 1.0 / xy_dist
+
+            x = controller.move.x * controller.max_move.x * xy_scaling
+            y = controller.move.y * controller.max_move.y * xy_scaling
+            controller.translation = Vec3(x * dt, y * dt, 0)
+
+
+class Accelerate(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            AcceleratingMovement,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            dt = entity[Clock].timestep
+            character = entity[CharacterController]
+            move = entity[AcceleratingMovement]
             def clamp(x, floor, ceiling): 
                 return min(ceiling, max(x, floor))
-
             def increment(n, dest, step):
                 if n < dest-step:
                     n += step
@@ -132,51 +170,67 @@ class Accelerate(System):
                 else:
                     n = dest
                 return n
-
-            for a, speed in enumerate(acc.speed):
+            for a, speed in enumerate(move.speed):
                 dest = 0
                 if character.move[a] < 0:
                     dest = -1
                 elif character.move[a] > 0:
                     dest = 1
                 if dest:
-                    if ((dest > 0 and acc.speed[a] < 0) or
-                        (dest < 0 and acc.speed[a] > 0)):
-                        step = acc.brake[a]
+                    if ((dest > 0 and move.speed[a] < 0) or
+                        (dest < 0 and move.speed[a] > 0)):
+                        step = move.brake[a]
                     else:
-                        step = acc.accelerate[a]
+                        step = move.accelerate[a]
                 else:
-                    step = acc.slide[a]
-                acc.speed[a] = increment(speed, dest, step)
-        xy_dist = sqrt(acc.speed.x**2 + acc.speed.y**2)
+                    step = move.slide[a]
+                move.speed[a] = increment(speed, dest, step)
+
+        xy_dist = sqrt(move.speed.x**2 + move.speed.y**2)
         xy_scaling = 1.0
         if xy_dist > 1:
             xy_scaling = 1.0 / xy_dist
-        x = character.max_move.x * character.move_multiplier * xy_scaling
-        y = character.max_move.y * character.move_multiplier * xy_scaling
-        character.translation.x = x * acc.speed.x * dt
-        character.translation.y = y * acc.speed.y * dt
+        x = character.max_move.x * xy_scaling
+        y = character.max_move.y * xy_scaling
+        character.translation.x = x * move.speed.x * dt
+        character.translation.y = y * move.speed.y * dt
 
 
 class Multispeed(System):
     entity_filters = {
-        'character': or_filter([
+        'character': and_filter([
             CharacterController,
-            SprintMovement,
-            CrouchMovement,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character   = entity[CharacterController]
-            sprint      = entity[SprintMovement]
-            crouch	= entity[CrouchMovement]
+            if SprintingMovement in entity and character.sprints:
+                character.max_move = entity[SprintingMovement].speed
+            elif CrouchingMovement in entity and character.crouches:
+                character.max_move = entity[CrouchingMovement].speed
+            elif ForwardMovement in entity:
+                character.max_move = entity[ForwardMovement].speed
+            if BackwardMovement in entity and character.move.y < 0:
+                character.max_move = character.max_move * entity[BackwardMovement].speed_multiplier
+            if JumpingMovement in entity  and character.jumps:
+                character.max_move = entity[JumpingMovement].speed
+            print("setting to ", character.max_move)
 
-            character.move_multiplier = 1
-            if character.sprints:
-                character.move_multiplier = sprint.speed_multiplier
-            if character.crouches:
-                character.move_multiplier = crouch.speed_multiplier
-            if character.jumps:
-                character.move_multiplier = crouch.speed_multiplier
+
+class ExecuteMovement(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+        ]),
+    }
+            
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            controller = entity[CharacterController]
+            model.node.set_pos(model.node, controller.translation)
+            model.node.set_hpr(model.node, controller.rotation)
+

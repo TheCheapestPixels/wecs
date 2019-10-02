@@ -6,7 +6,7 @@ from wecs.core import and_filter
 
 from .character import CharacterController
 from .character import FallingMovement
-from .character import JumpingMovement
+from .movement import JumpingMovement
 
 
 @Component()
@@ -40,14 +40,19 @@ class AcceptInput(System):
             character.sprints = False
             character.crouching = False
 
+            # Emulate analog stick being half-way by holding shift
+            analog = 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
+                analog = 0.5
+
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
-                character.move.y += 1
+                character.move.y += analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("s")):
-                character.move.y -= 1
+                character.move.y -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("a")):
-                character.move.x -= 1
+                character.move.x -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
-                character.move.x += 1
+                character.move.x += analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
                 character.pitch += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
@@ -56,7 +61,7 @@ class AcceptInput(System):
                 character.heading += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("e")):
                 character.sprints = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
                 character.crouching = True

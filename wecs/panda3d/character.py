@@ -36,13 +36,15 @@ class CharacterController:
     max_heading: float = 90.0
     max_pitch: float = 90.0
     move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
-    max_move: Vec3 = field(default_factory=lambda:Vec3(100,100,0))
-    move_multiplier: float = 1
+    max_move: Vec3 = field(default_factory=lambda:Vec3(20,20,0))
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
     sprints: bool = False
     crouches: bool = False
+
+    runs: bool = False
+    walks: bool = False
 
 
 @Component()
@@ -69,8 +71,6 @@ class FallingMovement:
     debug: bool = False
 
 
-# movement
-
 class UpdateCharacter(System):
     entity_filters = {
         'character': and_filter([
@@ -85,14 +85,7 @@ class UpdateCharacter(System):
             dt = entity[Clock].timestep
             controller = entity[CharacterController]
             model = entity[Model]
-
-            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
-            xy_scaling = 1.0
-            if xy_dist > 1:
-                xy_scaling = 1.0 / xy_dist
-            x = controller.move.x * controller.move_multiplier * controller.max_move.x
-            y = controller.move.y * controller.move_multiplier * controller.max_move.y
-            controller.translation = Vec3(x * xy_scaling * dt, y * xy_scaling * dt, 0)
+            print("updating")
             heading_delta = controller.heading * controller.max_heading * dt
             preclamp_pitch = model.node.get_p() + controller.pitch * controller.max_pitch * dt
             clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
@@ -104,7 +97,7 @@ class UpdateCharacter(System):
             )
 
 
-# Movements
+# Collisions
 
 class CollisionSystem(System):
     def init_sensors(self, entity, movement):
@@ -258,19 +251,3 @@ class Falling(CollisionSystem):
 
         # Now we know how falling / lifting influences the character move
         controller.translation += frame_falling
-
-
-class ExecuteMovement(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            Model,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            model = entity[Model]
-            controller = entity[CharacterController]
-            model.node.set_pos(model.node, controller.translation)
-            model.node.set_hpr(model.node, controller.rotation)

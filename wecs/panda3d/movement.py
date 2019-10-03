@@ -45,6 +45,10 @@ class JumpingMovement:
 
 
 @Component()
+class AirControl:
+    air_friction: float = 10.0
+
+@Component()
 class AcceleratingMovement:
     accelerate: Vec2 = field(default_factory=lambda:Vec2(1, 1))
     slide: Vec2 = field(default_factory=lambda:Vec2(1, 1))
@@ -159,26 +163,35 @@ class Accelerating(System):
             for a, speed in enumerate(move.speed):
                 moving = character.move[a]
                 max_move = character.max_move[a]
+
+                air_friction = 1
+                if FallingMovement in entity:
+                    if not entity[FallingMovement].ground_contact:
+                        if AirControl in entity:
+                            max_move = 9999999
+                            air_friction = entity[AirControl].air_friction
+
+                step = 0
                 if moving:
                     if speed < max_move*moving:
-                        step = move.accelerate[a]
+                        step = move.accelerate[a]/air_friction
                         if speed < 0:
-                            step = move.brake[a]
+                            step = move.brake[a]/air_friction
                     elif speed > max_move*moving:
-                        step = -move.accelerate[a]
+                        step = -move.accelerate[a]/air_friction
                         if speed > 0:
-                            step = -move.brake[a]
-                    else: step = 0
+                            step = -move.brake[a]/air_friction
                 else:
-                    slide = move.slide[a]
-                    if speed > slide:
-                        step = -slide
-                    elif speed < -slide:
-                        step = slide   
-                    else: 
-                        step = 0
-                        move.speed[a] = 0
+                    if air_friction == 1:
+                        slide = move.slide[a]
+                        if speed > slide:
+                            step = -slide
+                        elif speed < -slide:
+                            step = slide   
+                        else: 
+                            move.speed[a] = 0
                 move.speed[a] += step
+
         mx, my = move.speed.x, move.speed.y
         xy_dist = sqrt(character.move.x**2 + character.move.y**2)
         xy_scaling = 1.0
@@ -211,7 +224,6 @@ class Multispeed(System):
                 character.max_move = entity[WalkingMovement].speed * multiplier
             if JumpingMovement in entity  and character.jumps:
                 character.max_move = entity[JumpingMovement].speed
-
 
 class ExecuteMovement(System):
     entity_filters = {

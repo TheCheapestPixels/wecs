@@ -107,6 +107,7 @@ if __name__ == '__main__':
         panda3d.SprintingMovement(),
         panda3d.WalkingMovement(),
         panda3d.CrouchingMovement(),
+        panda3d.AirControl(),
         panda3d.AcceleratingMovement(),
         # Others
         panda3d.Stamina(),

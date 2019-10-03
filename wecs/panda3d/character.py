@@ -85,7 +85,6 @@ class UpdateCharacter(System):
             dt = entity[Clock].timestep
             controller = entity[CharacterController]
             model = entity[Model]
-            print("updating")
             heading_delta = controller.heading * controller.max_heading * dt
             preclamp_pitch = model.node.get_p() + controller.pitch * controller.max_pitch * dt
             clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)

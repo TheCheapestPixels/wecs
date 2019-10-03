@@ -17,14 +17,10 @@ from .model import Scene
 
 
 @Component()
-class ForwardMovement:
+class WalkingMovement:
     speed: Vec3 = field(default_factory=lambda:Vec3(20,20,20))
+    backwards_multiplier: float = 1.0
     run_threshold: float = 0.5
-
-
-@Component()
-class BackwardMovement:
-    speed_multiplier: float = 0.5
 
 
 @Component()
@@ -99,28 +95,30 @@ class SetStamina(System):
             dt = entity[Clock].timestep
             stamina.current += stamina.recovery * dt
             av = (abs(character.move.x)+abs(character.move.y))/2
-            if stamina.current > stamina.maximum:
-                stamina.current = stamina.maximum
+            if stamina.current < stamina.maximum:
+                stamina.current += stamina.recovery
+            drain = 0
             if character.move.x or character.move.y:                
-                stamina.current -= stamina.move_drain * av * dt
+                drain = stamina.move_drain * av * dt
             if character.sprints:
                 if stamina > stamina.sprint_drain * dt:
-                    stamina.current -= stamina.sprint_drain * av * dt
+                    drain = stamina.sprint_drain * av * dt
                 else:
                     character.sprints = False
             elif character.crouches:
                 if stamina > stamina.crouch_drain * dt:
-                    stamina.current -= stamina.crouch_drain * av * dt
+                    drain = stamina.crouch_drain * av * dt
                 else:
                     character.crouches = False
             if jump:
                 if stamina > stamina.jump_drain * dt:
-                    stamina.current -= stamina.jump_drain * av * dt
+                    drain += stamina.jump_drain * av * dt
                 else:
                     character.jumps = False
+            stamina.current -= drain
             if stamina.current < 0:
                 stamina.current = 0
-
+            print("Stamina: " + stamina.current, "Drains: " + drain)
 
 class LinearMovement(System):
     entity_filters = {
@@ -134,19 +132,16 @@ class LinearMovement(System):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].timestep
             controller   = entity[CharacterController]
-            print("translating ", controller.max_move)
-
             xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
             xy_scaling = 1.0
             if xy_dist > 1:
                 xy_scaling = 1.0 / xy_dist
-
             x = controller.move.x * controller.max_move.x * xy_scaling
             y = controller.move.y * controller.max_move.y * xy_scaling
             controller.translation = Vec3(x * dt, y * dt, 0)
 
 
-class Accelerate(System):
+class Accelerating(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -160,37 +155,38 @@ class Accelerate(System):
             dt = entity[Clock].timestep
             character = entity[CharacterController]
             move = entity[AcceleratingMovement]
-            def clamp(x, floor, ceiling): 
-                return min(ceiling, max(x, floor))
-            def increment(n, dest, step):
-                if n < dest-step:
-                    n += step
-                elif n > dest+step:
-                    n -= step
-                else:
-                    n = dest
-                return n
+            def clamp(n, floor, ceiling):
+                return min(ceiling, max(n, floor))
             for a, speed in enumerate(move.speed):
-                dest = character.move[a]
-                if dest:
-                    if ((dest > 0 and move.speed[a] < 0) or
-                        (dest < 0 and move.speed[a] > 0)):
-                        step = move.brake[a]
-                    else:
+                moving = character.move[a]
+                max_move = character.max_move[a]
+                if moving:
+                    if speed < max_move*moving:
                         step = move.accelerate[a]
+                        if speed < 0:
+                            step = move.brake[a]
+                    elif speed > max_move*moving:
+                        step = -move.accelerate[a]
+                        if speed > 0:
+                            step = -move.brake[a]
+                    else: step = 0
                 else:
-                    step = move.slide[a]
-                move.speed[a] = increment(speed, dest, step)
-
-        mx = move.speed.x
-        my = move.speed.y
-
-        xy_dist = sqrt(mx**2 + my**2)
+                    slide = move.slide[a]
+                    if speed > slide:
+                        step = -slide
+                    elif speed < -slide:
+                        step = slide   
+                    else: 
+                        step = 0
+                        move.speed[a] = 0
+                move.speed[a] += step
+        mx, my = move.speed.x, move.speed.y
+        xy_dist = sqrt(character.move.x**2 + character.move.y**2)
         xy_scaling = 1.0
         if xy_dist > 1:
             xy_scaling = 1.0 / xy_dist
-        x = mx * character.max_move.x * xy_scaling
-        y = my * character.max_move.y * xy_scaling
+        x = mx * xy_scaling
+        y = my * xy_scaling
         character.translation = Vec3(x * dt, y * dt, 0)
 
 
@@ -208,13 +204,14 @@ class Multispeed(System):
                 character.max_move = entity[SprintingMovement].speed
             elif CrouchingMovement in entity and character.crouches:
                 character.max_move = entity[CrouchingMovement].speed
-            elif ForwardMovement in entity:
-                character.max_move = entity[ForwardMovement].speed
-            if BackwardMovement in entity and character.move.y < 0:
-                character.max_move = character.max_move * entity[BackwardMovement].speed_multiplier
+            elif WalkingMovement in entity:
+                if character.move.y < 0:
+                    multiplier = entity[WalkingMovement].backwards_multiplier
+                else:
+                    multiplier = 1
+                character.max_move = entity[WalkingMovement].speed * multiplier
             if JumpingMovement in entity  and character.jumps:
                 character.max_move = entity[JumpingMovement].speed
-            print("setting to ", character.max_move)
 
 
 class ExecuteMovement(System):

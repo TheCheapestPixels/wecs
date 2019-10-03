@@ -52,13 +52,13 @@ if __name__ == '__main__':
         # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
-        panda3d.Multispeed, # Set different kinds of speeds
+        panda3d.SetStamina, # Disables input based on current stamina
+        panda3d.Multispeed, # Set speed according to input
         panda3d.Accelerating, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
-        panda3d.SetStamina, # Movements cost stamina
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
         # We're done with character movement now.
@@ -109,6 +109,7 @@ if __name__ == '__main__':
         panda3d.CrouchingMovement(),
         panda3d.AcceleratingMovement(),
         # Others
+        panda3d.Stamina(),
         panda3d.CharacterController(),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

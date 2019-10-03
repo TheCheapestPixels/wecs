@@ -16,6 +16,10 @@ from .model import Clock
 from .model import Scene
 
 
+def clamp(n, floor, ceiling):
+    return min(ceiling, max(n, floor))
+
+
 @Component()
 class WalkingMovement:
     speed: Vec3 = field(default_factory=lambda:Vec3(20,20,20))
@@ -52,10 +56,10 @@ class AcceleratingMovement:
 class Stamina:
     current: float = 100.0
     maximum: float = 100.0
-    recovery: float = 1
-    move_drain: float = 0.8
-    sprint_drain: float = 2
-    jump_drain: float = 5
+    recovery: float = 10
+    move_drain: float = 10
+    sprint_drain: float = 30
+    jump_drain: float = 20
 
 
 class Jumping(CollisionSystem):
@@ -93,32 +97,29 @@ class SetStamina(System):
             character = entity[CharacterController]
             stamina = entity[Stamina]
             dt = entity[Clock].timestep
-            stamina.current += stamina.recovery * dt
-            av = (abs(character.move.x)+abs(character.move.y))/2
-            if stamina.current < stamina.maximum:
-                stamina.current += stamina.recovery
+            av = abs(character.move.x)+abs(character.move.y)
             drain = 0
             if character.move.x or character.move.y:                
-                drain = stamina.move_drain * av * dt
-            if character.sprints:
-                if stamina > stamina.sprint_drain * dt:
-                    drain = stamina.sprint_drain * av * dt
+                drain = stamina.move_drain * av
+            if character.sprints and SprintingMovement in entity:
+                if stamina.current > stamina.sprint_drain * av:
+                    drain = stamina.sprint_drain * av
                 else:
                     character.sprints = False
-            elif character.crouches:
-                if stamina > stamina.crouch_drain * dt:
-                    drain = stamina.crouch_drain * av * dt
+            elif character.crouches and CrouchingMovement in entity:
+                if stamina.current > stamina.crouch_drain * av:
+                    drain = stamina.crouch_drain * av
                 else:
                     character.crouches = False
-            if jump:
-                if stamina > stamina.jump_drain * dt:
-                    drain += stamina.jump_drain * av * dt
+            if character.jumps and JumpingMovement in entity:
+                if stamina.current > stamina.jump_drain * av:
+                    drain += stamina.jump_drain
                 else:
                     character.jumps = False
-            stamina.current -= drain
-            if stamina.current < 0:
-                stamina.current = 0
-            print("Stamina: " + stamina.current, "Drains: " + drain)
+            stamina.current -= drain * dt
+            stamina.current += stamina.recovery * dt
+            stamina.current = clamp(stamina.current, 0, stamina.maximum)
+
 
 class LinearMovement(System):
     entity_filters = {
@@ -155,8 +156,6 @@ class Accelerating(System):
             dt = entity[Clock].timestep
             character = entity[CharacterController]
             move = entity[AcceleratingMovement]
-            def clamp(n, floor, ceiling):
-                return min(ceiling, max(n, floor))
             for a, speed in enumerate(move.speed):
                 moving = character.move[a]
                 max_move = character.max_move[a]

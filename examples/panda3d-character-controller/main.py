@@ -77,11 +77,17 @@ if __name__ == '__main__':
         ),
         panda3d.BumpingMovement(
             solids={
+                # 'bumper': dict(
+                #     shape=CollisionCapsule,
+                #     end_a=Vec3(0.0, 0.0, 0.7),
+                #     end_b=Vec3(0.0, 0.0, 1.1),
+                #     radius=0.6,
+                #     debug=True,
+                # ),
                 'bumper': dict(
-                    shape=CollisionCapsule,
-                    end_a=Vec3(0.0, 0.0, 0.7),
-                    end_b=Vec3(0.0, 0.0, 1.1),
-                    radius=0.6,
+                    shape=CollisionSphere,
+                    center=Vec3(0.0, 0.0, 1.0),
+                    radius=0.7,
                     debug=True,
                 ),
             },
@@ -94,6 +100,7 @@ if __name__ == '__main__':
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 0.25),
                     radius=0.5,
+                    debug=True,
                 ),
             },
             # debug=True,
@@ -103,8 +110,8 @@ if __name__ == '__main__':
         ),
         # Others
         panda3d.CharacterController(
-            max_move_x=20,
-            max_move_y=20,
+            max_move_x=2,
+            max_move_y=2,
         ),
         panda3d.ThirdPersonCamera(
             camera=base.cam,
@@ -117,7 +124,8 @@ if __name__ == '__main__':
 
     static_level = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
-        panda3d.Model(model_name='roadD.bam'),
+        panda3d.Model(model_name='planetree05.bam'),
+        # panda3d.Model(model_name='roadD.bam'),
         panda3d.Scene(node=base.render),
         Map(),
     )

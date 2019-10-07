@@ -5,6 +5,7 @@ from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import CollisionTraverser
 from panda3d.core import CollisionHandlerQueue
+from panda3d.core import CollisionHandlerPusher
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionCapsule
 from panda3d.core import CollisionNode
@@ -53,7 +54,7 @@ class BumpingMovement:
     solids: dict = field(default_factory=lambda:dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
-    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
+    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
     debug: bool = False
 
 
@@ -145,34 +146,72 @@ class CollisionSystem(System):
 class Bumping(CollisionSystem):
     entity_filters = {
         'character': and_filter([
+            Scene,
+            Model,
             CharacterController,
             BumpingMovement,
-            Model,
-            Scene,
             Clock,
         ]),
     }
 
     def init_entity(self, filter_name, entity):
-        self.init_sensors(entity, entity[BumpingMovement])
+        movement = entity[BumpingMovement]
+        self.init_sensors(entity, movement)
+        bumper = movement.solids['bumper']
+        node = bumper['node']
+        movement.queue.add_collider(node, node)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            self.predict_movement(entity)
-            self.run_sensors(entity, entity[BumpingMovement])
-            self.adjust(entity)
+            scene = entity[Scene]
+            controller = entity[CharacterController]
+            movement = entity[BumpingMovement]
+            bumper = movement.solids['bumper']
+            node = bumper['node']
+            node.set_pos(controller.translation)
+            movement.traverser.traverse(scene.node)
+            controller.translation = node.get_pos()
 
-    def predict_movement(self, entity):
-        controller = entity[CharacterController]
-        movement = entity[BumpingMovement]
-        bumper = movement.solids['bumper']
-        node = bumper['node']
-        node.set_pos(controller.translation)
 
-    def adjust(self, entity):
-        movement = entity[BumpingMovement]
-        # if len(movement.contacts) > 0:
-        # print(len(movement.contacts))
+# class Bumping(CollisionSystem):
+#     entity_filters = {
+#         'character': and_filter([
+#             CharacterController,
+#             BumpingMovement,
+#             Model,
+#             Scene,
+#             Clock,
+#         ]),
+#     }
+# 
+#     def init_entity(self, filter_name, entity):
+#         self.init_sensors(entity, entity[BumpingMovement])
+# 
+#     def update(self, entities_by_filter):
+#         for entity in entities_by_filter['character']:
+#             self.predict_movement(entity)
+#             self.run_sensors(entity, entity[BumpingMovement])
+#             self.adjust(entity)
+# 
+#     def predict_movement(self, entity):
+#         controller = entity[CharacterController]
+#         movement = entity[BumpingMovement]
+#         bumper = movement.solids['bumper']
+#         node = bumper['node']
+#         node.set_pos(controller.translation)
+# 
+#     def adjust(self, entity):
+#         controller = entity[CharacterController]
+#         movement = entity[BumpingMovement]
+#         adjustment = Vec3(0, 0, 0)
+#         for contact in movement.contacts:
+#             interior = contact.get_interior_point(contact.from_node_path)
+#             surface = contact.get_surface_point(contact.from_node_path)
+#             back_vector = interior - surface
+#             adjustment += Vec3(back_vector.x, back_vector.y, 0)
+#         if len(movement.contacts) > 0:
+#              adjustment /= len(movement.contacts)
+#         controller.translation += adjustment
 
 
 class Falling(CollisionSystem):

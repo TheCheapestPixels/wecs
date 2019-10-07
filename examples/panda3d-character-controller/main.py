@@ -9,7 +9,7 @@ from panda3d.core import CollisionSphere
 from panda3d.core import CollisionCapsule
 from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
- 
+
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 
 # import simplepbr
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # simplepbr.init(max_lights=1)
     base.disable_mouse()
     base.cTrav = False
-    
+
     base.accept('escape', sys.exit)
     def debug():
         import pdb; pdb.set_trace()
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     character = base.ecs_world.create_entity(
         panda3d.Clock(clock=globalClock),
-        panda3d.Position(value=Point3(0, 0, 0)),
+        panda3d.Position(value=Point3(50, 295, 0)),
         # panda3d.Model(node=NodePath('spectator')),
         # panda3d.Model(model_name='models/smiley'),
         panda3d.Model(model_name='rebecca.bam'),
@@ -80,11 +80,17 @@ if __name__ == '__main__':
         ),
         panda3d.BumpingMovement(
             solids={
+                # 'bumper': dict(
+                #     shape=CollisionCapsule,
+                #     end_a=Vec3(0.0, 0.0, 0.7),
+                #     end_b=Vec3(0.0, 0.0, 1.1),
+                #     radius=0.6,
+                #     debug=True,
+                # ),
                 'bumper': dict(
-                    shape=CollisionCapsule,
-                    end_a=Vec3(0.0, 0.0, 0.7),
-                    end_b=Vec3(0.0, 0.0, 1.1),
-                    radius=0.6,
+                    shape=CollisionSphere,
+                    center=Vec3(0.0, 0.0, 1.0),
+                    radius=0.7,
                     debug=True,
                 ),
             },
@@ -97,6 +103,7 @@ if __name__ == '__main__':
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 0.25),
                     radius=0.5,
+                    debug=True,
                 ),
             },
             # debug=True,
@@ -123,7 +130,7 @@ if __name__ == '__main__':
 
     static_level = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
-        panda3d.Model(model_name='roadD.bam'),
+        panda3d.Model(model_name='roadE.bam'),
         panda3d.Scene(node=base.render),
         Map(),
     )

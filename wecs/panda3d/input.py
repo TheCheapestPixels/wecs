@@ -33,19 +33,26 @@ class AcceptInput(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
-            character.move_x = 0.0
-            character.move_y = 0.0
+            character.move.x = 0.0
+            character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
+            character.sprints = False
+            character.crouching = False
+
+            # Emulate analog stick being half-way by holding shift
+            analog = 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
+                analog = 0.5
 
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
-                character.move_y += 1
+                character.move.y += analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("s")):
-                character.move_y -= 1
+                character.move.y -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("a")):
-                character.move_x -= 1
+                character.move.x -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
-                character.move_x += 1
+                character.move.x += analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
                 character.pitch += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
@@ -54,6 +61,10 @@ class AcceptInput(System):
                 character.heading += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("e")):
+                character.sprints = True
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
+                character.crouching = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
                 if FallingMovement in entity and JumpingMovement in entity:
                     if entity[FallingMovement].ground_contact:

@@ -3,13 +3,13 @@
 import sys
 
 from panda3d.core import Point3
-from panda3d.core import Vec3
+from panda3d.core import Vec2, Vec3
 from panda3d.core import NodePath
 from panda3d.core import CollisionSphere
 from panda3d.core import CollisionCapsule
 from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
- 
+
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 
 # import simplepbr
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # simplepbr.init(max_lights=1)
     base.disable_mouse()
     base.cTrav = False
-    
+
     base.accept('escape', sys.exit)
     def debug():
         import pdb; pdb.set_trace()
@@ -52,6 +52,9 @@ if __name__ == '__main__':
         # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
+        panda3d.SetStamina, # Disables input based on current stamina
+        panda3d.Multispeed, # Set speed according to input
+        panda3d.Accelerating, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
         panda3d.Falling, # Falling, and standing on the ground
@@ -66,7 +69,7 @@ if __name__ == '__main__':
 
     character = base.ecs_world.create_entity(
         panda3d.Clock(clock=globalClock),
-        panda3d.Position(value=Point3(0, 0, 0)),
+        panda3d.Position(value=Point3(50, 295, 0)),
         # panda3d.Model(node=NodePath('spectator')),
         # panda3d.Model(model_name='models/smiley'),
         panda3d.Model(model_name='rebecca.bam'),
@@ -108,11 +111,14 @@ if __name__ == '__main__':
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),
         ),
+        panda3d.SprintingMovement(),
+        panda3d.WalkingMovement(),
+        panda3d.CrouchingMovement(),
+        panda3d.AirControl(),
+        panda3d.AcceleratingMovement(),
         # Others
-        panda3d.CharacterController(
-            max_move_x=2,
-            max_move_y=2,
-        ),
+        panda3d.Stamina(),
+        panda3d.CharacterController(),
         panda3d.ThirdPersonCamera(
             camera=base.cam,
             height=2.0,
@@ -124,8 +130,7 @@ if __name__ == '__main__':
 
     static_level = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
-        panda3d.Model(model_name='planetree05.bam'),
-        # panda3d.Model(model_name='roadD.bam'),
+        panda3d.Model(model_name='roadE.bam'),
         panda3d.Scene(node=base.render),
         Map(),
     )

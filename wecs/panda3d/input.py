@@ -6,7 +6,7 @@ from wecs.core import and_filter
 
 from .character import CharacterController
 from .character import FallingMovement
-from .movement import JumpingMovement
+from .character import JumpingMovement
 
 
 @Component()

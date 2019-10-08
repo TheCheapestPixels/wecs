@@ -10,9 +10,11 @@ from panda3d.core import CollisionSphere
 from panda3d.core import CollisionCapsule
 from panda3d.core import CollisionNode
 
+
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
+
 
 from .model import Model
 from .model import Scene
@@ -131,27 +133,6 @@ class UpdateCharacter(System):
                 pitch_delta,
                 0,
             )
-
-
-class Jumping(CollisionSystem):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            JumpingMovement,
-            FallingMovement,
-            Model,
-            Scene,
-            Clock,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
-            falling_movement = entity[FallingMovement]
-            jumping_movement = entity[JumpingMovement]
-            if controller.jumps and falling_movement.ground_contact:
-                falling_movement.inertia += jumping_movement.impulse
 
 
 class MoveLinear(System):
@@ -462,3 +443,24 @@ class Falling(CollisionSystem):
 
         # Now we know how falling / lifting influences the character move
         controller.translation += frame_falling
+
+
+class Jumping(CollisionSystem):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            JumpingMovement,
+            FallingMovement,
+            Model,
+            Scene,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            controller = entity[CharacterController]
+            falling_movement = entity[FallingMovement]
+            jumping_movement = entity[JumpingMovement]
+            if controller.jumps and falling_movement.ground_contact:
+                falling_movement.inertia += jumping_movement.impulse

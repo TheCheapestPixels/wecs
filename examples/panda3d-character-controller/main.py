@@ -54,7 +54,7 @@ if __name__ == '__main__':
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
         mechanics.UpdateStamina, # Disables input based on current stamina
-        panda3d.UpdateSpeed, # Set speed according to input
+        panda3d.Walking, # Set speed according to input
         panda3d.Accelerating, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
@@ -76,9 +76,6 @@ if __name__ == '__main__':
         panda3d.Model(model_name='rebecca.bam'),
         panda3d.Scene(node=base.render),
         # Movement-related components
-        panda3d.MovementSensors(
-            tag_name='movement_sensors',
-        ),
         panda3d.BumpingMovement(
             solids={
                 # 'bumper': dict(

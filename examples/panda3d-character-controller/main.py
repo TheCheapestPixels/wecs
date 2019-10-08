@@ -17,6 +17,7 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 from wecs.core import Component
 from wecs.panda3d import ECSShowBase as ShowBase
 from wecs import panda3d
+from wecs import mechanics
 
 
 @Component()
@@ -52,8 +53,8 @@ if __name__ == '__main__':
         # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
-        panda3d.SetStamina, # Disables input based on current stamina
-        panda3d.Multispeed, # Set speed according to input
+        mechanics.UpdateStamina, # Disables input based on current stamina
+        panda3d.UpdateSpeed, # Set speed according to input
         panda3d.Accelerating, # Movement is accumulated instead of instant.
         # The following systems adjust the intended movement
         panda3d.Bumping, # FIXME: Stub for bumping into things
@@ -114,10 +115,10 @@ if __name__ == '__main__':
         panda3d.SprintingMovement(),
         panda3d.WalkingMovement(),
         panda3d.CrouchingMovement(),
-        panda3d.AirControl(),
+        panda3d.AirMovement(),
         panda3d.AcceleratingMovement(),
         # Others
-        panda3d.Stamina(),
+        mechanics.Stamina(),
         panda3d.CharacterController(),
         panda3d.ThirdPersonCamera(
             camera=base.cam,

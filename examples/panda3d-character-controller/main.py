@@ -54,15 +54,15 @@ if __name__ == '__main__':
         panda3d.AcceptInput,  # What movement does the player choose?
         panda3d.UpdateCharacter,  # Determine intended movement.
         mechanics.UpdateStamina, # Disables input based on current stamina
+        # The following systems adjust the intended movement
         panda3d.Walking, # Set speed according to input
         panda3d.Accelerating, # Movement is accumulated instead of instant.
-        # The following systems adjust the intended movement
-        panda3d.Bumping, # FIXME: Stub for bumping into things
-        panda3d.Falling, # Falling, and standing on the ground
+        panda3d.Bumping, # Bumping into things.
+        panda3d.Falling, # Falling, and standing on the ground,
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
-        # We're done with character movement now.
+        # We're done with character movement, back to other things.
         panda3d.UpdateCameras,
     ]
     for sort, system_type in enumerate(system_types):

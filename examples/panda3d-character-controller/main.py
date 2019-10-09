@@ -120,11 +120,7 @@ if __name__ == '__main__':
         # Others
         mechanics.Stamina(),
         panda3d.CharacterController(),
-        panda3d.ThirdPersonCamera(
-            camera=base.cam,
-            height=2.0,
-            focus_height=1.8,
-        ),
+        panda3d.ThirdPersonCamera(camera=base.cam),
         # panda3d.FirstPersonCamera(camera=base.cam),
         panda3d.Input(),
     )

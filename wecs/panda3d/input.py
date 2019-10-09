@@ -4,6 +4,8 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 
+from .camera import FirstPersonCamera, ThirdPersonCamera
+
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
@@ -33,10 +35,17 @@ class AcceptInput(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
+
             character.move.x = 0.0
             character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
+
+            if ThirdPersonCamera in entity:
+                camera = entity[ThirdPersonCamera]
+            elif FirstPersonCamera in entity:
+                camera = entity[FirstPersonCamera]
+
             character.sprints = False
             character.crouching = False
 
@@ -53,16 +62,18 @@ class AcceptInput(System):
                 character.move.x -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
                 character.move.x += analog
+
             if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
-                character.pitch += 1
+                camera.pivot.set_p(camera.pivot.get_p()+1)
             if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
-                character.pitch -= 1
+                camera.pivot.set_p(camera.pivot.get_p()-1)
             if base.mouseWatcherNode.is_button_down(KeyboardButton.left()):
-                character.heading += 1
+                camera.pivot.set_h(camera.pivot.get_h()+2)
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
-                character.heading -= 1
+                camera.pivot.set_h(camera.pivot.get_h()-2)
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("e")):
                 character.sprints = True
+
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
                 character.crouching = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):

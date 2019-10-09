@@ -99,15 +99,13 @@ class FallingMovement:
     debug: bool = False
 
 
-@Component()
-class MovementSensors:
-    tag_name: str = 'collision_sensors' # FIXME: Symbolify
-    solids: dict = field(default_factory=lambda:dict())
-    contacts: dict = field(default_factory=lambda:dict())
-    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
-    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
-    moves: dict = field(default_factory=lambda:dict())
-    debug: bool = False
+# @Component()
+# class MovementSensors:
+#     solids: dict = field(default_factory=lambda:dict())
+#     contacts: dict = field(default_factory=lambda:dict())
+#     traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
+#     queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+#     debug: bool = False
 
 
 class UpdateCharacter(System):
@@ -135,6 +133,59 @@ class UpdateCharacter(System):
             )
 
 
+<<<<<<< HEAD
+=======
+# Movement systems
+#
+# These systems modify the intended movement as stored on the
+# character controller to conform to external constraints. A
+# recurring element is that systems will run a collision
+# traverser, so first we provide a helpful base class.
+
+class CollisionSystem(System):
+    def init_sensors(self, entity, movement):
+        solids = movement.solids
+        for tag, solid in solids.items():
+            solid['tag'] = tag
+            if solid['shape'] is CollisionSphere:
+                shape = CollisionSphere(solid['center'], solid['radius'])
+                self.add_shape(entity, movement, solid, shape)
+            elif solid['shape'] is CollisionCapsule:
+                shape = CollisionCapsule(
+                    solid['end_a'],
+                    solid['end_b'],
+                    solid['radius'],
+                )
+                self.add_shape(entity, movement, solid, shape)
+        if movement.debug:
+            movement.traverser.show_collisions(entity[Scene].node)
+
+    def add_shape(self, entity, movement, solid, shape):
+        model = entity[Model]
+        node = NodePath(CollisionNode(
+            '{}-{}'.format(
+                movement.tag_name,
+                solid['tag'],
+            )
+        ))
+        solid['node'] = node
+        node.node().add_solid(shape)
+        node.node().set_into_collide_mask(0)
+        node.reparent_to(model.node)
+        movement.traverser.add_collider(node, movement.queue)
+        node.set_python_tag(movement.tag_name, movement)
+        if 'debug' in solid and solid['debug']:
+            node.show()
+
+    def run_sensors(self, entity, movement):
+        scene = entity[Scene]
+
+        movement.traverser.traverse(scene.node)
+        movement.queue.sort_entries()
+        movement.contacts = movement.queue.entries
+
+
+>>>>>>> eb453f0a8edcbfd1283709cca3ca08e78ff3c508
 class MoveLinear(System):
     entity_filters = {
         'character': and_filter([
@@ -154,6 +205,30 @@ class MoveLinear(System):
             x = controller.move.x * controller.max_move.x * xy_scaling
             y = controller.move.y * controller.max_move.y * xy_scaling
             controller.translation = Vec3(x * dt, y * dt, 0)
+
+
+class Walking(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            character   = entity[CharacterController]
+            if SprintingMovement in entity and character.sprints:
+                character.max_move = entity[SprintingMovement].speed
+            elif CrouchingMovement in entity and character.crouches:
+                character.max_move = entity[CrouchingMovement].speed
+            elif WalkingMovement in entity:
+                if character.move.y < 0:
+                    multiplier = entity[WalkingMovement].backwards_multiplier
+                else:
+                    multiplier = 1
+                character.max_move = entity[WalkingMovement].speed * multiplier
+            if JumpingMovement in entity  and character.jumps:
+                character.max_move = entity[JumpingMovement].speed
 
 
 class Accelerating(System):
@@ -212,91 +287,6 @@ class Accelerating(System):
         character.translation = Vec3(x * dt, y * dt, 0)
 
 
-class UpdateSpeed(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            character   = entity[CharacterController]
-            if SprintingMovement in entity and character.sprints:
-                character.max_move = entity[SprintingMovement].speed
-            elif CrouchingMovement in entity and character.crouches:
-                character.max_move = entity[CrouchingMovement].speed
-            elif WalkingMovement in entity:
-                if character.move.y < 0:
-                    multiplier = entity[WalkingMovement].backwards_multiplier
-                else:
-                    multiplier = 1
-                character.max_move = entity[WalkingMovement].speed * multiplier
-            if JumpingMovement in entity  and character.jumps:
-                character.max_move = entity[JumpingMovement].speed
-
-
-class ExecuteMovement(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            Model,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            model = entity[Model]
-            controller = entity[CharacterController]
-            model.node.set_pos(model.node, controller.translation)
-            model.node.set_hpr(model.node, controller.rotation)
-
-
-# Collisions
-
-class CollisionSystem(System):
-    def init_sensors(self, entity, movement):
-        solids = movement.solids
-        for tag, solid in solids.items():
-            solid['tag'] = tag
-            if solid['shape'] is CollisionSphere:
-                shape = CollisionSphere(solid['center'], solid['radius'])
-                self.add_shape(entity, movement, solid, shape)
-            elif solid['shape'] is CollisionCapsule:
-                shape = CollisionCapsule(
-                    solid['end_a'],
-                    solid['end_b'],
-                    solid['radius'],
-                )
-                self.add_shape(entity, movement, solid, shape)
-        if movement.debug:
-            movement.traverser.show_collisions(entity[Scene].node)
-
-    def add_shape(self, entity, movement, solid, shape):
-        model = entity[Model]
-        node = NodePath(CollisionNode(
-            '{}-{}'.format(
-                movement.tag_name,
-                solid['tag'],
-            )
-        ))
-        solid['node'] = node
-        node.node().add_solid(shape)
-        node.node().set_into_collide_mask(0)
-        node.reparent_to(model.node)
-        movement.traverser.add_collider(node, movement.queue)
-        node.set_python_tag(movement.tag_name, movement)
-        if 'debug' in solid and solid['debug']:
-            node.show()
-
-    def run_sensors(self, entity, movement):
-        scene = entity[Scene]
-
-        movement.traverser.traverse(scene.node)
-        movement.queue.sort_entries()
-        movement.contacts = movement.queue.entries
-
-
 class Bumping(CollisionSystem):
     entity_filters = {
         'character': and_filter([
@@ -325,47 +315,6 @@ class Bumping(CollisionSystem):
             node.set_pos(controller.translation)
             movement.traverser.traverse(scene.node)
             controller.translation = node.get_pos()
-
-
-# class Bumping(CollisionSystem):
-#     entity_filters = {
-#         'character': and_filter([
-#             CharacterController,
-#             BumpingMovement,
-#             Model,
-#             Scene,
-#             Clock,
-#         ]),
-#     }
-#
-#     def init_entity(self, filter_name, entity):
-#         self.init_sensors(entity, entity[BumpingMovement])
-#
-#     def update(self, entities_by_filter):
-#         for entity in entities_by_filter['character']:
-#             self.predict_movement(entity)
-#             self.run_sensors(entity, entity[BumpingMovement])
-#             self.adjust(entity)
-#
-#     def predict_movement(self, entity):
-#         controller = entity[CharacterController]
-#         movement = entity[BumpingMovement]
-#         bumper = movement.solids['bumper']
-#         node = bumper['node']
-#         node.set_pos(controller.translation)
-#
-#     def adjust(self, entity):
-#         controller = entity[CharacterController]
-#         movement = entity[BumpingMovement]
-#         adjustment = Vec3(0, 0, 0)
-#         for contact in movement.contacts:
-#             interior = contact.get_interior_point(contact.from_node_path)
-#             surface = contact.get_surface_point(contact.from_node_path)
-#             back_vector = interior - surface
-#             adjustment += Vec3(back_vector.x, back_vector.y, 0)
-#         if len(movement.contacts) > 0:
-#              adjustment /= len(movement.contacts)
-#         controller.translation += adjustment
 
 
 class Falling(CollisionSystem):
@@ -464,3 +413,25 @@ class Jumping(CollisionSystem):
             jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
                 falling_movement.inertia += jumping_movement.impulse
+<<<<<<< HEAD
+=======
+
+
+# Transcribe the final intended movement to the model, making it an
+# actual movement.
+                
+class ExecuteMovement(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            controller = entity[CharacterController]
+            model.node.set_pos(model.node, controller.translation)
+            model.node.set_hpr(model.node, controller.rotation)
+>>>>>>> eb453f0a8edcbfd1283709cca3ca08e78ff3c508

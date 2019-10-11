@@ -52,11 +52,10 @@ if __name__ == '__main__':
         panda3d.DetermineTimestep,
         # How does the character want to move?
         panda3d.AcceptInput,  # What movement does the player choose?
-        panda3d.UpdateCharacter,  # Determine intended movement.
         mechanics.UpdateStamina, # Disables input based on current stamina
-        # The following systems adjust the intended movement
-        panda3d.Walking, # Set speed according to input
-        panda3d.Accelerating, # Movement is accumulated instead of instant.
+        panda3d.WalkSpeeds, # Set speed according to input
+        panda3d.HeadingFromCamera, # Set character direction from camera
+        panda3d.UpdateCharacter, # Determine intended movement.
         panda3d.Bumping, # Bumping into things.
         panda3d.Falling, # Falling, and standing on the ground,
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
@@ -64,6 +63,7 @@ if __name__ == '__main__':
         panda3d.ExecuteMovement,
         # We're done with character movement, back to other things.
         panda3d.UpdateCameras,
+        panda3d.CameraCollisions,
     ]
     for sort, system_type in enumerate(system_types):
         base.add_system(system_type(), sort)
@@ -116,8 +116,9 @@ if __name__ == '__main__':
         panda3d.AcceleratingMovement(),
         # Others
         mechanics.Stamina(),
-        panda3d.CharacterController(),
+        panda3d.CharacterController(node=NodePath("player")),
         panda3d.ThirdPersonCamera(camera=base.cam),
+        panda3d.CameraCollision(),
         # panda3d.FirstPersonCamera(camera=base.cam),
         panda3d.Input(),
     )

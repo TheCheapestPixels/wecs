@@ -22,6 +22,10 @@ from .camera import FirstPersonCamera
 from .camera import ThirdPersonCamera
 
 
+def clamp(i, floor, ceiling):
+    return min(ceiling, max(floor, i))
+
+
 @Component()
 class CharacterController:
     node: NodePath = field(default_factory=NodePath)
@@ -125,17 +129,17 @@ class UpdateCharacter(System):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].timestep
             controller = entity[CharacterController]
+            # Accelerating movement
             if AcceleratingMovement in entity:
                 move = entity[AcceleratingMovement]
                 for a, speed in enumerate(move.speed):
                     moving = controller.move[a]
                     max_move = controller.max_move[a]
                     air_friction = 1
-                    if FallingMovement in entity:
+                    if AirMovement in entity and FallingMovement in entity:
                         if not entity[FallingMovement].ground_contact:
-                            if AirMovement in entity:
-                                max_move = 9999999
-                                air_friction = entity[AirMovement].air_friction
+                            max_move = 9999999
+                            air_friction = entity[AirMovement].air_friction
                     step = 0
                     if moving:
                         if speed < max_move*moving:
@@ -158,6 +162,7 @@ class UpdateCharacter(System):
                     move.speed[a] += step
                 x = move.speed.x
                 y = move.speed.y
+            # Normal (linear) movement
             else:
                 x = controller.move.x * controller.max_move.x
                 y = controller.move.y * controller.max_move.y
@@ -200,12 +205,13 @@ class HeadingFromCamera(System):
             if not (controller.move.x == 0 and controller.move.y == 0):
                 model.node.set_h(camera_heading)
 
-            rotation_speed = 2
+            rotation_speed = 1
             if AcceleratingMovement in entity:
-                acceleration = entity[AcceleratingMovement]
-                total =  abs(acceleration.accelerate[0] + acceleration.accelerate[1])
+                speed = entity[AcceleratingMovement].speed
+                total = speed[0] + speed[1]
                 if total:
-                    rotation_speed -= total/2
+                    # Where can I find the highest possible max_move to replace 200 with?
+                    rotation_speed -= total/200
             if AirMovement in entity and FallingMovement in entity:
                 if not entity[FallingMovement].ground_contact:
                     rotation_speed /= entity[AirMovement].air_friction/5

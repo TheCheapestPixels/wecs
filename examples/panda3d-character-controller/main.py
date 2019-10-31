@@ -50,15 +50,17 @@ if __name__ == '__main__':
     system_types = [
         LoadMapsAndActors,
         panda3d.DetermineTimestep,
-        # How does the character want to move?
-        panda3d.AcceptInput,  # What movement does the player choose?
-        panda3d.UpdateCharacter,  # Determine intended movement.
-        mechanics.UpdateStamina, # Disables input based on current stamina
+        # Set intended movement (translation and rotation) in normalized
+        # range [-1; 1], time-invariant
+        panda3d.AcceptInput,
+        # Scale inputs by frame time
+        panda3d.UpdateCharacter,
+        # mechanics.UpdateStamina, # Disables input based on current stamina
         # The following systems adjust the intended movement
-        panda3d.Walking, # Set speed according to input
-        panda3d.Accelerating, # Movement is accumulated instead of instant.
+        panda3d.Walking, # Scale speed according to movement type speed
+        panda3d.Inertiing, # Clamp movement speed delta by inertia
         panda3d.Bumping, # Bumping into things.
-        panda3d.Falling, # Falling, and standing on the ground,
+        panda3d.Falling, # Falling, and standing on the ground.
         panda3d.Jumping, # Impart upward impulse. Executed by falling.
         # Turn intention into actual movement
         panda3d.ExecuteMovement,
@@ -112,8 +114,7 @@ if __name__ == '__main__':
         panda3d.SprintingMovement(),
         panda3d.WalkingMovement(),
         panda3d.CrouchingMovement(),
-        panda3d.AirMovement(),
-        panda3d.AcceleratingMovement(),
+        panda3d.InertialMovement(),
         # Others
         mechanics.Stamina(),
         panda3d.CharacterController(),

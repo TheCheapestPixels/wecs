@@ -37,10 +37,12 @@ class AcceptInput(System):
             character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
-            character.sprints = False
-            character.crouching = False
+            character.sprints = True
+            character.crouches = False
+            character.jumps = False
 
-            # Emulate analog stick being half-way by holding shift
+            # For debug purposes, emulate analog stick on keyboard
+            # input, being half-way pressed, by holding shift
             analog = 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
                 analog = 0.5
@@ -53,6 +55,8 @@ class AcceptInput(System):
                 character.move.x -= analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("d")):
                 character.move.x += analog
+
+            # Rotation
             if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
                 character.pitch += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
@@ -61,27 +65,16 @@ class AcceptInput(System):
                 character.heading += 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
+
+            # Special movement modes.
+            # By default, you run ("sprint"), unless you press e, in
+            # which case you walk. You can crouch by pressing q; this
+            # overrides walking and running. Jump by pressing space.
+            # This logic is implemented by the Walking system. Here,
+            # only intention is signalled.
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("e")):
-                character.sprints = True
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
-                character.crouching = True
+                character.sprints = False
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("q")):
+                character.crouches = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
-                if FallingMovement in entity and JumpingMovement in entity:
-                    if entity[FallingMovement].ground_contact:
-                        character.jumps = True
-            else:
-                character.jumps = False
-
-
-            # if base.mouseWatcherNode.has_mouse():
-            #     mouse_pos = base.mouseWatcherNode.get_mouse()
-            #     character.heading = mouse_pos.get_x() * -character.max_heading
-            #     character.pitch = mouse_pos.get_y() * character.max_pitch
-            # else:
-            #     mouse_pos = None
-            # base.win.movePointer(
-            #     0,
-            #     int(base.win.getXSize() / 2),
-            #     int(base.win.getYSize() / 2),
-            # )
-            # entity[Input].last_mouse_pos = mouse_pos
+                character.jumps = True

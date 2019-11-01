@@ -28,6 +28,8 @@ class CharacterController:
     move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
     sprints: bool = False
     crouches: bool = False
@@ -60,8 +62,9 @@ class JumpingMovement:
 @Component()
 class InertialMovement:
     acceleration: float = 40.0
-    last_vector: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    last_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    rotated_inertia: float = 1.0
+    node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
+    ignore_z: bool = True
 
 
 @Component()
@@ -229,23 +232,65 @@ class Inertiing(System):
         'character': and_filter([
             CharacterController,
             InertialMovement,
+            Model,
             Clock,
         ]),
     }
 
+    def init_entity(self, filter_name, entity):
+        movement = entity[InertialMovement]
+        model = entity[Model]
+        movement.node.reparent_to(model.node)
+        movement.node.set_hpr(0, 0, 0)
+
+    def destroy_entity(self, filter_name, entity, components_by_type):
+    # detach InertialMovement.node
+        import pdb; pdb.set_trace()
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].timestep
+            model = entity[Model]
             character = entity[CharacterController]
             inertia = entity[InertialMovement]
 
-            vector = character.translation / dt
-            delta_v = vector - inertia.last_vector
+            # Usually you want to apply inertia only to x and y, and
+            # ignore z, so we cache it.
+            old_z = character.translation.z
+
+            # We use inertia.node to represent "last frame's" model
+            # orientation, scaled for how much inertia you'd like to
+            # keep model-relative. Wow, what a sentence...
+            # When you run forward and turn around, where should inertia
+            # carry you? Physically, towards your new backward
+            # direction. The opposite end of the scale of realism is
+            # that your inertia vector turns around with you, and keeps
+            # carrying you towards your new forward.
+            # So if inertia.rotated_inertia = 1.0, inertia.node will
+            # be aligned with the model, and thus the inertia vector
+            # turns with you. If inertia.rotated_inertia = 0.0,
+            # inertia.node will extrapolate the model's past rotation,
+            # and the inertia vector will thus be kept still relative to
+            # the surroundings.
+            inertia.node.set_hpr(
+                -character.last_rotation_speed * dt * (1 - inertia.rotated_inertia),
+            )
+            last_speed_vector = model.node.get_relative_vector(
+                inertia.node,
+                character.last_translation_speed,
+            )
+
+            # Now we calculate the wanted speed difference, and scale it
+            # within gameplay limits.
+            wanted_speed_vector = character.translation / dt
+            delta_v = wanted_speed_vector - last_speed_vector
             max_delta_v = inertia.acceleration * dt
             if delta_v.length() > max_delta_v:
                 capped_delta_v = delta_v / delta_v.length() * max_delta_v
-                character.translation = (inertia.last_vector + capped_delta_v) * dt
-            inertia.last_vector = character.translation / dt
+                character.translation = (last_speed_vector + capped_delta_v) * dt
+
+            if inertia.ignore_z:
+                character.translation.z = old_z
 
 
 class Bumping(CollisionSystem):
@@ -384,6 +429,7 @@ class ExecuteMovement(System):
         'character': and_filter([
             CharacterController,
             Model,
+            Clock,
         ]),
     }
 
@@ -391,5 +437,9 @@ class ExecuteMovement(System):
         for entity in entities_by_filter['character']:
             model = entity[Model]
             controller = entity[CharacterController]
+            dt = entity[Clock].timestep
+
             model.node.set_pos(model.node, controller.translation)
             model.node.set_hpr(model.node, controller.rotation)
+            controller.last_translation_speed = controller.translation / dt
+            controller.last_rotation_speed = controller.rotation / dt

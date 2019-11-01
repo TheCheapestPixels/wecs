@@ -91,10 +91,10 @@ if __name__ == '__main__':
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 1.0),
                     radius=0.7,
-                    debug=True,
+                    # debug=True,
                 ),
             },
-            debug=True,
+            # debug=True,
         ),
         panda3d.FallingMovement(
             gravity=Vec3(0, 0, -9.81),
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                     shape=CollisionSphere,
                     center=Vec3(0.0, 0.0, 0.25),
                     radius=0.5,
-                    debug=True,
+                    # debug=True,
                 ),
             },
             # debug=True,
@@ -114,7 +114,10 @@ if __name__ == '__main__':
         panda3d.SprintingMovement(),
         panda3d.WalkingMovement(),
         panda3d.CrouchingMovement(),
-        panda3d.InertialMovement(),
+        panda3d.InertialMovement(
+            acceleration=30.0,
+            rotated_inertia=0.5,
+        ),
         # Others
         mechanics.Stamina(),
         panda3d.CharacterController(),

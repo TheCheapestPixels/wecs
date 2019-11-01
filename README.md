@@ -382,6 +382,15 @@ present. This leads to easy management of the system:
 
 # TODO
 
+* Bugs
+  * CharacterController:
+    * Bumping: Go into an edge. You will find yourself sticking to it
+      instead of gliding off to one side.
+    * Bumping: Go through a thin wall.
+    * Bumping: Walk into a wall at a near-perpendicular angle, drifting
+      towards a corner. When the corner is reached, the character will
+      take a sudden side step. Easy to see when walking into a tree.
+    * Falling: Stand on a mountain ridge. You will jitter up and down.
 * Tests
   * `wecs.equipment`
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
@@ -395,11 +404,12 @@ present. This leads to easy management of the system:
     be tested between removing old and adding new components?
   * Archetypes: Make it easy to compose typical entities
   * De-/serialize world state
-* panda3d-pong
-  * Hoist `Components` / `Systems` into `panda3d.py` where applicable
 * panda3d
   * Check the `task_mgr` for tasks already existing at a given sort
   * If that's not possible, `System`ify existing Panda3D `tasks`
+  * CharacterController
+    * Spectator movement
+    * Move pitch clamping from UpdateCharacter to ExecuteMovement
 * All code
   * Change `filtered_entities` to `entities_by_filter`
   * `system.destroy_entity()` now gets `components_by_type` argument.

@@ -34,51 +34,45 @@ class CharacterController:
     max_heading: float = 90.0
     max_pitch: float = 90.0
     move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
-    max_move: Vec3 = field(default_factory=lambda:Vec3(20,20,0))
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
     sprints: bool = False
     crouches: bool = False
-    runs: bool = False
-    walks: bool = False
 
 
 @Component()
 class WalkingMovement:
-    speed: Vec3 = field(default_factory=lambda:Vec3(20,20,20))
-    backwards_multiplier: float = 1.0
-    run_threshold: float = 0.5
+    speed: float = 10.0
+    backwards_multiplier: float = 0.5
+    turning_speed: float = 60.0
 
 
 @Component()
 class SprintingMovement:
-    speed: Vec3 = field(default_factory=lambda:Vec3(30,30,30))
+    speed: float = 20.0
 
 
 @Component()
 class CrouchingMovement:
-    speed: Vec3 = field(default_factory=lambda:Vec3(5,5,5))
+    speed: float = 1.0
     height: float = 0.4
 
 
 @Component()
 class JumpingMovement:
-    speed: Vec3 = field(default_factory=lambda:Vec3(1,1,0))
+    speed: Vec3 = field(default_factory=lambda:Vec3(1, 1, 0))
     impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
-class AirMovement:
-    air_friction: float = 10.0
-
-
-@Component()
-class AcceleratingMovement:
-    accelerate: Vec2 = field(default_factory=lambda:Vec2(1, 1))
-    slide: Vec2 = field(default_factory=lambda:Vec2(1, 1))
-    brake: Vec2 = field(default_factory=lambda:Vec2(1, 1))
-    speed: Vec2 = field(default_factory=lambda:Vec2(0, 0))
+class InertialMovement:
+    acceleration: float = 40.0
+    rotated_inertia: float = 1.0
+    node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
+    ignore_z: bool = True
 
 
 @Component()
@@ -127,54 +121,16 @@ class UpdateCharacter(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            dt = entity[Clock].timestep
             controller = entity[CharacterController]
-            # Accelerating movement
-            if AcceleratingMovement in entity:
-                move = entity[AcceleratingMovement]
-                for a, speed in enumerate(move.speed):
-                    moving = controller.move[a]
-                    max_move = controller.max_move[a]
-                    air_friction = 1
-                    if AirMovement in entity and FallingMovement in entity:
-                        if not entity[FallingMovement].ground_contact:
-                            max_move = 9999999
-                            air_friction = entity[AirMovement].air_friction
-                    step = 0
-                    if moving:
-                        if speed < max_move*moving:
-                            step = move.accelerate[a]/air_friction
-                            if speed < 0:
-                                step = move.brake[a]/air_friction
-                        elif speed > max_move*moving:
-                            step = -move.accelerate[a]/air_friction
-                            if speed > 0:
-                                step = -move.brake[a]/air_friction
-                    else:
-                        if air_friction == 1:
-                            slide = move.slide[a]
-                            if speed > slide:
-                                step = -slide
-                            elif speed < -slide:
-                                step = slide
-                            else:
-                                move.speed[a] = 0
-                    move.speed[a] += step
-                x = move.speed.x
-                y = move.speed.y
-            # Normal (linear) movement
-            else:
-                x = controller.move.x * controller.max_move.x
-                y = controller.move.y * controller.max_move.y
+            model = entity[Model]
+            clock = entity[Clock]
 
-            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
-            xy_scaling = 1.0
-            if xy_dist > 1:
-                xy_scaling = 1.0 / xy_dist
-            controller.translation = Vec3(x * xy_scaling * dt, y * xy_scaling * dt, 0)
-
-            heading_delta = controller.heading * controller.max_heading * dt
-            preclamp_pitch = controller.node.get_p() + controller.pitch * controller.max_pitch * dt
+            # Rotation
+            # FIXME
+            # * move clamping to ExecuteMovement
+            # * make clamping optional
+            heading_delta = controller.heading * clock.timestep
+            preclamp_pitch = model.node.get_p() + controller.pitch * clock.timestep
             clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
             pitch_delta = clamped_pitch - preclamp_pitch
             controller.rotation = Vec3(
@@ -182,6 +138,15 @@ class UpdateCharacter(System):
                 pitch_delta,
                 0,
             )
+
+            # Translation
+            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
+            xy_scaling = 1.0
+            if xy_dist > 1:
+                xy_scaling = 1.0 / xy_dist
+            x = controller.move.x * xy_scaling
+            y = controller.move.y * xy_scaling
+            controller.translation = Vec3(x * clock.timestep, y * clock.timestep, 0)
 
 
 class HeadingFromCamera(System):
@@ -271,28 +236,108 @@ class CollisionSystem(System):
         movement.contacts = movement.queue.entries
 
 
-class WalkSpeeds(System):
+class MoveLinear(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
+            Clock,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            character   = entity[CharacterController]
-            if SprintingMovement in entity and character.sprints:
-                character.max_move = entity[SprintingMovement].speed
-            elif CrouchingMovement in entity and character.crouches:
-                character.max_move = entity[CrouchingMovement].speed
-            elif WalkingMovement in entity:
-                if character.move.y < 0:
-                    multiplier = entity[WalkingMovement].backwards_multiplier
-                else:
-                    multiplier = 1
-                character.max_move = entity[WalkingMovement].speed * multiplier
-            if JumpingMovement in entity  and character.jumps:
-                character.max_move = entity[JumpingMovement].speed
+            dt = entity[Clock].timestep
+            controller   = entity[CharacterController]
+
+
+class Walking(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            WalkingMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            character = entity[CharacterController]
+
+            speed = entity[WalkingMovement].speed
+            if character.sprints and SprintingMovement in entity:
+                speed = entity[SprintingMovement].speed
+            if character.crouches and CrouchingMovement in entity:
+                speed = entity[CrouchingMovement].speed
+            if character.move.y < 0:
+                speed *= entity[WalkingMovement].backwards_multiplier
+
+            character.translation *= speed
+            character.rotation *= entity[WalkingMovement].turning_speed
+
+
+class Inertiing(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            InertialMovement,
+            Model,
+            Clock,
+        ]),
+    }
+
+    def init_entity(self, filter_name, entity):
+        movement = entity[InertialMovement]
+        model = entity[Model]
+        movement.node.reparent_to(model.node)
+        movement.node.set_hpr(0, 0, 0)
+
+    def destroy_entity(self, filter_name, entity, components_by_type):
+    # detach InertialMovement.node
+        import pdb; pdb.set_trace()
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            dt = entity[Clock].timestep
+            model = entity[Model]
+            character = entity[CharacterController]
+            inertia = entity[InertialMovement]
+
+            # Usually you want to apply inertia only to x and y, and
+            # ignore z, so we cache it.
+            old_z = character.translation.z
+
+            # We use inertia.node to represent "last frame's" model
+            # orientation, scaled for how much inertia you'd like to
+            # keep model-relative. Wow, what a sentence...
+            # When you run forward and turn around, where should inertia
+            # carry you? Physically, towards your new backward
+            # direction. The opposite end of the scale of realism is
+            # that your inertia vector turns around with you, and keeps
+            # carrying you towards your new forward.
+            # So if inertia.rotated_inertia = 1.0, inertia.node will
+            # be aligned with the model, and thus the inertia vector
+            # turns with you. If inertia.rotated_inertia = 0.0,
+            # inertia.node will extrapolate the model's past rotation,
+            # and the inertia vector will thus be kept still relative to
+            # the surroundings.
+            inertia.node.set_hpr(
+                -character.last_rotation_speed * dt * (1 - inertia.rotated_inertia),
+            )
+            last_speed_vector = model.node.get_relative_vector(
+                inertia.node,
+                character.last_translation_speed,
+            )
+
+            # Now we calculate the wanted speed difference, and scale it
+            # within gameplay limits.
+            wanted_speed_vector = character.translation / dt
+            delta_v = wanted_speed_vector - last_speed_vector
+            max_delta_v = inertia.acceleration * dt
+            if delta_v.length() > max_delta_v:
+                capped_delta_v = delta_v / delta_v.length() * max_delta_v
+                character.translation = (last_speed_vector + capped_delta_v) * dt
+
+            if inertia.ignore_z:
+                character.translation.z = old_z
 
 
 class Bumping(CollisionSystem):
@@ -426,17 +471,17 @@ class ExecuteMovement(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
+            Model,
+            Clock,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
-            controller.node.set_hpr(controller.node, controller.rotation)
-            controller.node.set_pos(controller.node, controller.translation)
-            if Model in entity:
-                entity[Model].node.set_pos(controller.node.get_pos())
-            if ThirdPersonCamera in entity:
-                cam = entity[ThirdPersonCamera]
-                cam.pivot.set_pos(controller.node.get_pos())
-                cam.pivot.set_z(controller.node.get_z()+cam.pivot_height)
+            dt = entity[Clock].timestep
+
+            model.node.set_pos(model.node, controller.translation)
+            model.node.set_hpr(model.node, controller.rotation)
+            controller.last_translation_speed = controller.translation / dt
+            controller.last_rotation_speed = controller.rotation / dt

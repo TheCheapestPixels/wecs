@@ -18,17 +18,9 @@ from .model import Model
 from .model import Scene
 from .model import Clock
 
-from .camera import FirstPersonCamera
-from .camera import ThirdPersonCamera
-
-
-def clamp(i, floor, ceiling):
-    return min(ceiling, max(floor, i))
-
 
 @Component()
 class CharacterController:
-    node: NodePath = field(default_factory=NodePath)
     heading: float = 0.0
     pitch: float = 0.0
     max_heading: float = 90.0
@@ -82,7 +74,7 @@ class BumpingMovement:
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
-    debug: bool = False
+    debug: bool = True
 
 
 @Component()
@@ -96,7 +88,7 @@ class FallingMovement:
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
-    debug: bool = False
+    debug: bool = True
 
 
 # @Component()
@@ -115,9 +107,6 @@ class UpdateCharacter(System):
             Clock,
         ]),
     }
-
-    def init_entity(self, filter_name, entity):
-        entity[CharacterController].node.reparentTo(render)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
@@ -147,45 +136,6 @@ class UpdateCharacter(System):
             x = controller.move.x * xy_scaling
             y = controller.move.y * xy_scaling
             controller.translation = Vec3(x * clock.timestep, y * clock.timestep, 0)
-
-
-class HeadingFromCamera(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            Model,
-            Clock,
-            ThirdPersonCamera
-        ])
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
-            model = entity[Model]
-            clock = entity[Clock]
-            camera = entity[ThirdPersonCamera]
-            camera_heading = camera.pivot.get_h(render)
-            controller_heading = controller.node.get_h()
-            if not (controller.move.x == 0 and controller.move.y == 0):
-                model.node.set_h(camera_heading)
-
-            rotation_speed = 1
-            if AcceleratingMovement in entity:
-                speed = entity[AcceleratingMovement].speed
-                total = speed[0] + speed[1]
-                if total:
-                    # Where can I find the highest possible max_move to replace 200 with?
-                    rotation_speed -= total/200
-            if AirMovement in entity and FallingMovement in entity:
-                if not entity[FallingMovement].ground_contact:
-                    rotation_speed /= entity[AirMovement].air_friction/5
-
-            angle = (controller_heading - camera_heading)%360
-            if angle < 180-rotation_speed:
-                controller.heading = -rotation_speed
-            if angle > 180+rotation_speed:
-                controller.heading = rotation_speed
 
 
 # Movement systems
@@ -223,7 +173,7 @@ class CollisionSystem(System):
         solid['node'] = node
         node.node().add_solid(shape)
         node.node().set_into_collide_mask(0)
-        node.reparent_to(entity[CharacterController].node)
+        node.reparent_to(entity[Model].node)
         movement.traverser.add_collider(node, movement.queue)
         node.set_python_tag(movement.tag_name, movement)
         if 'debug' in solid and solid['debug']:
@@ -261,7 +211,6 @@ class Walking(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
-
             speed = entity[WalkingMovement].speed
             if character.sprints and SprintingMovement in entity:
                 speed = entity[SprintingMovement].speed
@@ -269,7 +218,6 @@ class Walking(System):
                 speed = entity[CrouchingMovement].speed
             if character.move.y < 0:
                 speed *= entity[WalkingMovement].backwards_multiplier
-
             character.translation *= speed
             character.rotation *= entity[WalkingMovement].turning_speed
 
@@ -394,13 +342,14 @@ class Falling(CollisionSystem):
             self.fall_and_land(entity)
 
     def predict_falling(self, entity):
+        model = entity[Model]
         scene = entity[Scene]
         clock = entity[Clock]
         controller = entity[CharacterController]
         falling_movement = entity[FallingMovement]
 
         # Adjust inertia by gravity
-        falling_movement.local_gravity = controller.node.get_relative_vector(
+        falling_movement.local_gravity = model.node.get_relative_vector(
             scene.node,
             falling_movement.gravity,
         )
@@ -480,7 +429,7 @@ class ExecuteMovement(System):
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             dt = entity[Clock].timestep
-
+            model = entity[Model]
             model.node.set_pos(model.node, controller.translation)
             model.node.set_hpr(model.node, controller.rotation)
             controller.last_translation_speed = controller.translation / dt

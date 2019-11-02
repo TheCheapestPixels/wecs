@@ -43,7 +43,8 @@ system_types = [
     # What movement does the player intend? Set it on character
     # controller (as translation and rotation) in normalized
     # range ([-1; 1]), ignoring time scaling.
-    panda3d.AcceptInput,
+    panda3d.AcceptInput, # Input from player
+    panda3d.Think, # Input from AIs
     # Scale inputs by frame time, making them "Intended movement in this
     # frame."
     panda3d.UpdateCharacter,
@@ -70,6 +71,7 @@ system_types = [
 # * avatar: A character with a body that walks around.
 # * spectator: A disembodied character that flies.
 # * player: A character that accepts keyboard input
+# * npc: A character that has AI for input
 # * first_person: A player with 1st person view
 # * third_person: A player with 3rd person view
 #
@@ -160,6 +162,13 @@ def player():
     return set([
         panda3d.Input(),
     ])
+def npc():
+    return set([
+        panda3d.ConstantCharacterAI(
+            move=Vec3(0.0, 0.75, 0.0),
+            heading=-0.1,
+        ),
+    ])
 def first_person():
     return set([
         panda3d.FirstPersonCamera(camera=base.cam),
@@ -209,6 +218,7 @@ if __name__ == '__main__':
             avatar(),
             # spectator(),
             player(),
+            # npc(),
             third_person(),
             # first_person(),
         )
@@ -219,7 +229,7 @@ if __name__ == '__main__':
     #    *set.union(
     #        character(),
     #        avatar(),
-    #        npc_ai(),
+    #        npc(),
     #    )
     #)
     

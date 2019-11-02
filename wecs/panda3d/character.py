@@ -27,19 +27,23 @@ class FloatingMovement:
 
 @Component()
 class CharacterController:
+    # Input or AI
+    move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
     heading: float = 0.0
     pitch: float = 0.0
-    max_heading: float = 90.0
-    max_pitch: float = 90.0
-    move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
-    translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    clamp_pitch: bool = True
-    last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
     sprints: bool = False
     crouches: bool = False
+    # FIXME: Shouldn't be used anymore
+    max_heading: float = 90.0
+    max_pitch: float = 90.0
+    # Intention of movement
+    translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    clamp_pitch: bool = True
+    # Speed bookkeeping
+    last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
 
 
 @Component()

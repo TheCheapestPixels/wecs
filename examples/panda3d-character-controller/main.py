@@ -220,11 +220,11 @@ if __name__ == '__main__':
         *set.union(
             character(),
             avatar(),
-            # spectator(),
+            #spectator(),
             player(),
-            # npc(),
+            #npc(),
             third_person(),
-            # first_person(),
+            #first_person(),
         )
     )
 

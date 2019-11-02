@@ -260,18 +260,17 @@ class TurningBackToCamera(System):
             controller = entity[CharacterController]
             model = entity[Model]
             camera = entity[ThirdPersonCamera]
-            camera_heading = entity[TurntableCamera].pivot.get_h(render)
+            camera_heading = entity[TurntableCamera].pivot.get_h(render)+180
             controller_heading = model.node.get_h()
             if not (controller.move.x == 0 and controller.move.y == 0):
                 rotation_speed = entity[TurningBackToCameraMovement].view_axis_allignment
-                if WalkingMovement in entity:
-                    rotation_speed *= entity[WalkingMovement].turning_speed
                 angle = (controller_heading - camera_heading)%360
-
+                if rotation_speed > angle:
+                    rotation_speed = angle
                 if angle < 180-rotation_speed:
-                    controller.heading = -rotation_speed
-                elif angle > 180+rotation_speed:
                     controller.heading = rotation_speed
+                elif angle > 180+rotation_speed:
+                    controller.heading = -rotation_speed
 
 
 class Inertiing(System):

@@ -31,7 +31,6 @@ class ThirdPersonCamera:
 class TurntableCamera:
     heading : float = 0
     pitch : float = 0
-    view_axis_allignment : float = 0
     pivot: NodePath = field(default_factory=lambda:NodePath("camera pivot"))
 
 
@@ -57,9 +56,10 @@ class UpdateCameras(System):
     }
 
     def init_entity(self, filter_name, entity):
+        model = entity[Model]
         if filter_name == "3rdPerson":
+            camera = entity[ThirdPersonCamera]
             if TurntableCamera in entity:
-                camera = entity[ThirdPersonCamera]
                 turntable = entity[TurntableCamera]
                 turntable.pivot.reparent_to(render)
                 turntable.pivot.set_z(camera.focus_height)
@@ -67,10 +67,17 @@ class UpdateCameras(System):
                 camera.camera.set_pos(0, -camera.distance, 0)
                 camera.camera.look_at(turntable.pivot)
             else:
-                camera.camera.reparent_to(entity[Model].node)
-                camera.camera.look_at(camera.focus_height)
+                camera.camera.reparent_to(model.node)
+                camera.camera.set_pos(0, -camera.distance, camera.height)
+                camera.camera.look_at(0, 0, camera.focus_height)
         elif filter_name == "1stPerson":
-            camera.camera.reparent_to(entity[Model].node)
+            camera = entity[FirstPersonCamera]
+            if camera.anchor_name is None:
+                camera.camera.reparent_to(model.node)
+            else:
+                camera.camera.reparent_to(model.node.find(camera.anchor_name))
+            camera.camera.set_pos(0, 0, 0)
+            camera.camera.set_hpr(0, 0, 0)
 
 
     def update(self, entities_by_filter):

@@ -49,7 +49,8 @@ system_types = [
     panda3d.UpdateCharacter,
     # mechanics.UpdateStamina, # Disables input based on current stamina
     # The following systems adjust the intended movement
-    panda3d.Walking, # Scale speed according to movement type speed
+    panda3d.Floating, # Scale speed for floating
+    panda3d.Walking, # Scale speed for walk / run / crouch / sprint
     panda3d.Inertiing, # Clamp movement speed delta by inertia
     panda3d.Bumping, # Bump into things (and out again).
     panda3d.Falling, # Fall, or stand on the ground.
@@ -92,7 +93,6 @@ def character():
     return set([
         panda3d.Clock(clock=globalClock),
         panda3d.Position(value=Point3(50, 295, 0)),
-        # panda3d.Model(model_name='models/smiley'),
         panda3d.Scene(node=base.render),
         panda3d.CharacterController(),
     ])
@@ -143,7 +143,18 @@ def avatar():
     ])
 def spectator():
     return set([
-        panda3d.Model(node=NodePath('spectator')),
+        panda3d.Model(model_name='models/smiley'),
+        # panda3d.Model(node=NodePath('spectator')),
+        panda3d.FloatingMovement(),
+        panda3d.BumpingMovement(
+            solids={
+                'bumper': dict(
+                    shape=CollisionSphere,
+                    center=Vec3(0.0, 0.0, 0.0),
+                    radius=1.0,
+                ),
+            },
+        ),
     ])
 def player():
     return set([
@@ -196,8 +207,10 @@ if __name__ == '__main__':
         *set.union(
             character(),
             avatar(),
+            # spectator(),
             player(),
             third_person(),
+            # first_person(),
         )
     )
 

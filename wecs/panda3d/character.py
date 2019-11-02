@@ -20,6 +20,12 @@ from .model import Clock
 
 
 @Component()
+class FloatingMovement:
+    speed: float = 200.0
+    turning_speed: float = 60.0
+
+
+@Component()
 class CharacterController:
     heading: float = 0.0
     pitch: float = 0.0
@@ -28,6 +34,7 @@ class CharacterController:
     move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
     translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    clamp_pitch: bool = True
     last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     jumps: bool = False
@@ -113,30 +120,26 @@ class UpdateCharacter(System):
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             model = entity[Model]
-            clock = entity[Clock]
+            dt = entity[Clock].timestep
 
             # Rotation
-            # FIXME
-            # * move clamping to ExecuteMovement
-            # * make clamping optional
-            heading_delta = controller.heading * clock.timestep
-            preclamp_pitch = model.node.get_p() + controller.pitch * clock.timestep
-            clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
-            pitch_delta = clamped_pitch - preclamp_pitch
             controller.rotation = Vec3(
-                heading_delta,
-                pitch_delta,
+                controller.heading * dt,
+                controller.pitch * dt,
                 0,
             )
 
             # Translation
+            # Controllers gamepad etc.) fill a whole rectangle of input
+            # space, but characters are limited to a circle. If you're
+            # strafing diagonally, you still don't get sqrt(2) speed.
             xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
             xy_scaling = 1.0
             if xy_dist > 1:
                 xy_scaling = 1.0 / xy_dist
             x = controller.move.x * xy_scaling
             y = controller.move.y * xy_scaling
-            controller.translation = Vec3(x * clock.timestep, y * clock.timestep, 0)
+            controller.translation = Vec3(x * dt, y * dt, 0)
 
 
 # Movement systems
@@ -189,18 +192,21 @@ class CollisionSystem(System):
         movement.contacts = movement.queue.entries
 
 
-class MoveLinear(System):
+class Floating(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            Clock,
+            FloatingMovement,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            dt = entity[Clock].timestep
-            controller   = entity[CharacterController]
+            character = entity[CharacterController]
+            floating = entity[FloatingMovement]
+
+            character.translation *= floating.speed
+            character.rotation *= floating.turning_speed
 
 
 class Walking(System):
@@ -214,17 +220,19 @@ class Walking(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
+            walking = entity[WalkingMovement]
 
-            speed = entity[WalkingMovement].speed
+            speed = walking.speed
             if character.sprints and SprintingMovement in entity:
                 speed = entity[SprintingMovement].speed
             if character.crouches and CrouchingMovement in entity:
                 speed = entity[CrouchingMovement].speed
             if character.move.y < 0:
-                speed *= entity[WalkingMovement].backwards_multiplier
+                speed *= walking.backwards_multiplier
 
             character.translation *= speed
-            character.rotation *= entity[WalkingMovement].turning_speed
+            character.rotation *= walking.turning_speed
+            character.rotation.y = 0  # No pitch adjustment while walking
 
 
 class Inertiing(System):
@@ -439,7 +447,17 @@ class ExecuteMovement(System):
             controller = entity[CharacterController]
             dt = entity[Clock].timestep
 
+            # Translation: Simple self-relative movement for now.
             model.node.set_pos(model.node, controller.translation)
-            model.node.set_hpr(model.node, controller.rotation)
             controller.last_translation_speed = controller.translation / dt
+
+            # Rotation
+            if controller.clamp_pitch:
+                # Adjust intended pitch until it won't move you over a pole.
+                preclamp_pitch = model.node.get_p() + controller.rotation.y
+                clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
+                controller.rotation.y += clamped_pitch - preclamp_pitch
+
+
+            model.node.set_hpr(model.node.get_hpr() + controller.rotation)
             controller.last_rotation_speed = controller.rotation / dt

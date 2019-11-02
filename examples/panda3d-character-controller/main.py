@@ -43,14 +43,16 @@ system_types = [
     # What movement does the player intend? Set it on character
     # controller (as translation and rotation) in normalized
     # range ([-1; 1]), ignoring time scaling.
-    panda3d.AcceptInput,
+    panda3d.AcceptInput, # Input from player
+    panda3d.Think, # Input from AIs
     mechanics.UpdateStamina,
     panda3d.TurningBackToCamera,
     # Scale inputs by frame time, making them "Intended movement in this
     # frame."
     panda3d.UpdateCharacter,
     # The following systems adjust the intended movement
-    panda3d.Walking, # Scale speed according to movement type speed
+    panda3d.Floating, # Scale speed for floating
+    panda3d.Walking, # Scale speed for walk / run / crouch / sprint
     panda3d.Inertiing, # Clamp movement speed delta by inertia
     panda3d.Bumping, # Bump into things (and out again).
     panda3d.Falling, # Fall, or stand on the ground.
@@ -71,6 +73,7 @@ system_types = [
 # * avatar: A character with a body that walks around.
 # * spectator: A disembodied character that flies.
 # * player: A character that accepts keyboard input
+# * npc: A character that has AI for input
 # * first_person: A player with 1st person view
 # * third_person: A player with 3rd person view
 #
@@ -94,7 +97,6 @@ def character():
     return set([
         panda3d.Clock(clock=globalClock),
         panda3d.Position(value=Point3(50, 295, 0)),
-        # panda3d.Model(model_name='models/smiley'),
         panda3d.Scene(node=base.render),
         panda3d.CharacterController(),
     ])
@@ -145,11 +147,29 @@ def avatar():
     ])
 def spectator():
     return set([
-        panda3d.Model(node=NodePath('spectator')),
+        panda3d.Model(model_name='models/smiley'),
+        # panda3d.Model(node=NodePath('spectator')),
+        panda3d.FloatingMovement(),
+        panda3d.BumpingMovement(
+            solids={
+                'bumper': dict(
+                    shape=CollisionSphere,
+                    center=Vec3(0.0, 0.0, 0.0),
+                    radius=1.0,
+                ),
+            },
+        ),
     ])
 def player():
     return set([
         panda3d.Input(),
+    ])
+def npc():
+    return set([
+        panda3d.ConstantCharacterAI(
+            move=Vec3(0.0, 0.75, 0.0),
+            heading=-0.1,
+        ),
     ])
 def first_person():
     return set([
@@ -200,8 +220,11 @@ if __name__ == '__main__':
         *set.union(
             character(),
             avatar(),
+            # spectator(),
             player(),
+            # npc(),
             third_person(),
+            # first_person(),
         )
     )
 
@@ -210,7 +233,7 @@ if __name__ == '__main__':
     #    *set.union(
     #        character(),
     #        avatar(),
-    #        npc_ai(),
+    #        npc(),
     #    )
     #)
 

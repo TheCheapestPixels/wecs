@@ -96,13 +96,13 @@ class ZoomOnCollision(System):
     entity_filters = {
         'camera': and_filter([
             ThirdPersonCamera,
-            CameraCollision,
+            CollisionZoom,
         ])
     }
 
     def init_entity(self, filter_name, entity):
         camera = entity[ThirdPersonCamera]
-        camera_col = entity[CameraCollision]
+        camera_col = entity[CollisionZoom]
         w = camera_col.body_width/2
         segs = ((0,0,w), (0,0,-w), (w,0,0), (-w,0,0))
         for seg in segs:
@@ -115,7 +115,7 @@ class ZoomOnCollision(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter["camera"]:
             camera = entity[ThirdPersonCamera]
-            camera_col = entity[CameraCollision]
+            camera_col = entity[CollisionZoom]
             camera_col.traverser.traverse(render)
             entries = list(camera_col.queue.entries)
             if len(entries) > 0:

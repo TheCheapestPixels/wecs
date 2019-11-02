@@ -69,11 +69,11 @@ class AcceptInput(System):
             if TurntableCamera in entity:
                 camera = entity[TurntableCamera]
                 camera.heading = camera.pitch = 0
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("h")):
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("j")):
                     camera.heading = 1
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("l")):
                     camera.heading = -1
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("j")):
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("i")):
                     camera.pitch = -1
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("k")):
                     camera.pitch = 1

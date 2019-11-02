@@ -18,6 +18,9 @@ from .model import Model
 from .model import Scene
 from .model import Clock
 
+from .camera import ThirdPersonCamera
+from .camera import TurntableCamera
+
 
 @Component()
 class CharacterController:
@@ -65,6 +68,11 @@ class InertialMovement:
     rotated_inertia: float = 1.0
     node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
     ignore_z: bool = True
+
+
+@Component()
+class TurningBackToCameraMovement:
+    view_axis_allignment: float = 1
 
 
 @Component()
@@ -220,6 +228,35 @@ class Walking(System):
                 speed *= entity[WalkingMovement].backwards_multiplier
             character.translation *= speed
             character.rotation *= entity[WalkingMovement].turning_speed
+
+
+class TurningBackToCamera(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+            ThirdPersonCamera,
+            TurntableCamera,
+            TurningBackToCameraMovement,
+        ])
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            controller = entity[CharacterController]
+            model = entity[Model]
+            camera = entity[ThirdPersonCamera]
+            camera_heading = entity[TurntableCamera].pivot.get_h(render)
+            controller_heading = model.node.get_h()
+            if not (controller.move.x == 0 and controller.move.y == 0):
+                rotation_speed = entity[TurningBackToCameraMovement].view_axis_allignment
+                if WalkingMovement in entity:
+                    rotation_speed *= entity[WalkingMovement].turning_speed
+                angle = (controller_heading - camera_heading)%360
+                if angle < 180-rotation_speed:
+                    controller.heading = -rotation_speed
+                elif angle > 180+rotation_speed:
+                    controller.heading = rotation_speed
 
 
 class Inertiing(System):

@@ -12,7 +12,6 @@ from wecs.core import System
 from wecs.core import and_filter
 
 from .model import Model
-from .character import CharacterController
 
 
 @Component()
@@ -30,6 +29,9 @@ class ThirdPersonCamera:
 
 @Component()
 class TurntableCamera:
+    heading : float = 0
+    pitch : float = 0
+    view_axis_allignment : float = 0
     pivot: NodePath = field(default_factory=lambda:NodePath("camera pivot"))
 
 
@@ -43,10 +45,6 @@ class CameraCollision:
 
 class UpdateCameras(System):
     entity_filters = {
-        'turntable': and_filter([
-            ThirdPersonCamera,
-            TurntableCamera,
-        ]),
         '3rdPerson' : and_filter([
             ThirdPersonCamera,
             Model
@@ -59,52 +57,32 @@ class UpdateCameras(System):
     }
 
     def init_entity(self, filter_name, entity):
-        if filter_name == 'turntable':
-            camera = entity[ThirdPersonCamera]
-            turntable = entity[TurntableCamera]
-            turntable.pivot.reparent_to(render)
-            turntable.pivot.set_z(camera.focus_height)
-            camera.camera.reparent_to(turntable.pivot)
-            camera.camera.set_pos(0, -camera.distance, 0)
-            camera.camera.look_at(turntable.pivot)
-        elif filter_name == "3rdperson":
-            camera.camera.reparent_to(entity[Model].node)
-            camera.camera.look_at(camera.focus_height)
-        elif filter_name == "1stperson":
+        if filter_name == "3rdPerson":
+            if TurntableCamera in entity:
+                camera = entity[ThirdPersonCamera]
+                turntable = entity[TurntableCamera]
+                turntable.pivot.reparent_to(render)
+                turntable.pivot.set_z(camera.focus_height)
+                camera.camera.reparent_to(turntable.pivot)
+                camera.camera.set_pos(0, -camera.distance, 0)
+                camera.camera.look_at(turntable.pivot)
+            else:
+                camera.camera.reparent_to(entity[Model].node)
+                camera.camera.look_at(camera.focus_height)
+        elif filter_name == "1stPerson":
             camera.camera.reparent_to(entity[Model].node)
 
 
     def update(self, entities_by_filter):
-        for entity in entities_by_filter["turntable"]:
+        for entity in entities_by_filter["3rdPerson"]:
             model = entity[Model]
-            pivot = entity[TurntableCamera].pivot
-            pivot.set_pos(model.node.get_pos())
-            pivot.set_z(pivot.get_z()+entity[ThirdPersonCamera].focus_height)
-
-
-class HeadingFromCamera(System):
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            Model,
-            ThirdPersonCamera
-        ])
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
-            model = entity[Model]
-            camera = entity[ThirdPersonCamera]
-            camera_heading = entity[TurntableCamera].pivot.get_h(render)
-            controller_heading = model.node.get_h()
-            if not (controller.move.x == 0 and controller.move.y == 0):
-                rotation_speed = 5
-                angle = (controller_heading - camera_heading)%360
-                if angle < 180-rotation_speed:
-                    controller.heading = -rotation_speed
-                elif angle > 180+rotation_speed:
-                    controller.heading = rotation_speed
+            if TurntableCamera in entity:
+                camera = entity[TurntableCamera]
+                pivot = entity[TurntableCamera].pivot
+                pivot.set_pos(model.node.get_pos())
+                pivot.set_z(pivot.get_z()+entity[ThirdPersonCamera].focus_height)
+                pivot.set_h(pivot.get_h()+camera.heading)
+                pivot.set_p(pivot.get_p()+camera.pitch)
 
 
 class CameraCollisions(System):

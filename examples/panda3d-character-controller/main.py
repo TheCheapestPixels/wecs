@@ -45,7 +45,7 @@ system_types = [
     # range ([-1; 1]), ignoring time scaling.
     panda3d.AcceptInput,
     mechanics.UpdateStamina,
-    panda3d.HeadingFromCamera,
+    panda3d.TurningBackToCamera,
     # Scale inputs by frame time, making them "Intended movement in this
     # frame."
     panda3d.UpdateCharacter,
@@ -162,6 +162,7 @@ def third_person():
             focus_height=1.8,
         ),
         panda3d.TurntableCamera(),
+        panda3d.TurningBackToCameraMovement(),
         panda3d.CameraCollision(),
     ])
 

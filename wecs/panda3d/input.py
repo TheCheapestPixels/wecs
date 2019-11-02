@@ -66,15 +66,16 @@ class AcceptInput(System):
                 character.heading -= 1
 
             if TurntableCamera in entity:
-                tt = entity[TurntableCamera]
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key(",")):
-                    tt.pivot.set_h(tt.pivot.get_h()+1)
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key(".")):
-                    tt.pivot.set_h(tt.pivot.get_h()-1)
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("r")):
-                    tt.pivot.set_p(tt.pivot.get_p()+1)
-                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("f")):
-                    tt.pivot.set_p(tt.pivot.get_p()-1)
+                camera = entity[TurntableCamera]
+                camera.heading = camera.pitch = 0
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("h")):
+                    camera.heading = 1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("l")):
+                    camera.heading = -1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("j")):
+                    camera.pitch = -1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("k")):
+                    camera.pitch = 1
 
 
             # Special movement modes.

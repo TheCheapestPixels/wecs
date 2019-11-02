@@ -61,7 +61,7 @@ system_types = [
     panda3d.ExecuteMovement,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
-    panda3d.CameraCollisions,
+    panda3d.ZoomOnCollision,
 ]
 
 
@@ -183,7 +183,7 @@ def third_person():
         ),
         panda3d.TurntableCamera(),
         panda3d.TurningBackToCameraMovement(),
-        panda3d.CameraCollision(),
+        panda3d.CollisionZoom(),
     ])
 
 

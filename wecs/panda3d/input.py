@@ -35,6 +35,7 @@ class AcceptInput(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
+            character.jumps = False
             character.sprints = False
             character.crouches = False
             character.move.x = 0.0

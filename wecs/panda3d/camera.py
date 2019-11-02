@@ -35,7 +35,7 @@ class TurntableCamera:
 
 
 @Component()
-class CameraCollision:
+class CollisionZoom:
     collision: CollisionNode = field(default_factory=lambda:CollisionNode("cam collisions"))
     traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser("cam traverser"))
     queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
@@ -92,7 +92,7 @@ class UpdateCameras(System):
                 pivot.set_p(pivot.get_p()+camera.pitch)
 
 
-class CameraCollisions(System):
+class ZoomOnCollision(System):
     entity_filters = {
         'camera': and_filter([
             ThirdPersonCamera,

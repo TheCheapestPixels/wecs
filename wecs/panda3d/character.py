@@ -93,7 +93,7 @@ class BumpingMovement:
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
-    debug: bool = True
+    debug: bool = False
 
 
 @Component()
@@ -107,7 +107,7 @@ class FallingMovement:
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
-    debug: bool = True
+    debug: bool = False
 
 
 # @Component()
@@ -124,6 +124,7 @@ class UpdateCharacter(System):
         'character': and_filter([
             CharacterController,
             Clock,
+            Model,
         ]),
     }
 
@@ -179,6 +180,7 @@ class CollisionSystem(System):
             movement.traverser.show_collisions(entity[Scene].node)
 
     def add_shape(self, entity, movement, solid, shape):
+        model = entity[Model]
         node = NodePath(CollisionNode(
             '{}-{}'.format(
                 movement.tag_name,
@@ -188,7 +190,7 @@ class CollisionSystem(System):
         solid['node'] = node
         node.node().add_solid(shape)
         node.node().set_into_collide_mask(0)
-        node.reparent_to(entity[Model].node)
+        node.reparent_to(model.node)
         movement.traverser.add_collider(node, movement.queue)
         node.set_python_tag(movement.tag_name, movement)
         if 'debug' in solid and solid['debug']:
@@ -346,6 +348,7 @@ class Bumping(CollisionSystem):
             CharacterController,
             BumpingMovement,
             Clock,
+            Model,
         ]),
     }
 
@@ -375,6 +378,7 @@ class Falling(CollisionSystem):
             FallingMovement,
             Scene,
             Clock,
+            Model,
         ]),
     }
 
@@ -452,6 +456,7 @@ class Jumping(CollisionSystem):
             FallingMovement,
             Scene,
             Clock,
+            Model,
         ]),
     }
 
@@ -464,7 +469,7 @@ class Jumping(CollisionSystem):
                 falling_movement.inertia += jumping_movement.impulse
 
 
-# Transcribe the final intended movement to the character, making it an
+# Transcribe the final intended movement to the model, making it an
 # actual movement.
 
 class ExecuteMovement(System):

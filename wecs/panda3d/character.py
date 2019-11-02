@@ -253,6 +253,7 @@ class TurningBackToCamera(System):
                 if WalkingMovement in entity:
                     rotation_speed *= entity[WalkingMovement].turning_speed
                 angle = (controller_heading - camera_heading)%360
+
                 if angle < 180-rotation_speed:
                     controller.heading = -rotation_speed
                 elif angle > 180+rotation_speed:

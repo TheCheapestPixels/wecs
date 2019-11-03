@@ -4,6 +4,8 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 
+from .camera import TurntableCamera
+
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
@@ -33,20 +35,18 @@ class AcceptInput(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
+            character.jumps = False
+            character.sprints = False
+            character.crouches = False
             character.move.x = 0.0
             character.move.y = 0.0
             character.heading = 0.0
             character.pitch = 0.0
-            character.sprints = True
-            character.crouches = False
-            character.jumps = False
-
             # For debug purposes, emulate analog stick on keyboard
             # input, being half-way pressed, by holding shift
             analog = 1
             if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
                 analog = 0.5
-
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("w")):
                 character.move.y += analog
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("s")):
@@ -66,6 +66,19 @@ class AcceptInput(System):
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
 
+            if TurntableCamera in entity:
+                camera = entity[TurntableCamera]
+                camera.heading = camera.pitch = 0
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("j")):
+                    camera.heading = 1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("l")):
+                    camera.heading = -1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("i")):
+                    camera.pitch = -1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("k")):
+                    camera.pitch = 1
+
+
             # Special movement modes.
             # By default, you run ("sprint"), unless you press e, in
             # which case you walk. You can crouch by pressing q; this
@@ -73,8 +86,8 @@ class AcceptInput(System):
             # This logic is implemented by the Walking system. Here,
             # only intention is signalled.
             if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("e")):
-                character.sprints = False
-            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("q")):
+                character.sprints = True
+            if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("c")):
                 character.crouches = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
                 character.jumps = True

@@ -1,4 +1,11 @@
+from dataclasses import field
 from panda3d.core import NodePath
+
+from panda3d.core import CollisionTraverser
+from panda3d.core import CollisionHandlerQueue
+from panda3d.core import CollisionHandlerPusher
+from panda3d.core import CollisionNode
+from panda3d.core import CollisionSegment
 
 from wecs.core import Component
 from wecs.core import System
@@ -13,33 +20,57 @@ class FirstPersonCamera:
     anchor_name: str = None
 
 
-# TODO:
-#   Rotate-around-character support
-#   Adjust distance so that the near plane is in front of level geometry
 @Component()
 class ThirdPersonCamera:
     camera: NodePath
     distance: float = 10.0
-    height: float = 3.0
-    focus_height: float = 2.0
-    dirty: bool = True
+    focus_height: float = 1.6
+
+
+@Component()
+class TurntableCamera:
+    heading : float = 0
+    pitch : float = 0
+    pivot: NodePath = field(default_factory=lambda:NodePath("camera pivot"))
+
+
+@Component()
+class CollisionZoom:
+    collision: CollisionNode = field(default_factory=lambda:CollisionNode("cam collisions"))
+    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser("cam traverser"))
+    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+    body_width: float = 0.5
 
 
 class UpdateCameras(System):
     entity_filters = {
-        '1stPerson': and_filter([
-            FirstPersonCamera,
-            Model,
-        ]),
-        '3rdPerson': and_filter([
+        '3rdPerson' : and_filter([
             ThirdPersonCamera,
-            Model,
+            Model
+
         ]),
+        '1stPerson' : and_filter([
+            FirstPersonCamera,
+            Model
+        ])
     }
 
     def init_entity(self, filter_name, entity):
         model = entity[Model]
-        if filter_name == '1stPerson':
+        if filter_name == "3rdPerson":
+            camera = entity[ThirdPersonCamera]
+            if TurntableCamera in entity:
+                turntable = entity[TurntableCamera]
+                turntable.pivot.reparent_to(render)
+                turntable.pivot.set_z(camera.focus_height)
+                camera.camera.reparent_to(turntable.pivot)
+                camera.camera.set_pos(0, -camera.distance, 0)
+                camera.camera.look_at(turntable.pivot)
+            else:
+                camera.camera.reparent_to(model.node)
+                camera.camera.set_pos(0, -camera.distance, camera.height)
+                camera.camera.look_at(0, 0, camera.focus_height)
+        elif filter_name == "1stPerson":
             camera = entity[FirstPersonCamera]
             if camera.anchor_name is None:
                 camera.camera.reparent_to(model.node)
@@ -47,14 +78,48 @@ class UpdateCameras(System):
                 camera.camera.reparent_to(model.node.find(camera.anchor_name))
             camera.camera.set_pos(0, 0, 0)
             camera.camera.set_hpr(0, 0, 0)
-        elif filter_name == '3rdPerson':
-            camera = entity[ThirdPersonCamera]
-            camera.camera.reparent_to(model.node)
-            camera.camera.set_pos(0, -camera.distance, camera.height)
-            camera.camera.look_at(0, 0, camera.focus_height)
+
 
     def update(self, entities_by_filter):
-        # If the camera needs to move relative to the model,
-        # put the code for the here.
-        # for entity in entities_by_filter['camType']:
-        pass
+        for entity in entities_by_filter["3rdPerson"]:
+            model = entity[Model]
+            if TurntableCamera in entity:
+                camera = entity[TurntableCamera]
+                pivot = entity[TurntableCamera].pivot
+                pivot.set_pos(model.node.get_pos())
+                pivot.set_z(pivot.get_z()+entity[ThirdPersonCamera].focus_height)
+                pivot.set_h(pivot.get_h()+camera.heading)
+                pivot.set_p(pivot.get_p()+camera.pitch)
+
+
+class ZoomOnCollision(System):
+    entity_filters = {
+        'camera': and_filter([
+            ThirdPersonCamera,
+            CollisionZoom,
+        ])
+    }
+
+    def init_entity(self, filter_name, entity):
+        camera = entity[ThirdPersonCamera]
+        camera_col = entity[CollisionZoom]
+        w = camera_col.body_width/2
+        segs = ((0,0,w), (0,0,-w), (w,0,0), (-w,0,0))
+        for seg in segs:
+            segment = CollisionSegment(seg,(0,-camera.distance,0))
+            camera_col.collision.addSolid(segment)
+        camera_col.collision.set_into_collide_mask(0)
+        cn = camera.camera.parent.attachNewNode(camera_col.collision)
+        camera_col.traverser.addCollider(cn, camera_col.queue)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter["camera"]:
+            camera = entity[ThirdPersonCamera]
+            camera_col = entity[CollisionZoom]
+            camera_col.traverser.traverse(render)
+            entries = list(camera_col.queue.entries)
+            if len(entries) > 0:
+                hit_pos = entries[0].get_surface_point(camera.camera.parent)
+                camera.camera.set_pos(hit_pos)
+            else:
+                camera.camera.set_pos(0, -camera.distance, 0)

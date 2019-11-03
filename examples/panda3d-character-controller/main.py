@@ -45,10 +45,11 @@ system_types = [
     # range ([-1; 1]), ignoring time scaling.
     panda3d.AcceptInput, # Input from player
     panda3d.Think, # Input from AIs
+    mechanics.UpdateStamina,
+    panda3d.TurningBackToCamera,
     # Scale inputs by frame time, making them "Intended movement in this
     # frame."
     panda3d.UpdateCharacter,
-    # mechanics.UpdateStamina, # Disables input based on current stamina
     # The following systems adjust the intended movement
     panda3d.Floating, # Scale speed for floating
     panda3d.Walking, # Scale speed for walk / run / crouch / sprint
@@ -60,6 +61,7 @@ system_types = [
     panda3d.ExecuteMovement,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
+    panda3d.ZoomOnCollision,
 ]
 
 
@@ -177,9 +179,11 @@ def third_person():
     return set([
         panda3d.ThirdPersonCamera(
             camera=base.cam,
-            height=2.0,
             focus_height=1.8,
         ),
+        panda3d.TurntableCamera(),
+        panda3d.TurningBackToCameraMovement(),
+        panda3d.CollisionZoom(),
     ])
 
 
@@ -216,11 +220,11 @@ if __name__ == '__main__':
         *set.union(
             character(),
             avatar(),
-            # spectator(),
+            #spectator(),
             player(),
-            # npc(),
+            #npc(),
             third_person(),
-            # first_person(),
+            #first_person(),
         )
     )
 
@@ -232,6 +236,6 @@ if __name__ == '__main__':
     #        npc(),
     #    )
     #)
-    
+
     ### Run
     base.run()

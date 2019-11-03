@@ -121,7 +121,7 @@ class LoadModels(System):
     def post_load_hook(self, node, entity):
         pass
 
-            
+
 # Bullet physics
 
 class SetUpPhysics(System):

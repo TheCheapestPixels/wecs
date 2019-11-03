@@ -18,6 +18,9 @@ from .model import Model
 from .model import Scene
 from .model import Clock
 
+from .camera import ThirdPersonCamera
+from .camera import TurntableCamera
+
 
 @Component()
 class FloatingMovement:
@@ -79,6 +82,11 @@ class InertialMovement:
 
 
 @Component()
+class TurningBackToCameraMovement:
+    view_axis_allignment: float = 1
+
+
+@Component()
 class BumpingMovement:
     tag_name: str = 'bumping'
     solids: dict = field(default_factory=lambda:dict())
@@ -115,8 +123,8 @@ class UpdateCharacter(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            Model,
             Clock,
+            Model,
         ]),
     }
 
@@ -190,7 +198,6 @@ class CollisionSystem(System):
 
     def run_sensors(self, entity, movement):
         scene = entity[Scene]
-
         movement.traverser.traverse(scene.node)
         movement.queue.sort_entries()
         movement.contacts = movement.queue.entries
@@ -237,6 +244,35 @@ class Walking(System):
             character.translation *= speed
             character.rotation *= walking.turning_speed
             character.rotation.y = 0  # No pitch adjustment while walking
+
+
+class TurningBackToCamera(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+            ThirdPersonCamera,
+            TurntableCamera,
+            TurningBackToCameraMovement,
+        ])
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            controller = entity[CharacterController]
+            model = entity[Model]
+            camera = entity[ThirdPersonCamera]
+            camera_heading = entity[TurntableCamera].pivot.get_h(render)+180
+            controller_heading = model.node.get_h()
+            if not (controller.move.x == 0 and controller.move.y == 0):
+                rotation_speed = entity[TurningBackToCameraMovement].view_axis_allignment
+                angle = (controller_heading - camera_heading)%360
+                if rotation_speed > angle:
+                    rotation_speed = angle
+                if angle < 180-rotation_speed:
+                    controller.heading = rotation_speed
+                elif angle > 180+rotation_speed:
+                    controller.heading = -rotation_speed
 
 
 class Inertiing(System):
@@ -309,10 +345,10 @@ class Bumping(CollisionSystem):
     entity_filters = {
         'character': and_filter([
             Scene,
-            Model,
             CharacterController,
             BumpingMovement,
             Clock,
+            Model,
         ]),
     }
 
@@ -340,9 +376,9 @@ class Falling(CollisionSystem):
         'character': and_filter([
             CharacterController,
             FallingMovement,
-            Model,
             Scene,
             Clock,
+            Model,
         ]),
     }
 
@@ -418,9 +454,9 @@ class Jumping(CollisionSystem):
             CharacterController,
             JumpingMovement,
             FallingMovement,
-            Model,
             Scene,
             Clock,
+            Model,
         ]),
     }
 
@@ -435,7 +471,7 @@ class Jumping(CollisionSystem):
 
 # Transcribe the final intended movement to the model, making it an
 # actual movement.
-                
+
 class ExecuteMovement(System):
     entity_filters = {
         'character': and_filter([

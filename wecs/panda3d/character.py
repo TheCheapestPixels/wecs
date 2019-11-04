@@ -13,6 +13,7 @@ from panda3d.core import CollisionNode
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
+from wecs.core import or_filter
 
 from .model import Model
 from .model import Scene
@@ -83,7 +84,7 @@ class InertialMovement:
 
 @Component()
 class TurningBackToCameraMovement:
-    view_axis_allignment: float = 1
+    view_axis_alignment: float = 1
 
 
 @Component()
@@ -249,30 +250,55 @@ class Walking(System):
 class TurningBackToCamera(System):
     entity_filters = {
         'character': and_filter([
+            TurningBackToCameraMovement,
             CharacterController,
             Model,
             ThirdPersonCamera,
             TurntableCamera,
-            TurningBackToCameraMovement,
+            Clock,
+            or_filter([
+                WalkingMovement,
+                FloatingMovement,
+            ]),
         ])
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
+            character = entity[CharacterController]
             model = entity[Model]
             camera = entity[ThirdPersonCamera]
-            camera_heading = entity[TurntableCamera].pivot.get_h(render)+180
-            controller_heading = model.node.get_h()
-            if not (controller.move.x == 0 and controller.move.y == 0):
-                rotation_speed = entity[TurningBackToCameraMovement].view_axis_allignment
-                angle = (controller_heading - camera_heading)%360
-                if rotation_speed > angle:
-                    rotation_speed = angle
-                if angle < 180-rotation_speed:
-                    controller.heading = rotation_speed
-                elif angle > 180+rotation_speed:
-                    controller.heading = -rotation_speed
+            turntable = entity[TurntableCamera]
+            turning = entity[TurningBackToCameraMovement]
+            if WalkingMovement in entity:
+                movement = entity[WalkingMovement]
+            else:
+                movement = entity[FloatingMovement]
+            dt = entity[Clock].timestep
+
+            if not (character.move.x == 0 and character.move.y == 0):
+                # What's the angle to turn?
+                camera_heading = turntable.pivot.get_h() % 360
+                if camera_heading > 180.0:
+                    camera_heading = camera_heading - 360.0
+                # How fast do we have to turn to achieve that?
+                rotation_angle = movement.turning_speed * dt
+                turning_speed = camera_heading / rotation_angle
+                if abs(turning_speed) > 1.0:
+                    turning_speed /= abs(turning_speed)
+                # And how much does that really influence the behavior?
+                turning_speed *= turning.view_axis_alignment
+                old_heading = character.heading
+                character.heading += turning_speed
+                character.heading = max(min(character.heading, 1), -1)
+                # Since the camera rotates with the character, we need
+                # to counteract that as well. So what angle did we
+                # correct turning by?
+                delta_heading = character.heading - old_heading
+                delta_heading_angle = delta_heading * movement.turning_speed * dt
+                # We don't clamp the result. Too fast cameras are not a
+                # problem, and this hopefully feels more consistent.
+                turntable.heading -= delta_heading_angle / turntable.turning_speed / dt
 
 
 class Inertiing(System):

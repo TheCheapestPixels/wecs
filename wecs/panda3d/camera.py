@@ -12,6 +12,7 @@ from wecs.core import System
 from wecs.core import and_filter
 
 from .model import Model
+from .model import Clock
 
 
 @Component()
@@ -23,15 +24,20 @@ class FirstPersonCamera:
 @Component()
 class ThirdPersonCamera:
     camera: NodePath
+    height: float = 2.0
     distance: float = 10.0
     focus_height: float = 1.6
 
 
 @Component()
 class TurntableCamera:
-    heading : float = 0
-    pitch : float = 0
+    turning_speed: float = 60.0
+    heading: float = 0
+    pitch: float = 0
+    min_pitch: float = -80.0
+    max_pitch: float = 45.0
     pivot: NodePath = field(default_factory=lambda:NodePath("camera pivot"))
+    attached: bool = False
 
 
 @Component()
@@ -44,33 +50,25 @@ class CollisionZoom:
 
 class UpdateCameras(System):
     entity_filters = {
-        '3rdPerson' : and_filter([
+        '3rdPerson': and_filter([
             ThirdPersonCamera,
-            Model
-
+            Model,
         ]),
-        '1stPerson' : and_filter([
+        '1stPerson': and_filter([
             FirstPersonCamera,
-            Model
-        ])
+            Model,
+        ]),
+        'turntable': and_filter([
+            TurntableCamera,
+            Model,
+            ThirdPersonCamera,
+            Clock,
+        ]),
     }
 
     def init_entity(self, filter_name, entity):
         model = entity[Model]
-        if filter_name == "3rdPerson":
-            camera = entity[ThirdPersonCamera]
-            if TurntableCamera in entity:
-                turntable = entity[TurntableCamera]
-                turntable.pivot.reparent_to(render)
-                turntable.pivot.set_z(camera.focus_height)
-                camera.camera.reparent_to(turntable.pivot)
-                camera.camera.set_pos(0, -camera.distance, 0)
-                camera.camera.look_at(turntable.pivot)
-            else:
-                camera.camera.reparent_to(model.node)
-                camera.camera.set_pos(0, -camera.distance, camera.height)
-                camera.camera.look_at(0, 0, camera.focus_height)
-        elif filter_name == "1stPerson":
+        if filter_name == "1stPerson":
             camera = entity[FirstPersonCamera]
             if camera.anchor_name is None:
                 camera.camera.reparent_to(model.node)
@@ -78,21 +76,53 @@ class UpdateCameras(System):
                 camera.camera.reparent_to(model.node.find(camera.anchor_name))
             camera.camera.set_pos(0, 0, 0)
             camera.camera.set_hpr(0, 0, 0)
+        elif filter_name == '3rdPerson':
+            camera = entity[ThirdPersonCamera]
+            if TurntableCamera in entity:
+                if not entity[TurntableCamera].attached:
+                    self.attach_turntable(entity)
+            else:
+                camera.camera.reparent_to(model.node)
+                camera.camera.set_pos(0, -camera.distance, camera.height)
+                camera.camera.look_at(0, 0, camera.focus_height)
+        elif filter_name == 'turntable':
+            if not entity[TurntableCamera].attached:
+                self.attach_turntable(entity)
 
+    def attach_turntable(self, entity):
+        turntable = entity[TurntableCamera]
+        model = entity[Model]
+        camera = entity[ThirdPersonCamera]
+
+        turntable.pivot.reparent_to(model.node)
+        camera.camera.reparent_to(turntable.pivot)
+        turntable.attached = True
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter["3rdPerson"]:
-            model = entity[Model]
-            if TurntableCamera in entity:
-                camera = entity[TurntableCamera]
-                pivot = entity[TurntableCamera].pivot
-                pivot.set_pos(model.node.get_pos())
-                pivot.set_z(pivot.get_z()+entity[ThirdPersonCamera].focus_height)
-                pivot.set_h(pivot.get_h()+camera.heading)
-                pivot.set_p(pivot.get_p()+camera.pitch)
+            if TurntableCamera in entity and Clock in entity:
+                model = entity[Model]
+                turntable = entity[TurntableCamera]
+                camera = entity[ThirdPersonCamera]
+                dt = entity[Clock].timestep
+
+                pivot = turntable.pivot
+                pivot.set_pos(0, 0, camera.focus_height)
+                camera.camera.set_pos(0, -camera.distance, 0)
+                camera.camera.look_at(turntable.pivot)
+
+                # Rotate pivot
+                max_angle = turntable.turning_speed * dt
+                heading_angle = turntable.heading * max_angle
+                pivot.set_h(pivot.get_h() + heading_angle)
+                pitch_angle = turntable.pitch * max_angle
+                new_pitch = pivot.get_p() + pitch_angle
+                new_pitch = max(new_pitch, turntable.min_pitch)
+                new_pitch = min(new_pitch, turntable.max_pitch)
+                pivot.set_p(new_pitch)
 
 
-class ZoomOnCollision(System):
+class CollideCamerasWithTerrain(System):
     entity_filters = {
         'camera': and_filter([
             ThirdPersonCamera,

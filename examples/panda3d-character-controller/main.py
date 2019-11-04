@@ -61,7 +61,7 @@ system_types = [
     panda3d.ExecuteMovement,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
-    panda3d.ZoomOnCollision,
+    panda3d.CollideCamerasWithTerrain,
 ]
 
 

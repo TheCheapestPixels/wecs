@@ -382,6 +382,27 @@ present. This leads to easy management of the system:
 
 # TODO
 
+### Hot Topics
+
+* core
+  * Archetypes or Aspects: Make it easy to compose typical entities
+* ai
+  * Turn towards entity
+  * Move towards entity
+  * Perceive entity
+  * Hierarchical Finite State Machine
+  * GOAP / STRIPS
+* panda3d
+  * character.Walking
+    * Decreased control while in the air
+    * Null input should have zero effect, not effect towards zero movement
+  * character.Jumping
+    * Multijump
+  * Debug console
+
+
+### Icebox
+
 * Bugs
   * CharacterController:
     * Bumping: Go into an edge. You will find yourself sticking to it
@@ -391,18 +412,23 @@ present. This leads to easy management of the system:
       towards a corner. When the corner is reached, the character will
       take a sudden side step. Easy to see when walking into a tree.
     * Falling: Stand on a mountain ridge. You will jitter up and down.
+  * CollideCamerasWithTerrain
+    * With the head stuck against a wall (e.g. in the tunnel), this places
+      the camera into the wall, allowing to see through it.
+    * If the angle camera-wall and camera-character is small, the wall
+      gets culled, probably due to the near plane being in the wall.
 * Tests
   * `wecs.equipment`
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?
   * Does removing entities affect the currently running system?
+  * Coverage is... lacking.
 * core
   * API improvements
     * `entity = world[entity_uid]`
     * `entity = other_entity.get_component(Reference).uid`
   * Unique `Components`; Only one per type in the world at any given time, to
     be tested between removing old and adding new components?
-  * Archetypes: Make it easy to compose typical entities
   * De-/serialize world state
 * panda3d
   * Check the `task_mgr` for tasks already existing at a given sort
@@ -416,3 +442,4 @@ present. This leads to easy management of the system:
   * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
   * `system.init_entity()` is also misleading. Maybe change it to
     `system.init_components()`, and give it a `components_by_type` argument too?
+  * I've been really bad about implementing `system.destroy_entity()`s...

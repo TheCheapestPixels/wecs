@@ -386,19 +386,14 @@ present. This leads to easy management of the system:
 
 * core
   * Archetypes or Aspects: Make it easy to compose typical entities
-* ai
-  * Turn towards entity
-  * Move towards entity
-  * Perceive entity
-  * Hierarchical Finite State Machine
-  * GOAP / STRIPS
 * panda3d
+  * Check the `task_mgr` for tasks already existing at a given sort
+  * If that's not possible, `System`ify existing Panda3D `tasks`
   * character.Walking
     * Decreased control while in the air
     * Null input should have zero effect, not effect towards zero movement
   * character.Jumping
     * Multijump
-  * Debug console
 
 
 ### Icebox
@@ -411,6 +406,7 @@ present. This leads to easy management of the system:
     * Bumping: Walk into a wall at a near-perpendicular angle, drifting
       towards a corner. When the corner is reached, the character will
       take a sudden side step. Easy to see when walking into a tree.
+      Probably the result not taking inertia into account.
     * Falling: Stand on a mountain ridge. You will jitter up and down.
   * CollideCamerasWithTerrain
     * With the head stuck against a wall (e.g. in the tunnel), this places
@@ -418,7 +414,6 @@ present. This leads to easy management of the system:
     * If the angle camera-wall and camera-character is small, the wall
       gets culled, probably due to the near plane being in the wall.
 * Tests
-  * `wecs.equipment`
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?
   * Does removing entities affect the currently running system?
@@ -431,11 +426,18 @@ present. This leads to easy management of the system:
     be tested between removing old and adding new components?
   * De-/serialize world state
 * panda3d
-  * Check the `task_mgr` for tasks already existing at a given sort
-  * If that's not possible, `System`ify existing Panda3D `tasks`
-  * CharacterController
-    * Spectator movement
-    * Move pitch clamping from UpdateCharacter to ExecuteMovement
+  * character
+    * climbing
+  * ai
+    * Turn towards entity
+    * Move towards entity
+    * Perceive entity
+  * Debug console
+* mechanics
+  * Meter systems: i.e. Health, Mana
+* ai
+  * Hierarchical Finite State Machine
+  * GOAP / STRIPS
 * All code
   * Change `filtered_entities` to `entities_by_filter`
   * `system.destroy_entity()` now gets `components_by_type` argument.

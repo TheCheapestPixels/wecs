@@ -85,6 +85,8 @@ needed here merely because `entity[] = foo_component` isn't syntactically valid
 Python.
 
 
+# Design
+
 ## Deferred `Component` addition / removal
 
 Do note that additions / removals of components are deferred, and only take
@@ -349,7 +351,7 @@ task chains to run asynchronous, while "every frame" tasks are put into the
 default task chain.
 
 
-## Note: Component inheritance
+## Note: Component Inheritance Considered Dangerous
 
 One basic design feature of an ECS is the separation of data from the code that
 processes it. One could now get the idea "Excellent, then I can have a class
@@ -374,6 +376,113 @@ present. This leads to easy management of the system:
   entity.
 
 
+## Composing templates for generic entities
+
+To set up entities individually, giving them their components and the starting
+values of those, is repetitive and inefficient. Even writing a factory function
+for each type of entity in your game is repetitive, because in all likelihood,
+some kinds of entities will be very similar to each other.
+
+Thus we need factory functions that create entities from sets of building
+blocks, and allow for overriding the given default values on a per-entity basis.
+The question is: How are those building blocks put together?
+
+Two approaches offer themselves:
+* Archetypes: Just use Python's inheritance system. Conflicts due to diamond
+  inheritance should be resolved by the usual linearization rules. Frankly I
+  have not thought too deeply about this approach.
+  * Pros: People who know Python know how this works
+  * Cons: Didn't we just get rid of OOP inheritance for reasons?
+* Aspects: We'll do EC-like composition again on a higher level.
+  * An aspect is a set of component types (and values diverging from the
+    defaults) and parent aspects. When you create an entity from a set of
+    aspects, all component types get pooled. Unlike to Archetypes, each type
+    must be provided only once. This disallows diamond inheritance and forces a
+    pure tree inheritance.
+    * This can already be checked on aspect creation
+    * It also allows for testing at runtime whether an entity still fulfills an
+      archetype.
+    * This in turn allows for removing and adding aspects at runtime while
+      insuring that aspects lower down in the hierarchy still match. An entity
+      can be given several different instances of an archetype, only one of
+      which can be active at any given time, but can be swapped out for another
+      one.
+  * API draft:
+    ```
+    * Aspect(aspects_or_components, overrides=None)
+      Creates an aspect.
+      Calling an aspect returns a set of new component instances.
+      `overrides` provides default values to use instead of the ones on the
+      provided aspects.
+      Calling an aspect with overrides does not invalidate, but possibly
+      override, an aspect's overrides.
+
+      moveset = [WalkingMovement, InertialMovement, BumpingMovement, FallingMovement]
+      walker = Aspect(moveset)
+      slider = Aspect(moveset, {InertialMovement: dict(acceleration=5.0)})
+      world.create_entity(slider())  # A walker with acceleration of 5.0
+      world.create_entity(slider({InertialMovement: dict(rotated_inertia=1.0)})))  # Acceleration is still 5.0
+    * add_aspect(entity, components)
+      Just a bit of syntactic sugar, and may perform a check whether component
+      clashes would occur before adding any component.
+    * MetaAspect(list_of_aspects)
+      A MetaAspect is a list of aspects. Components can not be created from a
+      MetaAspect. Its purpose is to serve as a flexible filter when removing
+      aspects from an entity. Instead of of one aspect, it is given a list of
+      them, which is matched in order against the entity. The first one to
+      match is then removed from the entity.
+    * remove_aspect(entity, aspect_or_metaaspect)
+      Returns the set of removed components.
+    ```
+  * Use case:
+    ```
+    # For readability, default values are omitted, and the
+    # The minimum that a character can be is a disembodied character...
+    character = Aspect([Clock, Position, Scene, CharacterController])
+    # ...until it gets a body.
+    avatar = Aspect([character, Model, WalkingMovement, Stamina])
+    spectator = Aspect([character, Model, FloatingMovement])
+
+    # A player has a camera with which to see into the world.
+    first_person = Aspect([FirstPersonCamera])
+    third_person = Aspect([ThirdPersonCamera])
+    camera = MetaAspect([first_person, third_person])
+
+    # Most characters have logic that controls their actions.
+    input = Aspect([Input])
+    ai = Aspect([ConstantCharacterAI])
+    control = MetaAspect([input, ai])
+
+    # To make our lives easier, a high-level abstractions...
+    # (This is the one case that makes MetaAspects necessary.)
+    mind = MetaAspect([Aspect([control, camera]), control])
+    # ...and templates.
+    player_character = Aspect([avatar, input, first_person])
+    non_player_character = Aspect([avatar, ai])
+
+    # Now let's create some entities!
+    player_entity = world.create_entity(player_character())
+    npc_entity = world.create_entity(npc_character())
+
+    # What if "minds" that control characters could swap bodies?
+    def swap_minds(entity_a, entity_b):
+        mind_a = remove_aspect(entity_a, mind)
+        mind_b = remove_aspect(entity_b, mind)
+        add_aspect(entity_a, mind_b)
+        add_aspect(entity_b, mind_a)
+    swap_minds(player_entity, npc_entity) # This will get confusing...
+    swap_minds(player_entity, npc_entity) # Much better.
+
+    # Now let's force a 3rd Person camera on the player.
+    remove_aspect(npc_entity, camera)
+    add_aspect(npc_entity, third_person())
+    ```
+  * Pros:
+    * Looks like it might work; Further research is warranted.
+  * Cons:
+    * Does this actually reduce complexity?
+    * What kind of type-theoretical implications does it have?
+
 ## Sources
 
 * http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/
@@ -382,8 +491,9 @@ present. This leads to easy management of the system:
 
 # TODO
 
-### Hot Topics
+## Hot Topics
 
+* Update PyPI package
 * core
   * Archetypes or Aspects: Make it easy to compose typical entities
 * panda3d
@@ -396,7 +506,7 @@ present. This leads to easy management of the system:
     * Multijump
 
 
-### Icebox
+## Icebox
 
 * Bugs
   * CharacterController:

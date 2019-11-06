@@ -548,6 +548,42 @@ Two approaches offer themselves:
 * ai
   * Hierarchical Finite State Machine
   * GOAP / STRIPS
+* examples
+  * Minimalistic implementations of different genres, acting as guideposts for
+    system / component development.
+    * Walking simulator
+      * documents / audio logs
+      * triggering changes in the world
+    * Platformer
+      * 2D or 3D? Make sure that it doesn't matter.
+      * Minimal NPC AI
+    * Twin stick shooter
+      * Tactical NPC AI
+    * Creed-like climber
+    * Stealth game
+    * First-person shooter: "Five Minutes of Violence"
+    * Driving game: "Friction: Zero"
+    * Abstract puzzle game: "sixxis"
+      * Candidate for list culling: Probably provides no reusable mechanics
+    * Match 3
+    * Rhythm game
+      * Candidate for list culling: Just a specific subgenre of abstract puzzle games.
+        Then again, it is a specific mechanic that defines a (sub)genre...
+    * Environmental puzzle game
+    * Turn-based strategy
+      * Strategic AI
+    * Real-time strategy
+      * Strategic AI
+    * Point and click
+    * Role-playing game
+      * Character sheet and randomized skill tests
+      * Talking
+    * Adventure
+    * Flight simulator
+    * City / tycoon / business / farming / life simulation
+    * Rail shooter / Shooting gallery
+    * Brawler
+    * Bullet Hell
 * All code
   * Change `filtered_entities` to `entities_by_filter`
   * `system.destroy_entity()` now gets `components_by_type` argument.

@@ -14,12 +14,12 @@ class Component_A:
 
 
 @Component()
-class Component_C:
-    pass
+class Component_B:
+    i: int = 0
 
 
 @Component()
-class Component_B:
+class Component_C:
     pass
 
 
@@ -77,6 +77,10 @@ def test_aspect_from_mixed_args():
     assert Component_B in aspect_2
 
 
+def test_clashing_args():
+    with pytest.raises(ValueError):
+        aspect = Aspect([Component_A, Component_A])
+
 def test_clashing_aspects():
     aspect_1 = Aspect([Component_A, Component_B])
     aspect_2 = Aspect([Component_B])
@@ -106,6 +110,15 @@ def test_create_with_overrides_on_creation():
     aspect = Aspect([Component_A])
     [component] = aspect(overrides={Component_A: dict(i=1)})
     assert component.i == 1
+
+def test_create_with_override_for_missing_component():
+    with pytest.raises(ValueError):
+        Aspect(
+            [Component_A],
+            overrides={
+                Component_B: dict(i=1),
+            },
+        )
 
 
 def test_adding_aspect_to_entity(world):
@@ -155,7 +168,7 @@ def test_remove_aspect_from_entity_that_does_not_have_it(world):
         aspect.remove(entity)
 
 
-def test_factory():
+def test_factory_func():
     class Foo:
         pass
     f = factory(lambda:Foo())
@@ -164,3 +177,15 @@ def test_factory():
     assert isinstance(a, Foo)
     assert isinstance(b, Foo)
     assert a is not b
+
+
+def test_create_aspect_with_factory_function_defaults(world):
+    class Foo:
+        pass
+    aspect = Aspect([Component_A],
+                    overrides={
+                        Component_A: dict(i=factory(lambda:1)),
+                    },
+    )
+    [a] = aspect()
+    assert a.i == 1

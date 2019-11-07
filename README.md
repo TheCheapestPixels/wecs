@@ -483,6 +483,7 @@ Two approaches offer themselves:
     * Does this actually reduce complexity?
     * What kind of type-theoretical implications does it have?
 
+
 ## Sources
 
 * http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/
@@ -493,10 +494,8 @@ Two approaches offer themselves:
 
 ## Hot Topics
 
-* Update PyPI package
-* core
-  * Archetypes or Aspects: Make it easy to compose typical entities
 * panda3d
+  * Finish boilerplaterization of panda3d-character-controller/main.py
   * Check the `task_mgr` for tasks already existing at a given sort
   * If that's not possible, `System`ify existing Panda3D `tasks`
   * character.Walking
@@ -508,6 +507,7 @@ Two approaches offer themselves:
 
 ## Icebox
 
+* Update PyPI package
 * Bugs
   * CharacterController:
     * Bumping: Go into an edge. You will find yourself sticking to it
@@ -535,8 +535,10 @@ Two approaches offer themselves:
   * Unique `Components`; Only one per type in the world at any given time, to
     be tested between removing old and adding new components?
   * De-/serialize world state
+* graphviz:Inheritance diagrams of `Aspect`s
 * panda3d
   * character
+    * Bumpers bumping against each other, distributing the push between them.
     * climbing
   * ai
     * Turn towards entity

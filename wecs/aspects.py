@@ -72,24 +72,3 @@ class Aspect:
             return self.name
         else:
             return super().__repr__()
-
-
-# class MetaAspect(Aspect):
-#     def __init__(self, list_of_aspects):
-#         self.aspects = list_of_aspects
-# 
-#     def is_in(self, entity):
-#         for aspect in self.aspect:
-#             if aspect.is_in(entity):
-#                 return True
-#         return False
-# 
-#     def add(self, entity):
-#         # MetaAspects can't add, because which one would it be?
-#         raise Exception
-# 
-#     def remove(self, entity):
-#         for aspect in self.aspect:
-#             if aspect.is_in(entity):
-#                 aspect.remove(entity)
-#         raise KeyError("No matching Aspect.")

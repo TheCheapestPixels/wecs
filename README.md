@@ -378,6 +378,9 @@ present. This leads to easy management of the system:
 
 ## Composing templates for generic entities
 
+Note: I've implemented `Aspect`s with slightly different API; no `MetaAspect`s
+until I actually need them.
+
 To set up entities individually, giving them their components and the starting
 values of those, is repetitive and inefficient. Even writing a factory function
 for each type of entity in your game is repetitive, because in all likelihood,
@@ -503,11 +506,14 @@ Two approaches offer themselves:
     * Null input should have zero effect, not effect towards zero movement
   * character.Jumping
     * Multijump
+* mechanics
+  * Move `equipment`, `inventory`, and `rooms` here
 
 
 ## Icebox
 
-* Update PyPI package
+* Pinned tasks
+  * Update PyPI package
 * Bugs
   * CharacterController:
     * Bumping: Go into an edge. You will find yourself sticking to it
@@ -536,6 +542,8 @@ Two approaches offer themselves:
     be tested between removing old and adding new components?
   * De-/serialize world state
 * graphviz:Inheritance diagrams of `Aspect`s
+* aspects
+  * MetaAspects
 * panda3d
   * character
     * Bumpers bumping against each other, distributing the push between them.
@@ -550,6 +558,13 @@ Two approaches offer themselves:
 * ai
   * Hierarchical Finite State Machine
   * GOAP / STRIPS
+* All code
+  * Change `filtered_entities` to `entities_by_filter`
+  * `system.destroy_entity()` now gets `components_by_type` argument.
+  * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
+  * `system.init_entity()` is also misleading. Maybe change it to
+    `system.init_components()`, and give it a `components_by_type` argument too?
+  * I've been really bad about implementing `system.destroy_entity()`s...
 * examples
   * Minimalistic implementations of different genres, acting as guideposts for
     system / component development.
@@ -586,10 +601,3 @@ Two approaches offer themselves:
     * Rail shooter / Shooting gallery
     * Brawler
     * Bullet Hell
-* All code
-  * Change `filtered_entities` to `entities_by_filter`
-  * `system.destroy_entity()` now gets `components_by_type` argument.
-  * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
-  * `system.init_entity()` is also misleading. Maybe change it to
-    `system.init_components()`, and give it a `components_by_type` argument too?
-  * I've been really bad about implementing `system.destroy_entity()`s...

@@ -15,6 +15,8 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 # import simplepbr
 
 from wecs.core import Component
+from wecs.aspects import Aspect
+from wecs.aspects import factory
 from wecs.panda3d import ECSShowBase as ShowBase
 from wecs import panda3d
 from wecs import mechanics
@@ -65,92 +67,47 @@ system_types = [
 ]
 
 
-### An Ontology of Characters
-#
-# To manage modes that a character can be in, we define sets of
-# components to be added or removed in state changes.
-# * character: Game definition of a character; Something controllable somewhere.
-# * avatar: A character with a body that walks around.
-# * spectator: A disembodied character that flies.
-# * player: A character that accepts keyboard input
-# * npc: A character that has AI for input
-# * first_person: A player with 1st person view
-# * third_person: A player with 3rd person view
-#
-# So when the player is in avatar mode, the active sets are character, avatar,
-# player, third_person. Switching to spectator mode removes avatar and
-# third_person, and adds spectator and first_person. Switching back, the same in
-# reverse.
-#
-# The goal here is also to have a mechanism to compose entities quickly. Need an
-# NPC? Use an avatar and add an AI component, done. This is currently far from
-# inplemented, since the sets here are ones of component instances. What they
-# should be is some kind of copyable dictionaries with default values that get
-# stuffed into components; Some kind of factories. But we *also* need actual
-# instances, since some component instances will use resources that shareable
-# (displays and input devices), so there has to be exactly one instance per
-# type and resource. Any idea for an API that makes this kind of composition
-# effortless? It should also make it easy to provide overrides for default
-# values.
+def populate_world():
+    # An ontology of aspects
+    character = Aspect([panda3d.Clock, panda3d.Position, panda3d.Scene, panda3d.CharacterController],
+                       overrides = {
+                           panda3d.Clock: dict(clock=globalClock),
+                           panda3d.Scene: dict(node=base.render),
+                       }
+    )
 
-def character():
-    return set([
-        panda3d.Clock(clock=globalClock),
-        panda3d.Position(value=Point3(50, 295, 0)),
-        panda3d.Scene(node=base.render),
-        panda3d.CharacterController(),
-    ])
-def avatar():
-    return set([
-        panda3d.Model(model_name='rebecca.bam'),
-        panda3d.WalkingMovement(),
-        panda3d.CrouchingMovement(),
-        panda3d.SprintingMovement(),
-        panda3d.InertialMovement(
-            acceleration=30.0,
-            rotated_inertia=0.5,
-        ),
-        panda3d.BumpingMovement(
-            solids={
-                # 'bumper': dict(
-                #     shape=CollisionCapsule,
-                #     end_a=Vec3(0.0, 0.0, 0.7),
-                #     end_b=Vec3(0.0, 0.0, 1.1),
-                #     radius=0.6,
-                #     debug=True,
-                # ),
-                'bumper': dict(
-                    shape=CollisionSphere,
-                    center=Vec3(0.0, 0.0, 1.0),
-                    radius=0.7,
-                    # debug=True,
-                ),
-            },
-            # debug=True,
-        ),
-        panda3d.FallingMovement(
-            gravity=Vec3(0, 0, -9.81),
-            solids={
-                'lifter': dict(
-                    shape=CollisionSphere,
-                    center=Vec3(0.0, 0.0, 0.25),
-                    radius=0.5,
-                    # debug=True,
-                ),
-            },
-            # debug=True,
-        ),
-        panda3d.JumpingMovement(
-            impulse=Vec3(0, 0, 6),
-        ),
-        mechanics.Stamina(),
-    ])
-def spectator():
-    return set([
-        panda3d.Model(model_name='models/smiley'),
-        # panda3d.Model(node=NodePath('spectator')),
-        panda3d.FloatingMovement(),
-        panda3d.BumpingMovement(
+    def rebecca_bumper():
+        return {
+            'bumper': dict(
+                shape=CollisionSphere,
+                center=Vec3(0.0, 0.0, 1.0),
+                radius=0.7,
+            ),
+        }
+    def rebecca_lifter():
+        return {
+            'lifter': dict(
+                shape=CollisionSphere,
+                center=Vec3(0.0, 0.0, 0.25),
+                radius=0.5,
+            ),
+        }
+    walking = Aspect([panda3d.WalkingMovement, panda3d.CrouchingMovement, panda3d.SprintingMovement,
+                      panda3d.InertialMovement, panda3d.BumpingMovement, panda3d.FallingMovement,
+                      panda3d.JumpingMovement],
+                     overrides = {
+                         panda3d.InertialMovement: dict(acceleration=30.0, rotated_inertia=0.5),
+                         panda3d.BumpingMovement: dict(solids=factory(lambda:rebecca_bumper())),
+                         panda3d.FallingMovement: dict(solids=factory(lambda:rebecca_lifter())),
+                         panda3d.JumpingMovement: dict(impulse=factory(lambda: Vec3(0, 0, 6))),
+                     },
+    )
+
+    avatar = Aspect([character, walking, panda3d.Model, mechanics.Stamina],
+                    overrides={panda3d.Model: dict(model_name='rebecca.bam')})
+
+    def spectator_bumper():
+        return dict(
             solids={
                 'bumper': dict(
                     shape=CollisionSphere,
@@ -158,42 +115,78 @@ def spectator():
                     radius=1.0,
                 ),
             },
-        ),
-    ])
-def player():
-    return set([
-        panda3d.Input(),
-    ])
-def npc():
-    return set([
-        panda3d.ConstantCharacterAI(
-            move=Vec3(0.0, 0.75, 0.0),
-            heading=-0.1,
-        ),
-    ])
-def first_person():
-    return set([
-        panda3d.FirstPersonCamera(camera=base.cam),
-    ])
-def third_person():
-    return set([
-        panda3d.ThirdPersonCamera(
-            camera=base.cam,
-            focus_height=1.8,
-        ),
-        panda3d.TurntableCamera(),
-        panda3d.TurningBackToCameraMovement(),
-        panda3d.CollisionZoom(),
-    ])
+        )
+    spectator = Aspect([character, panda3d.Model, panda3d.FloatingMovement, panda3d.BumpingMovement],
+                       overrides={
+                           panda3d.Model: dict(node=factory(lambda:NodePath('spectator'))),
+                           panda3d.BumpingMovement: dict(solids=factory(lambda:spectator_bumper())),
+                       },
+    )
+    
+    pc_mind = Aspect([panda3d.Input])
+
+    npc_mind = Aspect([panda3d.ConstantCharacterAI],
+                 overrides={
+                     panda3d.ConstantCharacterAI: dict(
+                         move=factory(lambda:Vec3(0.0, 0.25, 0.0)),
+                         heading=-0.5,
+                     ),
+                 },
+    )
+    
+    first_person = Aspect([panda3d.FirstPersonCamera],
+                          overrides={panda3d.FirstPersonCamera: dict(camera=base.cam)})
+
+    third_person = Aspect([panda3d.TurntableCamera, panda3d.TurningBackToCameraMovement,
+                           panda3d.CollisionZoom, panda3d.ThirdPersonCamera],
+                          overrides={
+                              panda3d.ThirdPersonCamera: dict(
+                                  camera=base.cam,
+                                  focus_height=1.8,
+                              ),
+                          },
+    )
+
+    player_character = Aspect([avatar, pc_mind, third_person])
+    non_player_character = Aspect([avatar, npc_mind])
+
+    game_map = Aspect([panda3d.Position, panda3d.Model, panda3d.Scene, Map],
+                      overrides={
+                          panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
+                          panda3d.Model: dict(model_name='roadE.bam'),
+                          panda3d.Scene: dict(node=base.render),
+                      },
+    )
+
+    ### The map, the player character, an NPC
+    game_map.add(base.ecs_world.create_entity())
+    player_character.add(
+        base.ecs_world.create_entity(),
+        overrides={panda3d.Position: dict(value=Point3(50, 295, 0))},
+    )
+    non_player_character.add(
+        base.ecs_world.create_entity(),
+        overrides={panda3d.Position: dict(value=Point3(50, 300, 0))},
+    )
+    non_player_character.add(
+        base.ecs_world.create_entity(),
+        overrides={
+            panda3d.Position: dict(value=Point3(55, 300, 0)),
+            panda3d.ConstantCharacterAI: dict(
+                move=Vec3(0.0, 0.75, 0.0),
+                heading=-0.1,
+            ),
+        },
+    )
 
 
 if __name__ == '__main__':
-    ### Application Basics
+    # Application Basics
     ShowBase()
-    # simplepbr.init(max_lights=1)
+    #simplepbr.init(max_lights=1)
     base.disable_mouse()
 
-    ### Handy Helpers: esc to quit, f11 for pdb, f12 for pstats
+    # Handy Helpers: esc to quit, f11 for pdb, f12 for pstats
     base.accept('escape', sys.exit)
     def debug():
         import pdb; pdb.set_trace()
@@ -203,39 +196,10 @@ if __name__ == '__main__':
         PStatClient.connect()
     base.accept('f12', pstats)
 
-    ### Set up systems
+    # Set up the world:
     for sort, system_type in enumerate(system_types):
         base.add_system(system_type(), sort)
+    populate_world()
 
-    ### Game world
-    base.ecs_world.create_entity(
-        panda3d.Position(value=Point3(0, 0, 0)),
-        panda3d.Model(model_name='roadE.bam'),
-        panda3d.Scene(node=base.render),
-        Map(),
-    )
-
-    ### Player Character
-    base.ecs_world.create_entity(
-        *set.union(
-            character(),
-            avatar(),
-            #spectator(),
-            player(),
-            #npc(),
-            third_person(),
-            #first_person(),
-        )
-    )
-
-    ### Non-Player Character: For when the archetyping stuff described above works
-    #base.ecs_world.create_entity(
-    #    *set.union(
-    #        character(),
-    #        avatar(),
-    #        npc(),
-    #    )
-    #)
-
-    ### Run
+    # And here we go...
     base.run()

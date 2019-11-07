@@ -498,7 +498,6 @@ Two approaches offer themselves:
 ## Hot Topics
 
 * panda3d
-  * Finish boilerplaterization of panda3d-character-controller/main.py
   * Check the `task_mgr` for tasks already existing at a given sort
   * If that's not possible, `System`ify existing Panda3D `tasks`
   * character.Walking

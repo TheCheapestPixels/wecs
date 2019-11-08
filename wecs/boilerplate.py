@@ -22,6 +22,12 @@ def run_game(simplepbr=False, simplepbr_kwargs=None):
 
     # Handy Helpers: esc to quit, f11 for pdb, f12 for pstats
     base.accept('escape', sys.exit)
+    base.frame_rame_meter_visible = False
+    base.set_frame_rate_meter(base.frame_rame_meter_visible)
+    def toggle_frame_rate_meter():
+        base.frame_rame_meter_visible = not base.frame_rame_meter_visible
+        base.set_frame_rate_meter(base.frame_rame_meter_visible)
+    base.accept('f10', toggle_frame_rate_meter)
     def debug():
         import pdb; pdb.set_trace()
     base.accept('f11', debug)

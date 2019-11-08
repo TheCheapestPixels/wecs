@@ -3,6 +3,7 @@ from dataclasses import field
 import direct.actor.Actor
 from panda3d.core import Vec3
 from panda3d.core import NodePath
+from panda3d.core import ClockObject
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletRigidBodyNode
 
@@ -26,7 +27,7 @@ class Actor:
 
 @Component()
 class Scene:
-    node: NodePath
+    node: NodePath = field(default_factory=lambda:base.render)
 
 
 @Component()
@@ -38,7 +39,7 @@ class Position:
 
 @Component()
 class Clock:
-    clock: object
+    clock: ClockObject = field(default_factory=lambda:globalClock)
     timestep: float = 0.0
     max_timestep: float = 1.0/30
 

@@ -17,16 +17,16 @@ from .model import Clock
 
 @Component()
 class FirstPersonCamera:
-    camera: NodePath
+    camera: NodePath = field(default_factory=lambda:base.camera)
     anchor_name: str = None
 
 
 @Component()
 class ThirdPersonCamera:
-    camera: NodePath
+    camera: NodePath = field(default_factory=lambda:base.camera)
     height: float = 2.0
     distance: float = 10.0
-    focus_height: float = 1.6
+    focus_height: float = 1.8
 
 
 @Component()

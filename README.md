@@ -523,6 +523,7 @@ Two approaches offer themselves:
       take a sudden side step. Easy to see when walking into a tree.
       Probably the result not taking inertia into account.
     * Falling: Stand on a mountain ridge. You will jitter up and down.
+    * example: Break Map / LoadMapsAndActors out of game.py
   * CollideCamerasWithTerrain
     * With the head stuck against a wall (e.g. in the tunnel), this places
       the camera into the wall, allowing to see through it.

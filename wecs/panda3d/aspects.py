@@ -8,6 +8,24 @@ from wecs.aspects import Aspect
 from wecs.aspects import factory
 
 
+# An ontology of aspects:
+# * Controllable beings on the map
+#   `character`s are controllable entities with a "physical" presence (a Model)
+#   `walking` is the ability to move around and interact with the map
+#   An `avatar` is a character that can walk.
+#   A `spectator` is a character that floats and bumps into the map.
+# * Things that control beings
+#   `pc_mind` represents the input from the neural network between the player's ears.
+#   `npc_mind` is a mind that executes a constant movement
+# * Things that see the world
+#   `first_person` is a first person camera
+#   `third_person` is, unsurprisingly, a third person camera (with a few features).
+# * Abstractions that are actually useful
+#   The `player_character` is an `avatar` controlled by a `pc_mind` and seen through
+#     the `third_person` camera.
+#   A `non_player_character` is an `avatar` controlled by an `npc_mind`
+#   A `game_map` is a model that you can bump / fall into.
+
 character = Aspect([panda3d.Clock, panda3d.Position, panda3d.Scene,
                     panda3d.CharacterController, panda3d.Model])
 

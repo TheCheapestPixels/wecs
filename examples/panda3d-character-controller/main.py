@@ -59,6 +59,8 @@ system_types = [
     panda3d.Jumping, # Impart upward impulse.
     # Turn intention into actual movement
     panda3d.ExecuteMovement,
+    panda3d.AnimateCharacter,
+    panda3d.Animate,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
@@ -103,6 +105,7 @@ def character():
 def avatar():
     return set([
         panda3d.Model(model_name='rebecca.bam'),
+        panda3d.Actor(),
         panda3d.WalkingMovement(),
         panda3d.CrouchingMovement(),
         panda3d.SprintingMovement(),
@@ -143,6 +146,7 @@ def avatar():
         panda3d.JumpingMovement(
             impulse=Vec3(0, 0, 6),
         ),
+        panda3d.Animation(),
         mechanics.Stamina(),
     ])
 def spectator():

@@ -378,6 +378,9 @@ present. This leads to easy management of the system:
 
 ## Composing templates for generic entities
 
+Note: I've implemented `Aspect`s with slightly different API; no `MetaAspect`s
+until I actually need them.
+
 To set up entities individually, giving them their components and the starting
 values of those, is repetitive and inefficient. Even writing a factory function
 for each type of entity in your game is repetitive, because in all likelihood,
@@ -483,6 +486,7 @@ Two approaches offer themselves:
     * Does this actually reduce complexity?
     * What kind of type-theoretical implications does it have?
 
+
 ## Sources
 
 * http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/
@@ -493,9 +497,6 @@ Two approaches offer themselves:
 
 ## Hot Topics
 
-* Update PyPI package
-* core
-  * Archetypes or Aspects: Make it easy to compose typical entities
 * panda3d
   * Check the `task_mgr` for tasks already existing at a given sort
   * If that's not possible, `System`ify existing Panda3D `tasks`
@@ -504,10 +505,14 @@ Two approaches offer themselves:
     * Null input should have zero effect, not effect towards zero movement
   * character.Jumping
     * Multijump
+* mechanics
+  * Move `equipment`, `inventory`, and `rooms` here
 
 
 ## Icebox
 
+* Pinned tasks
+  * Update PyPI package
 * Bugs
   * CharacterController:
     * Bumping: Go into an edge. You will find yourself sticking to it
@@ -518,6 +523,7 @@ Two approaches offer themselves:
       take a sudden side step. Easy to see when walking into a tree.
       Probably the result not taking inertia into account.
     * Falling: Stand on a mountain ridge. You will jitter up and down.
+    * example: Break Map / LoadMapsAndActors out of game.py
   * CollideCamerasWithTerrain
     * With the head stuck against a wall (e.g. in the tunnel), this places
       the camera into the wall, allowing to see through it.
@@ -535,8 +541,12 @@ Two approaches offer themselves:
   * Unique `Components`; Only one per type in the world at any given time, to
     be tested between removing old and adding new components?
   * De-/serialize world state
+* graphviz:Inheritance diagrams of `Aspect`s
+* aspects
+  * MetaAspects
 * panda3d
   * character
+    * Bumpers bumping against each other, distributing the push between them.
     * climbing
   * ai
     * Turn towards entity
@@ -548,6 +558,13 @@ Two approaches offer themselves:
 * ai
   * Hierarchical Finite State Machine
   * GOAP / STRIPS
+* All code
+  * Change `filtered_entities` to `entities_by_filter`
+  * `system.destroy_entity()` now gets `components_by_type` argument.
+  * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
+  * `system.init_entity()` is also misleading. Maybe change it to
+    `system.init_components()`, and give it a `components_by_type` argument too?
+  * I've been really bad about implementing `system.destroy_entity()`s...
 * examples
   * Minimalistic implementations of different genres, acting as guideposts for
     system / component development.
@@ -584,10 +601,3 @@ Two approaches offer themselves:
     * Rail shooter / Shooting gallery
     * Brawler
     * Bullet Hell
-* All code
-  * Change `filtered_entities` to `entities_by_filter`
-  * `system.destroy_entity()` now gets `components_by_type` argument.
-  * `system.destroy_entity()` is a horrible name. Change to `destroy_components`.
-  * `system.init_entity()` is also misleading. Maybe change it to
-    `system.init_components()`, and give it a `components_by_type` argument too?
-  * I've been really bad about implementing `system.destroy_entity()`s...

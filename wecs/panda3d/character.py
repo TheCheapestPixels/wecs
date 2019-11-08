@@ -76,8 +76,8 @@ class JumpingMovement:
 
 @Component()
 class InertialMovement:
-    acceleration: float = 40.0
-    rotated_inertia: float = 1.0
+    acceleration: float = 30.0
+    rotated_inertia: float = 0.5
     node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
     ignore_z: bool = True
 

@@ -12,7 +12,8 @@ from wecs.aspects import factory
 # * Controllable beings on the map
 #   `character`s are controllable entities with a "physical" presence (a Model)
 #   `walking` is the ability to move around and interact with the map
-#   An `avatar` is a character that can walk.
+#   To be `animated` means to be an Actor and Animated.
+#   An `avatar` is a character that can walk and is animated.
 #   A `spectator` is a character that floats and bumps into the map.
 # * Things that control beings
 #   `pc_mind` represents the input from the neural network between the player's ears.

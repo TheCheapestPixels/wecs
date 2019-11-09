@@ -534,6 +534,12 @@ Two approaches offer themselves:
   * Is there proper component cleanup when an entity is removed?
   * Does removing entities affect the currently running system?
   * Coverage is... lacking.
+* Documentation
+  * Well, docstrings!
+  * Sphinx
+  * doctests
+* Development pipeline
+  * tox
 * core
   * API improvements
     * `entity = world[entity_uid]`

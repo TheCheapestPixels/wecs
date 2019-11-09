@@ -77,7 +77,8 @@ spectator = Aspect([character, panda3d.FloatingMovement, panda3d.BumpingMovement
 
 
 pc_mind = Aspect([panda3d.Input])
-npc_mind = Aspect([panda3d.ConstantCharacterAI])
+npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
+npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
 
 
 first_person = Aspect([panda3d.FirstPersonCamera])
@@ -86,4 +87,4 @@ third_person = Aspect([panda3d.TurntableCamera, panda3d.TurningBackToCameraMovem
 
 
 player_character = Aspect([avatar, pc_mind, third_person])
-non_player_character = Aspect([avatar, npc_mind])
+non_player_character = Aspect([avatar, npc_mind_constant])

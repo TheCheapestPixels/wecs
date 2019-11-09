@@ -59,35 +59,38 @@ game_map = Aspect([panda3d.Position, panda3d.Model, panda3d.Scene, Map],
 
 
 # Populate the world with the map, the player character, and a few NPCs
+
+# Map
 game_map.add(base.ecs_world.create_entity())
 
+# Player
 player_avatar = Aspect([aspects.player_character, mechanics.Stamina])
-
 player_avatar.add(
     base.ecs_world.create_entity(),
-    overrides={panda3d.Position: dict(value=Point3(50, 295, 0))},
+    overrides={panda3d.Position: dict(value=Point3(50, 290, 0))},
 )
+
+# Non-moving NPC
+aspects.non_player_character.add(
+    base.ecs_world.create_entity(),
+    overrides={panda3d.Position: dict(value=Point3(60, 290, 0))},
+)
+
+# Small circle NPC
 aspects.non_player_character.add(
     base.ecs_world.create_entity(),
     overrides={
-        panda3d.Position: dict(value=Point3(50, 300, 0)),
+        panda3d.Position: dict(value=Point3(70, 290, 0)),
         panda3d.ConstantCharacterAI: dict(
             move=Vec3(0.0, 0.25, 0.0),
             heading=-0.5,
         ),
     },
 )
-aspects.non_player_character.add(
+
+# Brownian NPC
+new_npc = Aspect([aspects.avatar, aspects.npc_mind_brownian])
+new_npc.add(
     base.ecs_world.create_entity(),
-    overrides={
-        panda3d.Position: dict(value=Point3(60, 300, 0)),
-        panda3d.ConstantCharacterAI: dict(
-            move=Vec3(0.0, 0.75, 0.0),
-            heading=-0.1,
-        ),
-    },
-)
-aspects.non_player_character.add(
-    base.ecs_world.create_entity(),
-    overrides={panda3d.Position: dict(value=Point3(60, 295, 0))},
+    overrides={panda3d.Position: dict(value=Point3(80, 290, 0))},
 )

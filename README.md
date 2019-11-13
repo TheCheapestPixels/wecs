@@ -1,10 +1,39 @@
 # WECS
 
 WECS stands for World, Entities, Components, Systems, and is an implementation
-of an ECS system.
+of an ECS system. Its goal is to put usability first, and not let performance
+optimizations compromise it.
+
+Beyond the core, WECS' goal is to accumulate enough game mechanics, so that the
+time between imagining a game and getting to the point where you actually work
+on your specific game mechanics is a matter of a few minutes of setting up
+boilerplate code. In particular, a modue for Panda3D is provided.
 
 
-## ECS definition
+## What is an ECS?
+
+ECS, also called EC, Component system, and probably several other names, is an
+architecture aimed at simplifying the development and maintenance of video
+games. The central ideas are that
+* state should be separated from the logic working on it
+* state objects should be extended by using composition instead of classical
+  patterns of inheritance, and be extendable and restrictable at runtime
+* logic processes those objects to which it is applicable, determined by the
+  presence of a fitting set of components.
+* logic is applied in a round-robin fashion; In the context of games that likely
+  means "each piece of logic is applied once per frame, in a predetermined
+  order."
+
+To distinguish state objects and logic, state objects are called `Components`,
+while logic objects are called `Systems`. `Entities` are collections of
+`Components`.
+
+
+## WECS' ECS definition
+
+Since this is a specific implementation of the more general ECS architecture,
+these specific definitions are applicable only to WECS, and they correspond to
+the classes provided in `wecs.core`.
 
 * `World`
   * has a set of `Entities`
@@ -13,7 +42,7 @@ of an ECS system.
     running order
 * `Entities`
   * have a set of `Components`
-  * are, with regard to how they are processed, typeless
+  * are, with regard to how they are processed, type- and stateless
 * `Components`
   * are the state of an `Entity`
   * have a type
@@ -36,42 +65,63 @@ of an ECS system.
       * `World.update()`
       * a task that is created when the `System` is added to the `World`
 
+To summarize, you create a game by
+* Creating `Entity`s in the `World`, and giving them the `Component`s that
+  describe their properties.
+* Adding a list of `System`s which describe how components' states should change
+  over time; This is the content of your main loop.
 
-## API
+Now when running the main loop, each `System` will now fetch all `Entity`s that
+have sufficient `Component`s to satisfy one or more of its filters, then update
+them. This may involve updating `Component`s that aren't on any of the
+`System`'s filters, and which may even be on any `Entity` in the `World`.
 
-NOTE: `wecs/examples/minimal/main.py` offers a more complete overview of the
-API, including systems, but doesn't incorporate the syntactic sugar mentioned
+
+# API
+
+NOTE: `wecs/examples/minimal/main.py` offers another overview that also includes
+references, but doesn't incorporate the syntactic sugar mentioned
 below yet.
 
-Create a world, an entity, a component, and tie it all together:
+Create a `World`, an `Entity`, a `Component`, a `System`, and tie it all
+together:
 ```
-from wecs.core import World, Component
+from wecs.core import World, Component, System
 
 
 @Component()
 class Foo:
-  pass
+  counter: int = 0
 
+
+class Bar(System):
+    entity_filters = {'filter': and_filter([Foo])}
+
+    def init_entity(filter_name, entity):
+        print("Initializing an entity newly in filter {}".format(filter_name))
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['filter']:
+            print("Processing entity.")
+
+    def destroy_entity(filter_name, entity):
+        print("Tearing down entity for filter {filter_name} after components of types [{}] were removed".format(
+	    filter_name,
+	    ', '.join(components_by_type),
+	))
 
 world = World()
+entity = world.create_entity(Foo())
+```
+
+The last line of that could be broken down further like this:
+```
 entity = world.create_entity()
 foo_component = Foo()
 entity.add_component(foo_component)
 ```
 
-Entity creation can also take components to be added as arguments:
-```
-world.create_entity(Foo(), ...)
-```
-
 Getting and removing components, and checking for their presence:
-```
-is_present = entity.has_component(Foo)
-foo_component = entity.get_component(Foo)
-entity.remove_component(Foo)
-```
-
-A bit of syntactic sugar later:
 ```
 entity[Foo] = foo_component
 is_present = Foo in entity
@@ -79,13 +129,19 @@ foo_component = entity[Foo]
 del entity[Foo]
 ```
 
+The same without syntactic sugar:
+```
+entity.add_component(foo_component)
+is_present = entity.has_component(Foo)
+foo_component = entity.get_component(Foo)
+entity.remove_component(Foo)
+```
+
 The `Foo` in `entity[Foo] = foo_component` is something that doesn't have to be
 given to `entity.add_component(foo_component)`, since its type is known. It's
 needed here merely because `entity[] = foo_component` isn't syntactically valid
 Python.
 
-
-# Design
 
 ## Deferred `Component` addition / removal
 
@@ -101,51 +157,26 @@ with the state (of component presence) from when the system is started.
 However, if you *add* components, on one hand, they won't e added to any
 filter immediately, just like they won't be removed by dropping a component
 (since those updates are deferred). But you *can* still access them through
-`entity.has_component(ComponentType)` and
-`entity.get_component(ComponentType)`, as those functions use the sets of both
-existing and newly added components.
+`ComponentType in entity` and `entity[ComponentType]`, as those functions use
+the sets of both existing and newly added components.
 
 Do also note that none of this magic holds true for the values of state;
-You're on your own in that regard. Splitting systems into "This can be done",
-"This is being done", and "Now we're cleaning up weird states that could have
-come about" seems to be a workable pattern.
+You're on your own in that regard. If a `System` processes an `Entity` and
+changes some state, then processes another `Entity`, that process will not see
+the original state, only the current state.
+
+Splitting systems into "This can be done", "This is being done", and "Now we're
+cleaning up weird states that could have come about" seems to be a workable
+pattern.
+
+
+## Undocumented features
+
+* Aspects
+* References to entities in component values
 
 
 # Design questions and arguments
-
-## User story: Need for AND- and OR-based component selection
-
-There is a game with Bullet physics. To mitigate the effect of long frames, the
-physics will cap the maximum timestep for a simulation step to 1/30 of a
-second. This will slow down time in the simulation relative to a wall clock,
-but solves the following issue:
-Complex physics interactions can take a long time to process. When that happens
-to delay the frame, using the increased frametime as the next timestep may cause
-an even longer delay, causing the game to grind to a halt.
-This is solved simply by capping the timestep. However, physics objects in the
-game will have control logic being run on them that causes physics actions, like
-i.e. a system processing thrusters applies an impulse to the rocket. These need
-to scale to the timestep that will be used for the next physics simulation step.
-Thus, there are two systems, `TimestepSystem` and `PhysicsSystem`, plus
-game-specific system, here exemplified by `ThrusterSystem`.
-
-* `TimestepSystem`
-  * is run on `or_filter([PhysicsWorld, PhysicsObject])`, meaning entities with
-    either component
-  * gets the `PhysicsWorld` component (there is exactly one per world) and lets
-    it determine (and store) the next timestep's length
-  * stores the timestep on each `PhysicsObject` component
-* `ThrusterSystem`
-  * is run on `and_filter([Thruster, PhysicsObject])`, meaning the components of
-    those types that are on any entity that has components of all of these
-    types.
-  * adds an impulse on each `PhysicsObject`, respecting the timestep field
-* `PhysicsSystem`
-  * is run on `and_filter([PhysicsWorld])`. Since only one component type is
-    used here, it could just as well have been the `or_filter`, but the
-    `and_filter` stops faster.
-  * runs the physics simulation with the stored timestep
-
 
 ## Implementational detail: Optimizing type filtering performance
 

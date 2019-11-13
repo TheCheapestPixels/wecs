@@ -16,6 +16,7 @@ class Stamina:
     move_drain: float = 10
     sprint_drain: float = 30
     jump_drain: float = 20
+    crouch_drain: float = 10
 
 
 class UpdateStamina(System):

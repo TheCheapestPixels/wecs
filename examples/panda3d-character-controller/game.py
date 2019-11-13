@@ -54,7 +54,7 @@ system_types = [
 game_map = Aspect([panda3d.Position, panda3d.Model, panda3d.Scene, Map],
                   overrides={
                       panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
-                      panda3d.Model: dict(model_name='roadE.bam'),
+                      panda3d.Model: dict(model_name='grid.bam'),
                       panda3d.Scene: dict(node=base.render),
                   },
 )

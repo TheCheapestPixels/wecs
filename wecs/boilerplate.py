@@ -13,6 +13,7 @@ from wecs.panda3d import ECSShowBase as ShowBase
 def run_game(simplepbr=False, simplepbr_kwargs=None):
     # Application Basics
     ShowBase()
+    base.win.setClearColor((0.5,0.7,0.9,1))
     base.disable_mouse()
     if simplepbr is True:
         import simplepbr

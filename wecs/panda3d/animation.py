@@ -46,28 +46,47 @@ class AnimateCharacter(System):
             controller = entity[CharacterController]
             animation = entity[Animation]
             actor = entity[Model].node
-            animation.to_play = ["idle", "walk_forward", "run_forward"]
-            blends = [0, 0, 0]
-            s_speed = (controller.translation.x*2)
-            if s_speed > 0:
-                animation.to_play.append("walk_right")
-                blends.append(s_speed*2)
-            if s_speed < 0:
-                animation.to_play.append("walk_left")
-                blends.append(-(s_speed*2))
 
-            # set forward animations
-            f_speed = (controller.translation.y*2)
-            if f_speed == 0:
-                blends[1] = 0
-                blends[0] = 1
+            # vertical animation
+            vertical_speed = (controller.translation.z*10)
+            blends = [1]
+            if vertical_speed > 0.1:
+                animation.to_play = ["jumping"]
+            elif vertical_speed < -0.1:
+                animation.to_play = ["falling"]
             else:
-                blends[2] = -0.35+(f_speed)
-                blends[1] = (f_speed - (blends[1]/2)) - 0.1
-                blends[0] = (1-(f_speed*4))/2
+                # forward animation
+                if controller.crouches:
+                    # TODO: Don't crouch instantly but ease in (bounce?).
+                    initial = "crouch"
+                else:
+                    initial = "idle"
+                animation.to_play = [initial, "walk_forward", "run_forward"]
+                forward_speed = abs(controller.translation.y*3)
+                idle = max(0, (1 - forward_speed * 2))
+                walk = 1 - abs(forward_speed - 0.5) * 2
+                run = max(0, forward_speed * 2 - 1)
+                blends = [idle, walk, run]
+                # strafe animation
+                strafe_speed = (controller.translation.x*10)
+                if not strafe_speed == 0:
+                    blends.append(abs(strafe_speed))
+                    if strafe_speed > 0:
+                        animation.to_play.append("walk_right")
+                    elif strafe_speed < 0:
+                        animation.to_play.append("walk_left")
 
-            animation.blends = clamp_list(blends, 0, 1)
-            animation.framerate = 1
+                animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
+                # If walking backwards simply play the animation in reverse
+                # Only do this when there's no animations for walking backwards?
+                if controller.translation.y < 0:
+                    animation.framerate = -animation.framerate
+
+            animation.blends = blends
+
+            if Input in entity:
+                print(animation.blends)
+                print(animation.playing)
 
 
 class Animate(System):
@@ -101,10 +120,6 @@ class Animate(System):
                     if name not in animation.playing:
                         actor.loop(name)
                 animation.playing = animation.to_play
-
-            if Input in entity:
-                print(animation.blends)
-                print(animation.playing)
 
             # Set blends each frame
             for b, blend in enumerate(animation.blends):

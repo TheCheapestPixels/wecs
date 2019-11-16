@@ -26,7 +26,7 @@ from wecs.aspects import factory
 #   A `non_player_character` is an `avatar` controlled by an `npc_mind`
 #   A `game_map` is a model that you can bump / fall into.
 
-character = Aspect([panda3d.Clock, panda3d.Position, panda3d.Scene,
+character = Aspect([mechanics.Clock, panda3d.Position, panda3d.Scene,
                     panda3d.CharacterController, panda3d.Model])
 
 

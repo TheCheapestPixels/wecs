@@ -12,6 +12,8 @@ from wecs.core import and_filter
 from wecs.core import or_filter
 from wecs.core import UID
 
+from wecs.mechanics.clock import Clock
+
 
 @Component()
 class Model:
@@ -32,30 +34,6 @@ class Scene:
 @Component()
 class Position:
     value: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
-
-
-# Clock
-
-@Component()
-class Clock:
-    clock: ClockObject = field(default_factory=lambda:globalClock)
-    timestep: float = 0.0
-    max_timestep: float = 1.0/30
-
-
-class DetermineTimestep(System):
-    entity_filters = {
-        'clock': and_filter([Clock]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['clock']:
-            clock = entity[Clock]
-            dt = clock.clock.dt
-            max_timestep = clock.max_timestep
-            if dt > max_timestep:
-                dt = max_timestep
-            clock.timestep = dt
 
 
 # Bullet physics

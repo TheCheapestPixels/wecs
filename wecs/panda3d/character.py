@@ -64,7 +64,7 @@ class SprintingMovement:
 
 @Component()
 class CrouchingMovement:
-    speed: float = 1.0
+    speed: float = 10.0
     height: float = 0.4
 
 
@@ -536,8 +536,9 @@ class Stamina:
     current: float = 100.0
     maximum: float = 100.0
     recovery: float = 10
+    crouch_drain: float = 10
     move_drain: float = 10
-    sprint_drain: float = 30
+    sprint_drain: float = 10
     jump_drain: float = 20
 
 

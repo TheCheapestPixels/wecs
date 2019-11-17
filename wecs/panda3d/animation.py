@@ -6,22 +6,10 @@ from wecs.core import and_filter
 from wecs.core import or_filter
 
 from .input import Input
-from .character import CharacterController
+from .character import CharacterController, FallingMovement
 from .model import Model
 from .model import Scene
 from .model import Clock
-
-
-def clamp_list(to_clamp, floor, ceiling):
-    clamped = []
-    for i in to_clamp:
-        clamped.append(min(max(i, floor), ceiling))
-    return clamped
-
-# Animations:
-# Idle
-# Crouch/Walk/Run/Sprint/ forward/backward/left/right
-# Flying/Jumping/Falling/Landing
 
 
 @Component()
@@ -47,47 +35,46 @@ class AnimateCharacter(System):
             animation = entity[Animation]
             actor = entity[Model].node
 
-            # vertical animation
-            vertical_speed = (controller.translation.z*10)
-            blends = [1]
-            if vertical_speed > 0.1:
-                animation.to_play = ["jumping"]
-            elif vertical_speed < -0.1:
-                animation.to_play = ["falling"]
+            if FallingMovement in entity:
+                grounded = entity[FallingMovement].ground_contact
             else:
-                # forward animation
-                if controller.crouches:
-                    # TODO: Don't crouch instantly but ease in (bounce?).
-                    initial = "crouch"
-                else:
-                    initial = "idle"
-                animation.to_play = [initial, "walk_forward", "run_forward"]
-                forward_speed = abs(controller.translation.y*3)
-                idle = max(0, (1 - forward_speed * 2))
-                walk = 1 - abs(forward_speed - 0.5) * 2
-                run = max(0, forward_speed * 2 - 1)
-                blends = [idle, walk, run]
-                # strafe animation
-                strafe_speed = (controller.translation.x*10)
-                if not strafe_speed == 0:
-                    blends.append(abs(strafe_speed))
-                    if strafe_speed > 0:
-                        animation.to_play.append("walk_right")
-                    elif strafe_speed < 0:
-                        animation.to_play.append("walk_left")
+                grounded = False
 
-                animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
-                # If walking backwards simply play the animation in reverse
-                # Only do this when there's no animations for walking backwards?
-                if controller.translation.y < 0:
-                    animation.framerate = -animation.framerate
+            initial = "idle"
+            if not grounded:
+                if controller.jumps:
+                    initial = "jumping"
+                elif controller.translation.z < -0.2:
+                    initial = "falling"
+            elif controller.crouches:
+                initial = "crouch"
+            animation.to_play = [initial, "walk_forward", "run_forward"]
+            #TODO: bad constant, 1.4? Should be fixed in animation
+            # when the right value is found in lab.
+            forward_speed = abs(controller.translation.y*1.4)
+            idle = max(0, (1 - forward_speed))
+            walk = 1 - abs(forward_speed - 0.5) * 2
+            run = max(0, forward_speed * 2 - 1)
+            blends = [idle, walk, run]
+            # sideways movement
+            #TODO: same here, another constant. Fix in animation after lab.
+            strafe_speed = (controller.translation.x*1.4)
+            if not strafe_speed == 0:
+                blends.append(abs(strafe_speed))
+                if strafe_speed > 0:
+                    animation.to_play.append("walk_right")
+                elif strafe_speed < 0:
+                    animation.to_play.append("walk_left")
+
+            animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
+            # If walking backwards simply play the animation in reverse
+            # TODO: Only do this when there's no animations for walking backwards.
+            if controller.translation.y < 0:
+                animation.framerate = -animation.framerate
+            if controller.translation.z < -0.2:
+                animation.framerate *= 0.2
 
             animation.blends = blends
-
-            if Input in entity:
-                print(animation.blends)
-                print(animation.playing)
-
 
 class Animate(System):
     entity_filters = {
@@ -96,8 +83,6 @@ class Animate(System):
             Model,
         ])
     }
-    def init_entity(self, filter_name, entity):
-        print(entity[Model].node.getAnimNames())
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animation']:
@@ -108,6 +93,9 @@ class Animate(System):
                     actor.enableBlend()
                 else:
                     actor.disableBlend()
+
+                # TODO: Don't stop and swap different animations instantly
+                # but ease in (and bounce?) between them.
 
                 #Stop animations not in to_play.
                 for name in animation.playing:

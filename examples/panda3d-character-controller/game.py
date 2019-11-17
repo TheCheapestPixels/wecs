@@ -31,7 +31,7 @@ system_types = [
     # What movement do the characters intend to do?
     panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     panda3d.Think,  # Input from AIs, the same
-    mechanics.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
+    panda3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
     panda3d.TurningBackToCamera,  # Characters can have a tendency towards walk towards away-from-camera that adjusts their intention.
     panda3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."
     # The following systems adjust the intended movement
@@ -48,6 +48,11 @@ system_types = [
 ]
 
 
+def panda_clock():
+    def read_dt():
+        return globalClock.dt
+    return read_dt
+
 
 game_map = Aspect(
     [mechanics.Clock,
@@ -57,7 +62,7 @@ game_map = Aspect(
      Map,
     ],
     overrides={
-        mechanics.Clock: dict(clock=lambda:globalClock.dt),
+        mechanics.Clock: dict(clock=panda_clock),
         panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
         panda3d.Model: dict(model_name='roadE.bam'),
         panda3d.Scene: dict(node=base.render),
@@ -72,7 +77,7 @@ map_entity = base.ecs_world.create_entity()
 game_map.add(map_entity)
 
 # Player
-player_avatar = Aspect([aspects.player_character, mechanics.Stamina])
+player_avatar = Aspect([aspects.player_character, panda3d.Stamina])
 player_avatar.add(
     base.ecs_world.create_entity(),
     overrides={

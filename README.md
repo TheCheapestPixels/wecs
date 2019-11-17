@@ -602,6 +602,8 @@ Two approaches offer themselves:
   * `system.init_entity()` is also misleading. Maybe change it to
     `system.init_components()`, and give it a `components_by_type` argument too?
   * I've been really bad about implementing `system.destroy_entity()`s...
+  * `clock.timestep` is deprecated. Replace with `.wall_time`, `.frame_time`, or
+    `.game_time`.
 * examples
   * Minimalistic implementations of different genres, acting as guideposts for
     system / component development.

@@ -64,6 +64,8 @@ class DetermineTimestep(System):
                         child_clock = entity[Clock]
                         parent_clock = entity.world[parent][Clock]
                         child_clock.wall_time = parent_clock.wall_time
+                        # FIXME: Rip out timestep
+                        child_clock.timestep = parent_clock.frame_time
                         child_clock.frame_time = parent_clock.frame_time
                         child_clock.game_time = parent_clock.game_time * child_clock.scaling_factor
                         next_parents.add(entity._uid)

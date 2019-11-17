@@ -57,7 +57,7 @@ walking = Aspect([panda3d.WalkingMovement, panda3d.CrouchingMovement, panda3d.Sp
 )
 animated = Aspect([panda3d.Actor, panda3d.Animation])
 avatar = Aspect([character, walking, animated],
-                overrides={panda3d.Model: dict(model_name='rebecca.bam')})
+                overrides={panda3d.Model: dict(model_name='../../assets/rebecca.bam')})
 
 
 def spectator_bumper():

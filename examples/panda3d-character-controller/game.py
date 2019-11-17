@@ -42,6 +42,8 @@ system_types = [
     panda3d.Falling,  # Fall, or stand on the ground.
     panda3d.Jumping,  # Impart upward impulse.
     panda3d.ExecuteMovement,  # Turn intention into actual movement
+    panda3d.AnimateCharacter,
+    panda3d.Animate,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
@@ -65,6 +67,7 @@ game_map = Aspect(
         mechanics.Clock: dict(clock=panda_clock),
         panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
         panda3d.Model: dict(model_name='roadE.bam'),
+        # panda3d.Model: dict(model_name='grid.bam'),
         panda3d.Scene: dict(node=base.render),
     },
 )

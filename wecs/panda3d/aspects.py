@@ -12,7 +12,8 @@ from wecs.aspects import factory
 # * Controllable beings on the map
 #   `character`s are controllable entities with a "physical" presence (a Model)
 #   `walking` is the ability to move around and interact with the map
-#   An `avatar` is a character that can walk.
+#   To be `animated` means to be an Actor and Animated.
+#   An `avatar` is a character that can walk and is animated.
 #   A `spectator` is a character that floats and bumps into the map.
 # * Things that control beings
 #   `pc_mind` represents the input from the neural network between the player's ears.
@@ -54,7 +55,8 @@ walking = Aspect([panda3d.WalkingMovement, panda3d.CrouchingMovement, panda3d.Sp
                      panda3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
                  },
 )
-avatar = Aspect([character, walking],
+animated = Aspect([panda3d.Actor, panda3d.Animation])
+avatar = Aspect([character, walking, animated],
                 overrides={panda3d.Model: dict(model_name='rebecca.bam')})
 
 

@@ -1,5 +1,6 @@
 from dataclasses import field
 
+import direct.actor.Actor
 from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import ClockObject
@@ -23,7 +24,7 @@ class Model:
 
 @Component()
 class Actor:
-    model_name: str
+    pass
 
 
 @Component()
@@ -76,7 +77,10 @@ class LoadModels(System):
         # Load
         model = entity[Model]
         if model.node is None:
-            model.node = base.loader.load_model(model.model_name)
+            if Actor in entity:
+                model.node = direct.actor.Actor.Actor(model.model_name)
+            else:
+                model.node = base.loader.load_model(model.model_name)
 
         # Load hook
         self.post_load_hook(model.node, entity)

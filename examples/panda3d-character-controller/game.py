@@ -27,11 +27,11 @@ class LoadMapsAndActors(panda3d.LoadModels):
 # Each frame, run these systems. This defines the game itself.
 system_types = [
     LoadMapsAndActors,  # Self-descriptive...
-    panda3d.DetermineTimestep,  # How long is this frame? Update all clocks.
+    mechanics.DetermineTimestep,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
     panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     panda3d.Think,  # Input from AIs, the same
-    mechanics.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
+    panda3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
     panda3d.TurningBackToCamera,  # Characters can have a tendency towards walk towards away-from-camera that adjusts their intention.
     panda3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."
     # The following systems adjust the intended movement
@@ -50,46 +50,73 @@ system_types = [
 ]
 
 
+def panda_clock():
+    def read_dt():
+        return globalClock.dt
+    return read_dt
 
-game_map = Aspect([panda3d.Position, panda3d.Model, panda3d.Scene, Map],
-                  overrides={
-                      panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
-                      panda3d.Model: dict(model_name='grid.bam'),
-                      panda3d.Scene: dict(node=base.render),
-                  },
+
+game_map = Aspect(
+    [mechanics.Clock,
+     panda3d.Position,
+     panda3d.Model,
+     panda3d.Scene,
+     Map,
+    ],
+    overrides={
+        mechanics.Clock: dict(clock=panda_clock),
+        panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
+        panda3d.Model: dict(model_name='roadE.bam'),
+        # panda3d.Model: dict(model_name='grid.bam'),
+        panda3d.Scene: dict(node=base.render),
+    },
 )
 
 
 # Populate the world with the map, the player character, and a few NPCs
-game_map.add(base.ecs_world.create_entity())
 
-player_avatar = Aspect([aspects.player_character, mechanics.Stamina])
+# Map
+map_entity = base.ecs_world.create_entity()
+game_map.add(map_entity)
 
+# Player
+player_avatar = Aspect([aspects.player_character, panda3d.Stamina])
 player_avatar.add(
     base.ecs_world.create_entity(),
-    overrides={panda3d.Position: dict(value=Point3(50, 295, 0))},
+    overrides={
+        mechanics.Clock: dict(parent=map_entity._uid),
+        panda3d.Position: dict(value=Point3(50, 290, 0)),
+    },
 )
+
+# Non-moving NPC
 aspects.non_player_character.add(
     base.ecs_world.create_entity(),
     overrides={
-        panda3d.Position: dict(value=Point3(50, 300, 0)),
+        panda3d.Position: dict(value=Point3(60, 290, 0)),
+        mechanics.Clock: dict(parent=map_entity._uid),
+    },
+)
+
+# Small circle NPC
+aspects.non_player_character.add(
+    base.ecs_world.create_entity(),
+    overrides={
+        panda3d.Position: dict(value=Point3(70, 290, 0)),
         panda3d.ConstantCharacterAI: dict(
             move=Vec3(0.0, 0.25, 0.0),
             heading=-0.5,
         ),
+        mechanics.Clock: dict(parent=map_entity._uid),
     },
 )
-aspects.non_player_character.add(
+
+# Brownian NPC
+new_npc = Aspect([aspects.avatar, aspects.npc_mind_brownian])
+new_npc.add(
     base.ecs_world.create_entity(),
     overrides={
-        panda3d.Position: dict(value=Point3(60, 300, 0)),
-        panda3d.ConstantCharacterAI: dict(
-            move=Vec3(0.0, 0.75, 0.0),
-            heading=-0.1,
-        ),
+        panda3d.Position: dict(value=Point3(80, 290, 0)),
+        mechanics.Clock: dict(parent=map_entity._uid),
     },
-)
-aspects.non_player_character.add(
-    base.ecs_world.create_entity(),
-    overrides={panda3d.Position: dict(value=Point3(60, 295, 0))},
 )

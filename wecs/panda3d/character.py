@@ -133,7 +133,7 @@ class UpdateCharacter(System):
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             model = entity[Model]
-            dt = entity[Clock].timestep
+            dt = entity[Clock].game_time
 
             # Rotation
             controller.rotation = Vec3(
@@ -274,7 +274,7 @@ class TurningBackToCamera(System):
                 movement = entity[WalkingMovement]
             else:
                 movement = entity[FloatingMovement]
-            dt = entity[Clock].timestep
+            dt = entity[Clock].game_time
 
             if not (character.move.x == 0 and character.move.y == 0):
                 # What's the angle to turn?
@@ -323,7 +323,7 @@ class Inertiing(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            dt = entity[Clock].timestep
+            dt = entity[Clock].game_time
             model = entity[Model]
             character = entity[CharacterController]
             inertia = entity[InertialMovement]
@@ -434,11 +434,11 @@ class Falling(CollisionSystem):
             scene.node,
             falling_movement.gravity,
         )
-        frame_gravity = falling_movement.local_gravity * clock.timestep
+        frame_gravity = falling_movement.local_gravity * clock.game_time
         falling_movement.inertia += frame_gravity
 
         # Adjust lifter collider by inertia
-        frame_inertia = falling_movement.inertia * clock.timestep
+        frame_inertia = falling_movement.inertia * clock.game_time
         lifter = falling_movement.solids['lifter']
         node = lifter['node']
         node.set_pos(lifter['center'] + controller.translation + frame_inertia)
@@ -449,7 +449,7 @@ class Falling(CollisionSystem):
         controller = entity[CharacterController]
 
         falling_movement.ground_contact = False
-        frame_falling = falling_movement.inertia * clock.timestep
+        frame_falling = falling_movement.inertia * clock.game_time
         if len(falling_movement.contacts) > 0:
             lifter = falling_movement.solids['lifter']['node']
             center = falling_movement.solids['lifter']['center']
@@ -511,7 +511,7 @@ class ExecuteMovement(System):
         for entity in entities_by_filter['character']:
             model = entity[Model]
             controller = entity[CharacterController]
-            dt = entity[Clock].timestep
+            dt = entity[Clock].game_time
 
             # Translation: Simple self-relative movement for now.
             model.node.set_pos(model.node, controller.translation)
@@ -527,3 +527,53 @@ class ExecuteMovement(System):
 
             model.node.set_hpr(model.node.get_hpr() + controller.rotation)
             controller.last_rotation_speed = controller.rotation / dt
+
+
+### Stamina
+
+@Component()
+class Stamina:
+    current: float = 100.0
+    maximum: float = 100.0
+    recovery: float = 10
+    move_drain: float = 10
+    sprint_drain: float = 30
+    jump_drain: float = 20
+
+
+class UpdateStamina(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Stamina,
+            Clock,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            character = entity[CharacterController]
+            stamina = entity[Stamina]
+            dt = entity[Clock].timestep
+            av = abs(character.move.x)+abs(character.move.y)
+            drain = 0
+            if character.move.x or character.move.y:
+                drain = stamina.move_drain * av
+            if character.sprints and SprintingMovement in entity:
+                if stamina.current > stamina.sprint_drain * av:
+                    drain = stamina.sprint_drain * av
+                else:
+                    character.sprints = False
+            elif character.crouches and CrouchingMovement in entity:
+                if stamina.current > stamina.crouch_drain * av:
+                    drain = stamina.crouch_drain * av
+                else:
+                    character.crouches = False
+            if character.jumps and JumpingMovement in entity:
+                if stamina.current > stamina.jump_drain * av:
+                    drain += stamina.jump_drain
+                else:
+                    character.jumps = False
+            stamina.current -= drain * dt
+            stamina.current += stamina.recovery * dt
+            stamina.current = clamp(stamina.current, 0, stamina.maximum)

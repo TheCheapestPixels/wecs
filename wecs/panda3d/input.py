@@ -4,8 +4,9 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 
-from .camera import TurntableCamera
+from wecs.mechanics.clock import Clock
 
+from .camera import TurntableCamera
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
@@ -91,3 +92,11 @@ class AcceptInput(System):
                 character.crouches = True
             if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
                 character.jumps = True
+
+            # Time control
+            if Clock in entity:
+                clock = entity[Clock]
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("+")):
+                    clock.scaling_factor *= 1.1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("-")):
+                    clock.scaling_factor *= 1 / 1.1

@@ -48,7 +48,7 @@ class AnimateCharacter(System):
             actor = entity[Model].node
 
             # vertical animation
-            vertical_speed = (controller.translation.z*10)
+            vertical_speed = controller.last_translation_speed.z
             blends = [1]
             if vertical_speed > 0.1:
                 animation.to_play = ["jumping"]
@@ -62,13 +62,13 @@ class AnimateCharacter(System):
                 else:
                     initial = "idle"
                 animation.to_play = [initial, "walk_forward", "run_forward"]
-                forward_speed = abs(controller.translation.y*3)
+                forward_speed = abs(controller.last_translation_speed.y)
                 idle = max(0, (1 - forward_speed * 2))
                 walk = 1 - abs(forward_speed - 0.5) * 2
                 run = max(0, forward_speed * 2 - 1)
                 blends = [idle, walk, run]
                 # strafe animation
-                strafe_speed = (controller.translation.x*10)
+                strafe_speed = controller.last_translation_speed.x
                 if not strafe_speed == 0:
                     blends.append(abs(strafe_speed))
                     if strafe_speed > 0:
@@ -79,14 +79,10 @@ class AnimateCharacter(System):
                 animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
                 # If walking backwards simply play the animation in reverse
                 # Only do this when there's no animations for walking backwards?
-                if controller.translation.y < 0:
+                if controller.last_translation_speed.y < 0:
                     animation.framerate = -animation.framerate
 
             animation.blends = blends
-
-            if Input in entity:
-                print(animation.blends)
-                print(animation.playing)
 
 
 class Animate(System):

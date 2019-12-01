@@ -640,3 +640,4 @@ Two approaches offer themselves:
     * Rail shooter / Shooting gallery
     * Brawler
     * Bullet Hell
+    * Submarine simulator

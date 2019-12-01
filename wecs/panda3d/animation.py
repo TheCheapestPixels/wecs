@@ -76,6 +76,44 @@ class AnimateCharacter(System):
 
             animation.blends = blends
 
+            # # vertical animation
+            # vertical_speed = controller.last_translation_speed.z
+            # blends = [1]
+            # if vertical_speed > 0.1:
+            #     animation.to_play = ["jumping"]
+            # elif vertical_speed < -0.1:
+            #     animation.to_play = ["falling"]
+            # else:
+            #     # forward animation
+            #     if controller.crouches:
+            #         # TODO: Don't crouch instantly but ease in (bounce?).
+            #         initial = "crouch"
+            #     else:
+            #         initial = "idle"
+            #     animation.to_play = [initial, "walk_forward", "run_forward"]
+            #     forward_speed = abs(controller.last_translation_speed.y)
+            #     idle = max(0, (1 - forward_speed * 2))
+            #     walk = 1 - abs(forward_speed - 0.5) * 2
+            #     run = max(0, forward_speed * 2 - 1)
+            #     blends = [idle, walk, run]
+            #     # strafe animation
+            #     strafe_speed = controller.last_translation_speed.x
+            #     if not strafe_speed == 0:
+            #         blends.append(abs(strafe_speed))
+            #         if strafe_speed > 0:
+            #             animation.to_play.append("walk_right")
+            #         elif strafe_speed < 0:
+            #             animation.to_play.append("walk_left")
+            # 
+            #     animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
+            #     # If walking backwards simply play the animation in reverse
+            #     # Only do this when there's no animations for walking backwards?
+            #     if controller.last_translation_speed.y < 0:
+            #         animation.framerate = -animation.framerate
+            # 
+            # animation.blends = blends
+
+
 class Animate(System):
     entity_filters = {
         'animation': and_filter([

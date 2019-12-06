@@ -1,0 +1,27 @@
+body {
+    background-color: #ffffff80;
+}
+
+.subconsole_header {
+    width: 100%;
+    background-color: lightgrey;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.subconsole_header_cell {
+    border: 1px solid black;
+}
+
+.fullwidth_table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.cs_on {
+    background-color: lightgreen;
+}
+
+.cs_off {
+    background-color: #ff4d4d;
+}

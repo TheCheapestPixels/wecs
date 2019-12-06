@@ -10,7 +10,7 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 from wecs.panda3d import ECSShowBase as ShowBase
 
 
-def run_game(simplepbr=False, simplepbr_kwargs=None, console=True):
+def run_game(simplepbr=False, simplepbr_kwargs=None, console=False):
     # Application Basics
     ShowBase()
     base.win.setClearColor((0.5,0.7,0.9,1))
@@ -61,20 +61,53 @@ def run_game(simplepbr=False, simplepbr_kwargs=None, console=True):
     import game
     for sort, system_type in enumerate(game.system_types):
         base.add_system(system_type(), sort)
+    if console:
+        base.console.render_console()
 
     # And here we go...
     base.run()
 
 
-def make_console():
-        import cefpanda
+class Subconsole:
+    funcs = {}
+    
+    def hook_js_funcs(self, console):
+        self.console = console
+        for js_func, py_func_name in self.funcs.items():
+            console.set_js_function(js_func, getattr(self, py_func_name))
 
-        console = cefpanda.CEFPanda(size=[-1, 1, 0, 1])
-        def console_handler(entry):
-            # Do stuff and report back into the console
-            # I'm just looping this back here for demo purposes
-            result = entry
-            console.exec_js_func('python_result', result)
-        console.set_js_function('call_python', console_handler)
-        console.load_file('ui/console.html')
-        return console
+
+class DemoSubconsole(Subconsole):
+    funcs = {'call_python': 'test_hook'}
+
+    def test_hook(self):
+        self.console.exec_js_func('color_text', 'red')
+
+
+def make_console():
+    import cefpanda
+    from jinja2 import Environment
+    from jinja2 import PackageLoader
+    from jinja2 import select_autoescape
+
+    class Console(cefpanda.CEFPanda):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.subconsoles = []
+            self.env = Environment(
+                loader=PackageLoader('wecs', 'ui'),
+                autoescape=select_autoescape(['html', 'xml'])
+            )
+
+        def add_subconsole(self, subconsole):
+            self.subconsoles.append(subconsole)
+
+        def render_console(self):
+            for subconsole in self.subconsoles:
+                subconsole.hook_js_funcs(self)
+            template = self.env.get_template('console.html')
+            self.load_string(template.render(subconsoles=self.subconsoles))
+
+    console = Console(size=[-1, 1, -0.33, 1])
+    console.add_subconsole(DemoSubconsole())
+    return console

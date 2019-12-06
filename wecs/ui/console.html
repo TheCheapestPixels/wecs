@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="subconsole_wecs_style.css">
+    <script type="text/javascript">
+      subconsoles = ['subconsole_demo', 'subconsole_python', 'subconsole_wecs'];
+
+      function hide_subconsole(console_name) {
+	  document.getElementById(console_name).style.display = "none";
+      }
+
+      function hide_all_subconsoles() {
+	  subconsoles.forEach(hide_subconsole);
+      }
+
+      function show_subconsole(n) {
+	  hide_all_subconsoles();
+	  document.getElementById(subconsoles[n]).style.display = "block";
+      }
+
+      // This code is provided with subconsole_demo below
+      function color_text(color) {
+	  document.getElementById("colorable_text").style.color = color;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="subconsole_headers">
+      <table class="subconsole_header fullwidth_table">
+	<tr>
+	  <td id="subconsole_header_demo" class="subconsole_header_cell" onclick="show_subconsole(0);">Demo</td>
+	  <td id="subconsole_header_python" class="subconsole_header_cell" onclick="show_subconsole(1);">Python</td>
+	  <td id="subconsole_header_wecs" class="subconsole_header_cell" onclick="show_subconsole(2);">WECS</td>
+	</tr>
+      </table>
+    </div>
+    <div id="subconsole_container">
+      <div id="subconsole_demo">
+	<h1>Subconsole with some bla bla</h1>
+	<p>
+	  This is (or will become) a subconsole. It's purpose is to test
+	  <ul>
+	    <li>the clicking-on-subconsole-tab-riders, and that only the active subconsole is shown</li>
+	    <li>basic subconsole functionality</li>
+	  </ul>
+	</p>
+	<p id="colorable_text" onclick="call_python();">
+	  Click this text to color it red. Clicking will call
+	  `call_py_color_text('red');`, which is a Python function in this
+	  subconsole's Python code. It will in turn call the JavaScript
+	  function `color_text`, which finally does the actual recoloring.
+	</p>
+	<p>
+	  TODO:
+	  <ul>
+	    <li>The header buttons above: Make them work</li>
+	    <li>Breaking this mock-up up into templates</li>
+	    <li>Hooking all of this up in Panda3d, obviously
+	    <li>WECS subconsole
+	      <ul>
+		<li>Set up a system that updates this subconsole with the latest state</li>
+		<li>Sorting by component presence / absence of components / in systems</li>
+		<li>Pin entities to the top of the list</li>
+		<li>A shelf for components that are currently not attached to entities, and a waste basket
+		  <ul>
+		    <li>Dragging a component from the entity to the shelf detaches it</li>
+		    <li>Dragging a component into the waste basket deletes it</li>
+		    <li>Dragging a component from the shelf into an entity's line attaches it</li>
+		    <li>Dragging a component from one entity's line to another line moves it</li>
+		  </ul>
+		</li>
+		<li>Click red component field to add component</li>
+		<li>Click green component field to remove component</li>
+		<li>Add new entity, remove entity</li>
+		<li>Add / remove aspect to / from entity</li>
+	      </ul>
+	    </li>
+	  </ul>	    
+	</p>
+      </div>
+      <div id="subconsole_python">
+	<form>
+	  <input type="text" name="python_code"></input>
+	</form> 
+      </div>
+      <div id="subconsole_wecs">
+	<table class="fullwidth_table">
+	  <tr>
+	    <td>UID</td>
+	    <td colspan=4>Components</td>
+	    <td colspan=4>Systems</td>
+	  </tr>
+	  <tr>
+	    <td></td>
+	    <td>Scene</td>
+	    <td>Model</td>
+	    <td>Clock</td>
+	    <td>CharacterController</td>
+	    <td>DetermineTimestep</td>
+	    <td>AcceptInput</td>
+	    <td>Think</td>
+	    <td>UpdateCharacter</td>
+	  </tr>
+	  <tr>
+	    <td>00001</td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_off"></td>
+	    <td class="cs_on"></td>
+	  </tr>
+	  <tr>
+	    <td>00002</td>
+	    <td class="cs_off"></td>
+	    <td class="cs_off"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_off"></td>
+	    <td class="cs_on"></td>
+	    <td class="cs_on"></td>
+	  </tr>
+	</table>
+      </div>
+    </div>
+    <script>
+      show_subconsole(0);
+    </script>
+  </body>
+</html>

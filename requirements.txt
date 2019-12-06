@@ -1,0 +1,5 @@
+panda3d
+cefpanda
+jinja2
+graphviz
+crayons

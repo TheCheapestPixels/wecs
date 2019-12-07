@@ -69,6 +69,7 @@ def run_game(simplepbr=False, simplepbr_kwargs=None, console=False):
 
 
 class Subconsole:
+    name = ""
     funcs = {}
     
     def hook_js_funcs(self, console):
@@ -78,6 +79,7 @@ class Subconsole:
 
 
 class DemoSubconsole(Subconsole):
+    name = "Demo"
     funcs = {'call_python': 'test_hook'}
 
     def test_hook(self):

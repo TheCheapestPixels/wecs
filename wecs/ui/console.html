@@ -3,7 +3,35 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="subconsole_wecs_style.css">
+    <style type="text/css">
+      body {
+	  background-color: #ffffff80;
+      }
+
+      .subconsole_header {
+	  width: 100%;
+	  background-color: lightgrey;
+	  border-collapse: collapse;
+	  text-align: center;
+      }
+
+      .subconsole_header_cell {
+	  border: 1px solid black;
+      }
+
+      .fullwidth_table {
+	  width: 100%;
+	  overflow-x: auto;
+      }
+
+      .cs_on {
+	  background-color: lightgreen;
+      }
+
+      .cs_off {
+	  background-color: #ff4d4d;
+      }
+    </style>
     <script type="text/javascript">
       subconsoles = ['subconsole_demo', 'subconsole_python', 'subconsole_wecs'];
 
@@ -30,9 +58,9 @@
     <div id="subconsole_headers">
       <table class="subconsole_header fullwidth_table">
 	<tr>
-	  <td id="subconsole_header_demo" class="subconsole_header_cell" onclick="show_subconsole(0);">Demo</td>
-	  <td id="subconsole_header_python" class="subconsole_header_cell" onclick="show_subconsole(1);">Python</td>
-	  <td id="subconsole_header_wecs" class="subconsole_header_cell" onclick="show_subconsole(2);">WECS</td>
+	  <td class="subconsole_header_cell" onclick="show_subconsole(0);">Demo</td>
+	  <td class="subconsole_header_cell" onclick="show_subconsole(1);">Python</td>
+	  <td class="subconsole_header_cell" onclick="show_subconsole(2);">WECS</td>
 	</tr>
       </table>
     </div>

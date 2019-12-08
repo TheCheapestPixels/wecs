@@ -80,10 +80,23 @@ class Subconsole:
 
 class DemoSubconsole(Subconsole):
     name = "Demo"
+    html = "demo.html"
     funcs = {'call_python': 'test_hook'}
 
     def test_hook(self):
         self.console.exec_js_func('color_text', 'red')
+
+
+class PythonSubconsole(Subconsole):
+    name = "Python"
+    html = "python.html"
+    funcs = {}
+
+
+class WECSSubconsole(Subconsole):
+    name = "WECS"
+    html = "wecs.html"
+    funcs = {}
 
 
 def make_console():
@@ -112,4 +125,6 @@ def make_console():
 
     console = Console(size=[-1, 1, -0.33, 1])
     console.add_subconsole(DemoSubconsole())
+    console.add_subconsole(PythonSubconsole())
+    console.add_subconsole(WECSSubconsole())
     return console

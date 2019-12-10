@@ -25,7 +25,7 @@
       }
     </style>
     <script type="text/javascript">
-      subconsoles = ['subconsole_demo', 'subconsole_python', 'subconsole_wecs'];
+      subconsoles = ["{{ subconsoles | join('", "', attribute='name') | safe }}"];
 
       function hide_subconsole(console_name) {
 	  document.getElementById(console_name).style.display = "none";
@@ -46,14 +46,16 @@
       <table class="subconsole_header fullwidth_table">
 	<tr>
 	  {% for subconsole in subconsoles %}
-	  <td class="subconsole_header_cell" onclick="show_subconsole({{ loop.index0 }});">{{ subconsole.name}}</td>
+	  <td class="subconsole_header_cell" onclick="show_subconsole({{ loop.index0 }});">{{ subconsole.name }}</td>
 	  {% endfor %}
 	</tr>
       </table>
     </div>
     <div id="subconsole_container">
       {% for subconsole in subconsoles %}
-      {% include subconsole.html %}
+      <div id="{{ subconsole.name }}">
+	{% include subconsole.html %}
+      </div>
       {% endfor %}
     </div>
     <script>

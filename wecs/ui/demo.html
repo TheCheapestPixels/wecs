@@ -3,25 +3,24 @@
       document.getElementById("colorable_text").style.color = color;
   }
 </script>
-<div id="subconsole_demo">
-  <h1>Subconsole with some bla bla</h1>
-  <p>
-    This is (or will become) a subconsole. It's purpose is to test
-    <ul>
-      <li>the clicking-on-subconsole-tab-riders, and that only the active subconsole is shown</li>
-      <li>basic subconsole functionality</li>
-    </ul>
-  </p>
-  <p id="colorable_text" onclick="call_python();">
-    Click this text to color it red. Clicking will call
-    `call_py_color_text('red');`, which is a Python function in this
-    subconsole's Python code. It will in turn call the JavaScript
-    function `color_text`, which finally does the actual recoloring.
-  </p>
-  <p>
-    TODO:
-    <ul>
-      <li>WECS subconsole
+<h1>Subconsole with some bla bla</h1>
+<p>
+  This is (or will become) a subconsole. It's purpose is to test
+  <ul>
+    <li>the clicking-on-subconsole-tab-riders, and that only the active subconsole is shown</li>
+    <li>basic subconsole functionality</li>
+  </ul>
+</p>
+<p id="colorable_text" onclick="call_python();">
+  Click this text to color it red. Clicking will call
+  `call_py_color_text('red');`, which is a Python function in this
+  subconsole's Python code. It will in turn call the JavaScript
+  function `color_text`, which finally does the actual recoloring.
+</p>
+<p>
+  TODO:
+  <ul>
+    <li>WECS subconsole
 	<ul>
 	  <li>Set up a system that updates this subconsole with the latest state</li>
 	  <li>Sorting by component presence / absence of components / in systems</li>
@@ -39,7 +38,6 @@
 	  <li>Add new entity, remove entity</li>
 	  <li>Add / remove aspect to / from entity</li>
 	</ul>
-      </li>
-    </ul>	    
-  </p>
-</div>
+    </li>
+  </ul>	    
+</p>

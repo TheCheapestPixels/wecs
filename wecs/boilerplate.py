@@ -115,9 +115,10 @@ def make_console():
             for subconsole in self.subconsoles:
                 subconsole.hook_js_funcs(self)
             template = self.env.get_template('console.html')
-            self.load_string(template.render(subconsoles=self.subconsoles))
+            content = template.render(subconsoles=self.subconsoles)
+            self.load_string(content)
 
-    console = Console(size=[-1, 1, -0.33, 1])
-    console.add_subconsole(DemoSubconsole())
+    console = Console() # size=[-1, 1, -0.33, 1])
+    # console.add_subconsole(DemoSubconsole())
     console.add_subconsole(PythonSubconsole())
     return console

@@ -1,0 +1,23 @@
+<tr>
+  <td></td>
+  {% for ct in component_types %}
+  <td>
+    {{ ct | replace("'>", "") | replace("<class '", "") | replace(".", "<br />") | safe }}
+  </td>
+  {% endfor %}
+</tr>
+{% for (uid, components) in matrix %}
+<tr>
+  <td>
+    {{ uid | replace(">", "") | replace("<wecs.core.UID object at ", "") | safe }}
+  </td>
+  {% for component in components %}
+  <td>
+    {% if component %}
+    Yes
+    {% else %}
+    {% endif %}
+  </td>
+  {% endfor %}
+</tr>
+{% endfor %}

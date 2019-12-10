@@ -2,12 +2,14 @@ from panda3d.core import Point3
 from panda3d.core import Vec2, Vec3
 from panda3d.core import CollisionCapsule
 
+from wecs.core import System
 from wecs.core import Component
 from wecs.aspects import Aspect
 from wecs.aspects import factory
 from wecs import panda3d
 from wecs import mechanics
 from wecs.panda3d import aspects
+from wecs.boilerplate import Subconsole
 
 
 # Ignore this for the moment please; It means "This entity's model can be collided into".
@@ -22,6 +24,61 @@ class LoadMapsAndActors(panda3d.LoadModels):
         if Map in entity:
             node.flatten_strong()
             node.set_collide_mask(1<<0)
+
+
+class WECSSubconsole(Subconsole):
+    name = "WECS"
+    html = "wecs.html"
+    funcs = {
+        'refresh_wecs_matrix': 'refresh_wecs_matrix',
+        'toggle_live_refresh_wecs_matrix': 'toggle_live_refresh_wecs_matrix',
+    }
+    refresh = True
+    live_refresh = False
+
+    def refresh_wecs_matrix(self):
+        self.refresh = True
+
+    def toggle_live_refresh_wecs_matrix(self):
+        self.live_refresh = not self.live_refresh
+
+    def update(self):
+        if self.refresh or self.live_refresh:
+            entities = base.ecs_world.entities
+            uids = {repr(e._uid): e for e in entities}
+            uid_list = sorted(uids.keys())
+            component_types = set()
+            for entity in entities:
+                for component in entity.components:
+                    component_types.add(type(component))
+            component_types = sorted(component_types, key=lambda ct: repr(ct))
+            def crepr(e, ct):
+                if ct in e:
+                    return e[ct]
+                else:
+                    return None
+            matrix = [
+                (uid, [crepr(uids[uid], ct) for ct in component_types])
+                for uid in uid_list
+            ]
+            template = base.console.env.get_template('wecs_matrix.html')
+            content = template.render(
+                component_types=component_types,
+                matrix=matrix,
+            )
+            self.console.exec_js_func('update_wecs_matrix', content)
+            self.refresh = False
+
+
+wecs_subconsole = WECSSubconsole()
+base.console.add_subconsole(wecs_subconsole)
+
+
+class UpdateWecsSubonsole(System):
+    entity_filters = {}
+
+    def update(self, entities_by_filter):
+        wecs_subconsole.update()
 
 
 # Each frame, run these systems. This defines the game itself.
@@ -47,6 +104,7 @@ system_types = [
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
+    UpdateWecsSubonsole,
 ]
 
 

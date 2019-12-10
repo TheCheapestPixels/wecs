@@ -16,15 +16,7 @@ class Interpreter(InteractiveConsole):
         self.input_string = ""
         self.output_string = ""
         self.more = 0
-        try:
-            sys.ps1
-        except AttributeError:
-            sys.ps1 = ">>> "
-        try:
-            sys.ps2
-        except AttributeError:
-            sys.ps2 = "... "
-        self.prompt = sys.ps1
+        self.prompt = ">>> "
 
     def runline(self, line):
         self.output_string = ""
@@ -32,18 +24,11 @@ class Interpreter(InteractiveConsole):
         self.write(self.input_string)
 
         if self.push(line):
-            self.prompt = sys.ps2
+            self.prompt = "... "
         else:
-            self.prompt = sys.ps1
+            self.prompt = ">>> "
 
     def showsyntaxerror(self, filename=None):
-        """Display the syntax error that just occurred.
-        This doesn't display a stack trace because there isn't one.
-        If a filename is given, it is stuffed in the exception instead
-        of what was there before (because Python's parser always uses
-        "<string>" when reading from a string).
-        The output is written by self.write(), below.
-        """
         type, value, tb = sys.exc_info()
         sys.last_type = type
         sys.last_value = value
@@ -61,21 +46,6 @@ class Interpreter(InteractiveConsole):
                 sys.last_value = value
         lines = traceback.format_exception_only(type, value)
         self.write(''.join(lines))
-
-    def runsource(self, source, filename="<input>", symbol="single"):
-        try:
-            code = self.compile(source, filename, symbol)
-        except (OverflowError, SyntaxError, ValueError):
-            # Case 1
-            self.showsyntaxerror(filename)
-            return False
-
-        if code is None:
-            # Case 2
-            return True
-        # Case 3
-        self.runcode(code)
-        return False
 
     def runcode(self, code):
         # Empty buffers

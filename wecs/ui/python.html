@@ -2,6 +2,7 @@
   var input_history = [];
   var history_index = 0;
 
+  /* TODO: focus on repl_input when div is shown */
   function focus() {
     document.getElementById("repl_input").focus();
   }
@@ -57,6 +58,7 @@
   document.addEventListener('keyup', key_up);
 </script>
 <div id="subconsole_python">
+  <!-- height: 38em should be calculated to div-size depending on cef page resize instead -->
   <p id="repl_output" style="white-space: pre-wrap; height: 38em; overflow:auto">
 
 Python 3.7.5

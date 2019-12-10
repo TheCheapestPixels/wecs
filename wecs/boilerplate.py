@@ -102,12 +102,6 @@ class PythonSubconsole(Subconsole):
         self.console.exec_js_func("print_output", out, prompt)
 
 
-class WECSSubconsole(Subconsole):
-    name = "WECS"
-    html = "wecs.html"
-    funcs = {}
-
-
 def make_console():
     import cefpanda
     from jinja2 import Environment
@@ -135,5 +129,4 @@ def make_console():
     console = Console(size=[-1, 1, -0.33, 1])
     console.add_subconsole(DemoSubconsole())
     console.add_subconsole(PythonSubconsole())
-    console.add_subconsole(WECSSubconsole())
     return console

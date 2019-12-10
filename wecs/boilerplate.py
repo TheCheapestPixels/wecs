@@ -3,6 +3,8 @@ import sys
 from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
 
+from .repl import Interpreter
+
 # We want the time of collision traversal to be added to systems that
 # run them.
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
@@ -71,7 +73,7 @@ def run_game(simplepbr=False, simplepbr_kwargs=None, console=False):
 class Subconsole:
     name = ""
     funcs = {}
-    
+
     def hook_js_funcs(self, console):
         self.console = console
         for js_func, py_func_name in self.funcs.items():
@@ -90,7 +92,14 @@ class DemoSubconsole(Subconsole):
 class PythonSubconsole(Subconsole):
     name = "Python"
     html = "python.html"
-    funcs = {}
+    funcs = {'read_eval': 'read_and_eval'}
+    interpreter = Interpreter()
+
+    def read_and_eval(self, input):
+        self.interpreter.runline(input)
+        out = self.interpreter.output_string
+        prompt = self.interpreter.prompt
+        self.console.exec_js_func("print_output", out, prompt)
 
 
 class WECSSubconsole(Subconsole):

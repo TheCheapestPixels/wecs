@@ -1,5 +1,7 @@
 import cefconsole
 
+from wecs.core import System
+
 
 class WECSSubconsole(cefconsole.Subconsole):
     name = "WECS"
@@ -45,3 +47,15 @@ class WECSSubconsole(cefconsole.Subconsole):
             )
             self.console.exec_js_func('update_wecs_matrix', content)
             self.refresh = False
+
+
+class UpdateWecsSubconsole(System):
+    entity_filters = {}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subconsole = WECSSubconsole()
+        base.console.add_subconsole(self.subconsole)
+
+    def update(self, entities_by_filter):
+        self.subconsole.update()

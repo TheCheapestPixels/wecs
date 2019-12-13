@@ -28,8 +28,13 @@ from wecs.aspects import factory
 #   A `game_map` is a model that you can bump / fall into.
 
 character = Aspect(
-    [mechanics.Clock, panda3d.Position, panda3d.Scene, panda3d.CharacterController,
-     panda3d.Model],
+    [
+        mechanics.Clock,
+        panda3d.Position,
+        panda3d.Scene,
+        panda3d.CharacterController,
+        panda3d.Model,
+    ],
     overrides = {
         mechanics.Clock: dict(clock=panda3d.panda_clock),
     },
@@ -52,13 +57,20 @@ def rebecca_lifter():
             radius=0.5,
         ),
     }
-walking = Aspect([panda3d.WalkingMovement, panda3d.CrouchingMovement, panda3d.SprintingMovement,
-                  panda3d.InertialMovement, panda3d.BumpingMovement, panda3d.FallingMovement,
-                  panda3d.JumpingMovement],
-                 overrides = {
-                     panda3d.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-                     panda3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
-                 },
+walking = Aspect(
+    [
+        panda3d.WalkingMovement,
+        panda3d.CrouchingMovement,
+        panda3d.SprintingMovement,
+        panda3d.InertialMovement,
+        panda3d.BumpingMovement,
+        panda3d.FallingMovement,
+        panda3d.JumpingMovement,
+    ],
+    overrides = {
+        panda3d.BumpingMovement: dict(solids=factory(rebecca_bumper)),
+        panda3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
+    },
 )
 animated = Aspect([panda3d.Actor, panda3d.Animation])
 avatar = Aspect([character, walking, animated],

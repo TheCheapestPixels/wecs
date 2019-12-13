@@ -34,7 +34,7 @@ system_types = [
     panda3d.Think,  # Input from AIs, the same
     # panda3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
     # panda3d.TurningBackToCamera,  # Characters can have a tendency towards walk towards away-from-camera that adjusts their intention.
-    # panda3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."
+    panda3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."
     # The following systems adjust the intended movement
     panda3d.Floating,  # Scale by speed for floating
     panda3d.Walking,  # Scale by speed for walk / run / crouch / sprint
@@ -43,7 +43,7 @@ system_types = [
     panda3d.Falling,  # Fall, or stand on the ground.
     panda3d.Jumping,  # Impart upward impulse.
     panda3d.ExecuteMovement,  # Turn intention into actual movement
-    # panda3d.AnimateCharacter,
+    panda3d.AnimateCharacter,
     panda3d.Animate,
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,

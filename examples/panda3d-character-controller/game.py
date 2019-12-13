@@ -1,8 +1,6 @@
 from panda3d.core import Point3
-from panda3d.core import Vec2, Vec3
-from panda3d.core import CollisionCapsule
+from panda3d.core import Vec3
 
-from wecs.core import Component
 from wecs.aspects import Aspect
 from wecs.aspects import factory
 from wecs import panda3d
@@ -11,23 +9,9 @@ from wecs import cefconsole
 from wecs.panda3d import aspects
 
 
-# Ignore this for the moment please; It means "This entity's model can be collided into".
-@Component()
-class Map:
-    pass
-
-
-# Ignore this too; It makes the map collidable.
-class LoadMapsAndActors(panda3d.LoadModels):
-    def post_load_hook(self, node, entity):
-        if Map in entity:
-            node.flatten_strong()
-            node.set_collide_mask(1<<0)
-
-
 # Each frame, run these systems. This defines the game itself.
 system_types = [
-    LoadMapsAndActors,  # Self-descriptive...
+    panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
     mechanics.DetermineTimestep,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
     panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
@@ -38,14 +22,14 @@ system_types = [
     # The following systems adjust the intended movement
     panda3d.Floating,  # Scale by speed for floating
     panda3d.Walking,  # Scale by speed for walk / run / crouch / sprint
-    panda3d.Inertiing,  # Clamp movement speed delta by inertia
+    panda3d.Inertiing,  # Clamp movement speed delta by inertia.
     panda3d.Bumping,  # Bump into things (and out again).
     panda3d.Falling,  # Fall, or stand on the ground.
     panda3d.Jumping,  # Impart upward impulse.
-    panda3d.ExecuteMovement,  # Turn intention into actual movement
+    panda3d.ExecuteMovement,  # Turn intention into actual movement.
     panda3d.AnimateCharacter,
     panda3d.Animate,
-    # We're done with character movement, now adjust the cameras.
+    # We're done with character movement, now update the cameras and console.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
     cefconsole.UpdateWecsSubconsole,
@@ -53,24 +37,18 @@ system_types = [
 ]
 
 
-def panda_clock():
-    def read_dt():
-        return globalClock.dt
-    return read_dt
-
-
+# Aspects are basically classes for entities. Here are two that we will use.
 game_map = Aspect(
     [mechanics.Clock,
      panda3d.Position,
      panda3d.Model,
      panda3d.Scene,
-     Map,
+     panda3d.CollidableGeometry,
+     panda3d.FlattenStrong,
     ],
     overrides={
-        mechanics.Clock: dict(clock=panda_clock),
-        panda3d.Position: dict(value=factory(lambda:Point3(0, 0, 0))),
+        mechanics.Clock: dict(clock=panda3d.panda_clock),
         panda3d.Model: dict(model_name='roadE.bam'),
-        # panda3d.Model: dict(model_name='grid.bam'),
         panda3d.Scene: dict(node=base.render),
     },
 )

@@ -28,10 +28,23 @@ class Actor:
 
 
 @Component()
+class CollidableGeometry:
+    collide_mask: int = 1<<0 # bit 0 set
+
+
+@Component()
+class FlattenStrong:
+    pass
+
+
+# Spatial context
+
+@Component()
 class Scene:
     node: NodePath = field(default_factory=lambda:base.render)
 
 
+# This should vanish... It means "Initial position"... I hope.
 @Component()
 class Position:
     value: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
@@ -84,7 +97,12 @@ class LoadModels(System):
 
         # Load hook
         self.post_load_hook(model.node, entity)
+
         # Attach to PhysicsBody or Scene; former takes precedence.
+        if CollidableGeometry in entity:
+            model.node.set_collide_mask(entity[CollidableGeometry].collide_mask)
+        if FlattenStrong in entity:
+            model.node.flatten_strong()
         if PhysicsBody in entity:
             parent = entity[PhysicsBody].node
         else:

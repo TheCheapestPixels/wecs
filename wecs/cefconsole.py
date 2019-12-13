@@ -1,6 +1,10 @@
+import dataclasses
+
 import cefconsole
 
 from wecs.core import System
+from wecs.core import and_filter
+from wecs.core import Component
 
 
 class WECSSubconsole(cefconsole.Subconsole):
@@ -59,3 +63,69 @@ class UpdateWecsSubconsole(System):
 
     def update(self, entities_by_filter):
         self.subconsole.update()
+
+
+class EntityWatcherSubconsole(cefconsole.Subconsole):
+    name = "Entity Watcher"
+    package = 'wecs'
+    template_dir = 'templates'
+    html = "entity.html"
+    funcs = {
+    }
+
+    def update(self, entities):
+        entities = [
+            {'obj': e}
+            for e in sorted(
+                    list(entities),
+                    key=lambda e:repr(e._uid),
+            )
+        ]
+
+        for entity in entities:
+            entity['uid'] = entity['obj']._uid
+            entity['components'] = sorted(
+                list(entity['obj'].get_components()),
+                key=lambda c: repr(c),
+            )
+            entity['components'] = [
+                {'obj': c}
+                for c in entity['components']
+            ]
+            for component in entity['components']:
+                component['name'] = type(component['obj'])
+                component['fields'] = dataclasses.fields(component['obj'])
+                component['fields'] = [
+                    {
+                        'name': f.name,
+                        'type': f.type,
+                        'value': getattr(component['obj'], f.name)
+                    }
+                    for f in component['fields']
+                ]
+
+
+        template = base.console.env.get_template('{}/watcher.html'.format(self.name))
+        content = template.render(
+            entities=entities,
+        )
+        self.console.exec_js_func('update_entity_watcher', content)
+
+
+@Component()
+class WatchedEntity:
+    pass
+
+
+class WatchEntitiesInSubconsole(System):
+    entity_filters = {
+        'watched': and_filter([WatchedEntity]),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subconsole = EntityWatcherSubconsole()
+        base.console.add_subconsole(self.subconsole)
+
+    def update(self, entities_by_filter):
+        self.subconsole.update(entities_by_filter['watched'])

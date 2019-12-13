@@ -54,6 +54,7 @@ system_types = [
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
     cefconsole.UpdateWecsSubconsole,
+    cefconsole.WatchEntitiesInSubconsole,
 ]
 
 
@@ -87,7 +88,12 @@ map_entity = base.ecs_world.create_entity()
 game_map.add(map_entity)
 
 # Player
-player_avatar = Aspect([aspects.player_character, panda3d.Stamina])
+player_avatar = Aspect(
+    [
+        aspects.player_character,
+        panda3d.Stamina,
+        cefconsole.WatchedEntity,
+    ])
 player_avatar.add(
     base.ecs_world.create_entity(),
     overrides={

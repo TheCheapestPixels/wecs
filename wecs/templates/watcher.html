@@ -1,0 +1,24 @@
+{% for entity in entities %}
+{% if loop.index0 > 0 %}
+<hr />
+{% endif%}
+<h2>{{ entity.uid }}</h2>
+{% for component in entity.components %}
+<h3>{{ component.name }}</h3>
+<table>
+  {% for field in component.fields %}
+  <tr>
+    <td>
+      {{ field.name }}
+    </td>
+    <td>
+      {{ field.type }}
+    </td>
+    <td>
+      {{ field.value }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endfor %}
+{% endfor %}

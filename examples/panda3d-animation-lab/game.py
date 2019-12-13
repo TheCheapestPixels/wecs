@@ -7,6 +7,7 @@ from wecs.aspects import Aspect
 from wecs.aspects import factory
 from wecs import panda3d
 from wecs import mechanics
+from wecs import cefconsole
 from wecs.panda3d import aspects
 
 
@@ -47,6 +48,8 @@ system_types = [
     # We're done with character movement, now adjust the cameras.
     panda3d.UpdateCameras,
     # panda3d.CollideCamerasWithTerrain,
+    cefconsole.UpdateWecsSubconsole,
+    cefconsole.WatchEntitiesInSubconsole,
 ]
 
 
@@ -73,11 +76,13 @@ game_map = Aspect(
 game_map.add(base.ecs_world.create_entity())
 
 
-aspects.player_character.add(
-    base.ecs_world.create_entity(),
+lab_character = Aspect(
+    [aspects.player_character, cefconsole.WatchedEntity],
     overrides={
         mechanics.Clock: dict(clock=panda_clock),
         panda3d.Position: dict(value=Point3(50, 290, 0)),
         panda3d.Model: dict(model_name='../../assets/rebecca.bam'),
     },
 )
+
+lab_character.add(base.ecs_world.create_entity())

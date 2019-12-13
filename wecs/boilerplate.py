@@ -3,8 +3,6 @@ import sys
 from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
 
-from .repl import Interpreter
-
 # We want the time of collision traversal to be added to systems that
 # run them.
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
@@ -33,7 +31,8 @@ def run_game(simplepbr=False, simplepbr_kwargs=None, console=False):
 
     if console:
         from cefconsole import add_console
-        add_console()
+        from cefconsole import PythonSubconsole
+        add_console(subconsoles=[PythonSubconsole()])
 
     base.frame_rame_meter_visible = False
     base.set_frame_rate_meter(base.frame_rame_meter_visible)

@@ -2,8 +2,6 @@ from panda3d.core import Point3
 from panda3d.core import Vec2, Vec3
 from panda3d.core import CollisionCapsule
 
-import cefconsole as base_console
-
 from wecs.core import Component
 from wecs.aspects import Aspect
 from wecs.aspects import factory
@@ -11,9 +9,6 @@ from wecs import panda3d
 from wecs import mechanics
 from wecs import cefconsole
 from wecs.panda3d import aspects
-
-
-base.console.add_subconsole(base_console.PythonSubconsole())
 
 
 # Ignore this for the moment please; It means "This entity's model can be collided into".

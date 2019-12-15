@@ -7,9 +7,13 @@ from wecs.core import and_filter
 from wecs.mechanics.clock import Clock
 
 from .camera import TurntableCamera
+from .camera import ThirdPersonCamera
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
+from .creation import CursorMovement
+from .creation import Creator
+
 
 
 @Component()
@@ -100,3 +104,27 @@ class AcceptInput(System):
                     clock.scaling_factor *= 1.1
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("-")):
                     clock.scaling_factor *= 1 / 1.1
+
+            # Creation Debug/Testing
+            if CursorMovement in entity:
+                if ThirdPersonCamera in entity:
+                    camera = entity[ThirdPersonCamera]
+                    if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("[")):
+                        camera.distance -= 1
+                    if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("]")):
+                        camera.distance += 1
+                    if camera.distance < 4:
+                        camera.distance = 4
+                    if camera.distance > 300:
+                        camera.distance = 300
+                    entity[CursorMovement].move_speed = camera.distance / 2
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
+                    entity[CursorMovement].snapping = False
+                else:
+                    entity[CursorMovement].snapping = True
+            if Creator in entity:
+                creator = entity[Creator]
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
+                    creator.place = True
+                else:
+                    creator.place = False

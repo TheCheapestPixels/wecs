@@ -16,12 +16,16 @@ class NoSuchUID(Exception):
 
 
 class Entity:
-    def __init__(self, world):
+    def __init__(self, world, name=None):
         self.world = world
         self.components = set()
         self._uid = UID()
         self._new_components = {} # type: instance
         self._dropped_components = {} # types
+
+        if name is None:
+            name = str(id(self))
+        self._uid.name = name
 
     def add_component(self, component):
         exists = any([isinstance(c, type(component))
@@ -206,8 +210,8 @@ class World:
         self.system_of_filter = {}
         self.entities_that_update_components= [] # deferred operation
 
-    def create_entity(self, *args):
-        entity = Entity(self)
+    def create_entity(self, *args, name=None):
+        entity = Entity(self, name=name)
         self.entities.add(entity)
         self.entities_by_uid[entity._uid] = entity
         for arg in args:

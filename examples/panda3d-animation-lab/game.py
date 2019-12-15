@@ -43,6 +43,7 @@ game_map = Aspect(
      panda3d.Scene,
      panda3d.CollidableGeometry,
      panda3d.FlattenStrong,
+     cefconsole.WatchedEntity,
     ],
     overrides={
         panda3d.Model: dict(model_name='grid.bam'),
@@ -54,4 +55,4 @@ lab_character = Aspect([aspects.player_character, cefconsole.WatchedEntity])
 
 # Create entities
 game_map.add(base.ecs_world.create_entity())
-lab_character.add(base.ecs_world.create_entity())
+lab_character.add(base.ecs_world.create_entity(name="Rebecca"))

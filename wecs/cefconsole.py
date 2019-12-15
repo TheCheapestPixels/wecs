@@ -28,7 +28,7 @@ class WECSSubconsole(cefconsole.Subconsole):
     def update(self):
         if self.refresh or self.live_refresh:
             entities = base.ecs_world.entities
-            uids = {repr(e._uid): e for e in entities}
+            uids = {e._uid.name: e for e in entities}
             uid_list = sorted(uids.keys())
             component_types = set()
             for entity in entities:

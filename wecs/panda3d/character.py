@@ -22,6 +22,7 @@ from .model import Clock
 from .camera import ThirdPersonCamera
 from .camera import TurntableCamera
 
+from .helpers import snap_vector
 
 @Component()
 class FloatingMovement:
@@ -111,7 +112,15 @@ class FallingMovement:
     debug: bool = False
 
 
-# @Component()
+@Component()
+class CursorMovement:
+    move_snap: int = 2
+    move_speed: float = 10.0
+    rot_speed: float = 180.0
+    rot_snap: float = 90.0
+    snapping: bool = True
+
+
 # class MovementSensors:
 #     solids: dict = field(default_factory=lambda:dict())
 #     contacts: dict = field(default_factory=lambda:dict())
@@ -493,6 +502,31 @@ class Jumping(CollisionSystem):
             jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
                 falling_movement.inertia += jumping_movement.impulse
+
+
+# Move horizontally and possibly snap to a grid.
+class Cursoring(System):
+    entity_filters = {
+        'cursor' : and_filter([
+            CursorMovement,
+            CharacterController,
+            Model
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['cursor']:
+            cursor = entity[CursorMovement]
+            model = entity[Model]
+            char = entity[CharacterController]
+            char.translation *= cursor.move_speed
+            char.rotation *= cursor.rot_speed
+            char.rotation[1] = 0
+            if cursor.snapping:
+                if char.move.x == 0 and char.move.y == 0 and char.heading == 0:
+                    np = model.node
+                    np.set_pos(snap_vector(np.get_pos(), cursor.move_snap))
+                    np.set_hpr(snap_vector(np.get_hpr(), cursor.rot_snap))
 
 
 # Transcribe the final intended movement to the model, making it an

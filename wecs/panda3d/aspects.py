@@ -27,6 +27,19 @@ from wecs.aspects import factory
 #   A `non_player_character` is an `avatar` controlled by an `npc_mind`
 #   A `game_map` is a model that you can bump / fall into.
 
+empty_scene = Aspect(
+    [
+        mechanics.Clock,
+        panda3d.Position,
+        panda3d.Model,
+        panda3d.Scene,
+    ],
+    overrides={
+        mechanics.Clock: dict(clock=panda3d.panda_clock),
+        panda3d.Scene: dict(node=base.render),
+    },
+)
+
 character = Aspect(
     [
         mechanics.Clock,
@@ -38,6 +51,17 @@ character = Aspect(
     overrides = {
         mechanics.Clock: dict(clock=panda3d.panda_clock),
     },
+)
+
+cursor = Aspect(
+    [
+        character,
+        panda3d.Input,
+        panda3d.CursorMovement,
+        panda3d.ThirdPersonCamera,
+        panda3d.TurntableCamera,
+        panda3d.Creator,
+    ],
 )
 
 

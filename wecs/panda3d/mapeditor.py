@@ -9,54 +9,14 @@ from wecs.core import System
 from wecs.core import and_filter
 from wecs.core import UID
 
-from wecs.aspects import Aspect
-from wecs.aspects import factory
-
 from .model import Model
 from .character import CharacterController
-
-
-def round_node_pos_hpr(node, move_snap, rot_snap):
-    x = node.get_x()
-    y = node.get_y()
-    node.set_x(round(x/move_snap)*move_snap)
-    node.set_y(round(y/move_snap)*move_snap)
-    node.set_h(round(node.get_h()/rot_snap)*rot_snap)
+from .character import CursorMovement
+from .helpers import snap_vector
 
 
 @Component()
-class CursorMovement:
-    move_snap: int = 2
-    move_speed: float = 10.0
-    rot_speed: float = 180.0
-    rot_snap: float = 90.0
-    snapping: bool = True
-
-
-class Cursoring(System):
-    entity_filters = {
-        'cursor' : and_filter([
-            CursorMovement,
-            CharacterController,
-            Model
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['cursor']:
-            cursor = entity[CursorMovement]
-            model = entity[Model]
-            char = entity[CharacterController]
-            char.translation *= cursor.move_speed
-            char.rotation *= cursor.rot_speed
-            char.rotation[1] = 0
-            if cursor.snapping:
-                if char.move.x == 0 and char.move.y == 0 and char.heading == 0:
-                    round_node_pos_hpr(model.node, cursor.move_snap, cursor.rot_snap)
-
-
-@Component()
-class Creator:
+class Creator:              # An entity that places models in the scene
     place: bool = False     # Drop the entity on the field.
     max_cooldown: int = 10  # Time it takes before another entity can be placed.
     cooldown: int = 0       # Subtract 'till 0, then allow placement.
@@ -71,37 +31,48 @@ class Create(System):
         ]),
     }
 
+    def rebuild_cursor(self, entity):
+        creator = entity[Creator]
+        model = entity[Model]
+        console = base.ecs_world.get_system(UpdateMapEditorSubconsole).subconsole
+        while creator.current_tile.getNumChildren() > 0:
+            creator.current_tile.get_child(0).remove_node()
+        tileset = console.tilesets[console.tileset]
+        collection = tileset[console.collection]
+        tile = collection[console.tile]
+        tile.copy_to(creator.current_tile)
+        creator.current_tile.reparent_to(model.node)
+        console.fresh_tile = False
+
+    def place_tile(self, entity):
+        creator = entity[Creator]
+        model = entity[Model]
+        np = creator.current_tile.copy_to(render)
+        np.set_pos(model.node.get_pos())
+        np.set_hpr(model.node.get_hpr())
+        if CursorMovement in entity:
+            cursor = entity[CursorMovement]
+            if cursor.snapping:
+                np.set_pos(snap_vector(np.get_pos(), cursor.move_snap))
+                np.set_hpr(snap_vector(np.get_hpr(), cursor.rot_snap))
+        creator.place = False
+        creator.built = None
+        creator.cooldown = creator.max_cooldown
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter['creator']:
-            creator = entity[Creator]
-            model = entity[Model]
             console = base.ecs_world.get_system(UpdateMapEditorSubconsole).subconsole
-            if console.rebuild:
-                if creator.current_tile.getNumChildren() > 0:
-                    creator.current_tile.get_child(0).remove_node()
-                tileset = console.tilesets[console.tileset]
-                collection = tileset[console.collection]
-                tile = collection[console.tile]
-                tile.copy_to(creator.current_tile)
-                creator.current_tile.reparent_to(model.node)
+            if console.fresh_tile:
+                self.rebuild_cursor(entity)
+            creator = entity[Creator]
             if creator.cooldown > 0:
                 creator.cooldown -= 1
             else:
-                if creator.place and creator.tile:
-                    np = creator.current_tile.copy_to(render)
-                    np.set_pos(model.node.get_pos())
-                    np.set_hpr(model.node.get_hpr())
-                    if CursorMovement in entity:
-                        cursor = entity[CursorMovement]
-                        if cursor.snapping:
-                            round_node_pos_hpr(np, cursor.move_snap, cursor.rot_snap)
-
-                    creator.place = False
-                    creator.built = None
-                    creator.cooldown = creator.max_cooldown
+                if creator.place:
+                    self.place_tile(entity)
 
 
-## GUI stuff
+## map editor subconsole
 class MapEditorSubconsole(cefconsole.Subconsole):
     name = "map editor"
     package = 'wecs'
@@ -111,12 +82,19 @@ class MapEditorSubconsole(cefconsole.Subconsole):
         "load_tileset": "load_tileset",
         "update_tile": "update_tile",
     }
-
+    # Last data recieved from js
     tilesets = {}
     tileset = ""
     collection = ""
     tile = ""
-    rebuild = False
+    fresh_tile = False
+
+    def update_tile(self, tileset, collection, tile):
+        # JS passes these arguments
+        self.tileset = tileset
+        self.collection = collection
+        self.tile = tile
+        self.fresh_tile = True
 
     def load_tileset(self, filename, debug=False):
         # Load and store new tileset
@@ -138,19 +116,14 @@ class MapEditorSubconsole(cefconsole.Subconsole):
             tilesets[tileset] = {}
             for collection in self.tilesets[tileset]:
                 # Individual tiles have to be dictionaries too,
-                # or they'll show up as numbers
+                # or they'll show up in selection as numbers?
                 tilesets[tileset][collection] = {}
                 for tile in self.tilesets[tileset][collection]:
                     tilesets[tileset][collection][tile] = 0
         self.console.exec_js_func("tileman.load_tilesets", tilesets)
 
-    def update_tile(self, tileset, collection, tile):
-        self.tileset = tileset
-        self.collection = collection
-        self.tile = tile
-        self.rebuild = True
 
-
+# HEADSUP: All this does is instantiate a subconsole once.
 class UpdateMapEditorSubconsole(System):
     entity_filters = {
         'creator': and_filter([Creator]),
@@ -160,11 +133,3 @@ class UpdateMapEditorSubconsole(System):
         super().__init__(*args, **kwargs)
         self.subconsole = MapEditorSubconsole()
         base.console.add_subconsole(self.subconsole)
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter["creator"]:
-            creator = entity[Creator]
-            creator.tileset = self.subconsole.tileset
-            creator.collection = self.subconsole.collection
-            creator.tile = self.subconsole.tile
-            creator.rebuild = self.subconsole.rebuild

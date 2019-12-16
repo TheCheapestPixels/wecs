@@ -11,9 +11,8 @@ from .camera import ThirdPersonCamera
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
-from .mapeditor import CursorMovement
+from .character import CursorMovement
 from .mapeditor import Creator
-
 
 
 @Component()
@@ -71,6 +70,19 @@ class AcceptInput(System):
             if base.mouseWatcherNode.is_button_down(KeyboardButton.right()):
                 character.heading -= 1
 
+            # Zooming
+            if ThirdPersonCamera in entity:
+                camera = entity[ThirdPersonCamera]
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("[")):
+                    camera.distance -= 1
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("]")):
+                    camera.distance += 1
+                if camera.distance < 4:
+                    camera.distance = 4
+                if camera.distance > 300:
+                    camera.distance = 300
+
+            # Rotating around entity
             if TurntableCamera in entity:
                 camera = entity[TurntableCamera]
                 camera.heading = camera.pitch = 0
@@ -82,7 +94,6 @@ class AcceptInput(System):
                     camera.pitch = -1
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("k")):
                     camera.pitch = 1
-
 
             # Special movement modes.
             # By default, you run ("sprint"), unless you press e, in
@@ -105,23 +116,18 @@ class AcceptInput(System):
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("-")):
                     clock.scaling_factor *= 1 / 1.1
 
-            # Creation Debug/Testing
+            # Cursor movement
             if CursorMovement in entity:
+                # Make cursor speed relative to camera distance
                 if ThirdPersonCamera in entity:
                     camera = entity[ThirdPersonCamera]
-                    if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("[")):
-                        camera.distance -= 1
-                    if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key("]")):
-                        camera.distance += 1
-                    if camera.distance < 4:
-                        camera.distance = 4
-                    if camera.distance > 300:
-                        camera.distance = 300
                     entity[CursorMovement].move_speed = camera.distance / 2
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
                     entity[CursorMovement].snapping = False
                 else:
                     entity[CursorMovement].snapping = True
+
+            # Creator interaction
             if Creator in entity:
                 creator = entity[Creator]
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):

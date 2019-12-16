@@ -5,7 +5,7 @@ from panda3d.core import LineSegs
 from wecs import panda3d
 from wecs import mechanics
 from wecs.panda3d import aspects
-
+from wecs.panda3d.helpers import draw_grid
 
 system_types = [
     panda3d.LoadModels,
@@ -20,26 +20,12 @@ system_types = [
 ]
 
 # empty scene with a grid.
-def build_grid(x_size, y_size, s):
-    lines = LineSegs()
-    lines.set_color((0,0,0,1))
-    offset = s/2
-    for x in range(x_size):
-        x = (x*s) - offset
-        lines.move_to(x, -offset, 0)
-        lines.draw_to(x, (y_size*s)-offset, 0)
-    for y in range(y_size):
-        y = (y*s) - offset
-        lines.move_to(-offset, y, 0)
-        lines.draw_to((x_size*s)-offset, y, 0)
-    grid = NodePath(lines.create())
-    return grid
 gridsize = 500 # Size of grid in cells
 cellsize = 2 # Size of cells in meters
 aspects.empty_scene.add(
     base.ecs_world.create_entity(),
     overrides = {
-        panda3d.Model: dict(node=build_grid(gridsize, gridsize, cellsize)),
+        panda3d.Model: dict(node=draw_grid(gridsize, gridsize, cellsize)),
     }
 )
 

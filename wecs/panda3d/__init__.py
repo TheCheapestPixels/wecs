@@ -5,7 +5,7 @@ from .camera import *
 from .character import *
 from .ai import *
 from .animation import *
-from .creation import *
+from .mapeditor import *
 
 #__all__ = ['ECSShowBase']
 

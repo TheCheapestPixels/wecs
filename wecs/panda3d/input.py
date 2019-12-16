@@ -11,8 +11,8 @@ from .camera import ThirdPersonCamera
 from .character import CharacterController
 from .character import FallingMovement
 from .character import JumpingMovement
-from .creation import CursorMovement
-from .creation import Creator
+from .mapeditor import CursorMovement
+from .mapeditor import Creator
 
 
 

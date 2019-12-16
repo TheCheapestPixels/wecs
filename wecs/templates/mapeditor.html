@@ -1,0 +1,76 @@
+<script>
+  function set_options(selector, items){
+    // Delete old options
+    for(var i = selector.options.length - 1 ; i >= 0 ; i--) {
+        selector.remove(i);
+    }
+    // Add new options
+    for (item in items){
+      var option = document.createElement("option");
+      option.text = item;
+      selector.add(option);
+    }
+  }
+
+  function get_index(selector) {
+    var index = selector.selectedIndex
+    if (index < 0){
+      index = 0
+    }
+    return index
+  }
+
+  var tileman = {
+    tileset_select : "",
+    collection_select : "",
+    tile_select : "",
+    loaded : {},
+    tileset : "",
+    collection : "",
+    tile : "",
+    refresh: function() {
+      this.tileset_select = document.getElementById("tileset_selector");
+      this.collection_select = document.getElementById("collection_selector");
+      this.tile_select = document.getElementById("tile_selector");
+    },
+    load : function(filename) {
+      load_tileset(filename);
+    },
+    load_tilesets : function(tilesets) {
+      this.refresh();
+      this.loaded = tilesets;
+      set_options(this.tileset_select, tilesets)
+      this.update_tileset()
+    },
+    update_tileset : function() {
+      index = get_index(this.tileset_select)
+      this.tileset = Object.keys(this.loaded)[index];
+      set_options(this.collection_select, this.loaded[this.tileset])
+      this.update_collection()
+    },
+    update_collection : function() {
+      index = get_index(this.collection_select)
+      collections = this.loaded[this.tileset]
+      this.collection = Object.keys(collections)[index];
+      set_options(this.tile_select, this.loaded[this.tileset][this.collection])
+      this.update_tile()
+    },
+    update_tile: function() {
+      index = get_index(this.tile_select)
+      this.tile = Object.keys(this.loaded[this.tileset][this.collection])[index];
+      update_tile(this.tileset, this.collection, this.tile)
+    }
+  };
+
+  function load_tiles_test(){
+    tileman.load("../../assets/tiles.bam");
+  }
+</script>
+<div id="mapeditor">
+  <div id="tile_selecting">
+      Tileset: <select id="tileset_selector" onchange="tileman.update_tileset()"></select>
+      Collection: <select id="collection_selector" onchange="tileman.update_collection()"> </select>
+      Tile: <select id="tile_selector" onchange="tileman.update_tile()"> </select>
+  </div>
+  <button onclick="load_tiles_test()">Click here to load the tiles (testing, currently only loads assets/tiles.bam)).</button>
+</div>

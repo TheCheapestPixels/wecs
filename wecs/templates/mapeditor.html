@@ -5,6 +5,7 @@
         selector.remove(i);
     }
     // Add new options
+
     for (item in items){
       var option = document.createElement("option");
       option.text = item;
@@ -72,5 +73,8 @@
       Collection: <select id="collection_selector" onchange="tileman.update_collection()"> </select>
       Tile: <select id="tile_selector" onchange="tileman.update_tile()"> </select>
   </div>
-  <button onclick="load_tiles_test()">Click here to load the tiles (testing, currently only loads assets/tiles.bam)).</button>
+  <button onclick="load_tiles_test()">Load tileset</button>
+  <button onclick="save_map()">Save map</button>
+  <button onclick="load_map()">Load map</button>
+  <button onclick="export_map()">Export to bam</button>
 </div>

@@ -42,8 +42,7 @@ class AcceptInput(System):
             character.jumps = False
             character.sprints = False
             character.crouches = False
-            character.move.x = 0.0
-            character.move.y = 0.0
+            character.move *= 0
             character.heading = 0.0
             character.pitch = 0.0
             # For debug purposes, emulate analog stick on keyboard
@@ -118,19 +117,26 @@ class AcceptInput(System):
 
             # Cursor movement
             if CursorMovement in entity:
+                cursor = entity[CursorMovement]
                 # Make cursor speed relative to camera distance
                 if ThirdPersonCamera in entity:
                     camera = entity[ThirdPersonCamera]
-                    entity[CursorMovement].move_speed = camera.distance / 2
+                    cursor.move_speed = camera.distance / 2
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.shift()):
-                    entity[CursorMovement].snapping = False
+                    cursor.snapping = False
                 else:
-                    entity[CursorMovement].snapping = True
+                    cursor.snapping = True
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.page_down()):
+                    character.move.z = -1
+                elif base.mouseWatcherNode.is_button_down(KeyboardButton.page_up()):
+                    character.move.z = 1
 
             # Creator interaction
             if Creator in entity:
                 creator = entity[Creator]
                 if base.mouseWatcherNode.is_button_down(KeyboardButton.space()):
                     creator.place = True
-                else:
-                    creator.place = False
+                if base.mouseWatcherNode.is_button_down(KeyboardButton.backspace()):
+                    creator.remove = True
+                if base.mouseWatcherNode.is_button_down(KeyboardButton._del()):
+                    creator.clear = True

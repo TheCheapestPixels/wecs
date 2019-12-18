@@ -84,6 +84,11 @@ class Chunk(): # A chunk of the map to add tiles to.
             cell.remove(tile)
             self.rebuild()
 
+    def remove_cell(self, pos):
+        for tile in self.cells[pos]:
+            self.cells[pos].remove(tile)
+        self.rebuild()
+
     def destroy(self):
         self.node.remove_node()
         self.node = None
@@ -203,8 +208,11 @@ class Tilemap:
 @Component()
 class Creator:              # An entity that places models in the scene
     place: bool = False     # Drop the entity on the field.
-    max_cooldown: int = 5   # Time it takes before another entity can be placed.
-    cooldown: int = 0       # Subtract 'till 0, then allow placement.
+    remove: bool = False    # Delete the entity from the field
+    clear: bool = False     # Clear a cell of entities from the field
+    copy: bool = False      # Copy current tile
+    max_cooldown: int = 5   # Time it takes before another action can be taken
+    cooldown: int = 0       # Subtract 'till 0, then allow edit
     current_tile: NodePath = field(default_factory=lambda:NodePath("selected"))
 
 
@@ -267,18 +275,22 @@ class UpdateMapEditor(System):
         creator = creator_entity[Creator]
         model = creator_entity[Model]
         tilemap = tilemap_entity[Tilemap]
-        if creator.place:
+        if creator.place or creator.remove or creator.clear:
             pos, offset, hpr = split_translation(creator_entity, model.node)
             # Get the chunk responsible for this position
             chunk = grab_chunk(tilemap.chunks, pos, tilemap.chunksize)
             # Make sure the chunk has acces to loaded geometry
             chunk.geometry = tilemap.geometry
-            # make the tile
+            # get current index
             index = self.subconsole.get_property_index(tilemap)
-            chunk.add_tile(pos, (index, offset, hpr))
+            if creator.clear:
+                chunk.remove_cell(pos)
+            if creator.remove:
+                chunk.remove_tile(pos, (index, offset, hpr))
+            if creator.place:
+                chunk.add_tile(pos, (index, offset, hpr))
             chunk.node.reparent_to(render)
-            # done
-            creator.place = False
+            creator.place = creator.remove = creator.clear = False
             creator.cooldown = creator.max_cooldown
 
     # File management
@@ -303,7 +315,6 @@ class UpdateMapEditor(System):
             "tile_properties": tile_properties,
             "tiles" : tiles,
         }
-        print(json_data)
         with open("{}.map".format(mapname), 'w') as f:
             json.dump(json_data, f)
 

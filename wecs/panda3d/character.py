@@ -161,7 +161,8 @@ class UpdateCharacter(System):
                 xy_scaling = 1.0 / xy_dist
             x = controller.move.x * xy_scaling
             y = controller.move.y * xy_scaling
-            controller.translation = Vec3(x * dt, y * dt, 0)
+            z = controller.move.z * xy_scaling
+            controller.translation = Vec3(x * dt, y * dt, z*dt)
 
 
 # Movement systems
@@ -523,10 +524,11 @@ class Cursoring(System):
             char.rotation *= cursor.rot_speed
             char.rotation[1] = 0
             if cursor.snapping:
-                if char.move.x == 0 and char.move.y == 0 and char.heading == 0:
-                    np = model.node
-                    np.set_pos(snap_vector(np.get_pos(), cursor.move_snap))
-                    np.set_hpr(snap_vector(np.get_hpr(), cursor.rot_snap))
+                if char.move.x == 0 and char.move.y == 0 and char.move.z == 0:
+                    if char.heading == 0:
+                        np = model.node
+                        np.set_pos(snap_vector(np.get_pos(), cursor.move_snap))
+                        np.set_hpr(snap_vector(np.get_hpr(), cursor.rot_snap))
 
 
 # Transcribe the final intended movement to the model, making it an

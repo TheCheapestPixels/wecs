@@ -1,4 +1,7 @@
 # Tiny functions that should be built-in but aren't.
+from panda3d.core import LineSegs
+from panda3d.core import NodePath
+
 
 def clamp(n, floor, ceiling):
     return max(floor, min(n, ceiling))
@@ -8,9 +11,6 @@ def snap_vector(vec, snap):
         vec[v] = round(vector/snap)*snap
     return vec
 
-
-from panda3d.core import LineSegs
-from panda3d.core import NodePath
 def draw_grid(x_size, y_size, s):
     lines = LineSegs()
     lines.set_color((0,0,0,1))

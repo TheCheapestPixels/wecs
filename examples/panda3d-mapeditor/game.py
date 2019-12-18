@@ -4,6 +4,7 @@ from panda3d.core import LineSegs
 
 from wecs import panda3d
 from wecs import mechanics
+from wecs.aspects import Aspect
 from wecs.panda3d import aspects
 from wecs.panda3d.helpers import draw_grid
 
@@ -14,9 +15,8 @@ system_types = [
     panda3d.UpdateCharacter,
     panda3d.Cursoring, # Horizontal movement with optional grid-snapping.
     panda3d.ExecuteMovement,
-    panda3d.Create, # Update creator entities.
     panda3d.UpdateCameras,
-    panda3d.UpdateMapEditorSubconsole, # Interacting with map editor gui.
+    panda3d.UpdateMapEditor, # Handles Creator and Tilemap (to be split up later)
 ]
 
 # empty scene with a grid.

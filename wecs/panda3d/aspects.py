@@ -33,6 +33,7 @@ empty_scene = Aspect(
         panda3d.Position,
         panda3d.Model,
         panda3d.Scene,
+        panda3d.Tilemap,
     ],
     overrides={
         mechanics.Clock: dict(clock=panda3d.panda_clock),

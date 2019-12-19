@@ -9,7 +9,7 @@
 {% for (uid, components) in matrix %}
 <tr>
   <td>
-    {{ uid | replace(">", "") | replace("<wecs.core.UID object at ", "") | safe }}
+    {{ uid | safe }}
   </td>
   {% for component in components %}
   <td>

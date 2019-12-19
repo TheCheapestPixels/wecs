@@ -57,7 +57,7 @@ game_map = Aspect(
 # Populate the world with the map, the player character, and a few NPCs
 
 # Map
-map_entity = base.ecs_world.create_entity()
+map_entity = base.ecs_world.create_entity(name="Level geometry")
 game_map.add(map_entity)
 
 # Player
@@ -68,7 +68,7 @@ player_avatar = Aspect(
         cefconsole.WatchedEntity,
     ])
 player_avatar.add(
-    base.ecs_world.create_entity(),
+    base.ecs_world.create_entity(name="Playerbecca"),
     overrides={
         mechanics.Clock: dict(parent=map_entity._uid),
         panda3d.Position: dict(value=Point3(50, 290, 0)),
@@ -77,7 +77,7 @@ player_avatar.add(
 
 # Non-moving NPC
 aspects.non_player_character.add(
-    base.ecs_world.create_entity(),
+    base.ecs_world.create_entity(name="Rebecca"),
     overrides={
         panda3d.Position: dict(value=Point3(60, 290, 0)),
         mechanics.Clock: dict(parent=map_entity._uid),
@@ -86,7 +86,7 @@ aspects.non_player_character.add(
 
 # Small circle NPC
 aspects.non_player_character.add(
-    base.ecs_world.create_entity(),
+    base.ecs_world.create_entity(name="Roundbecca"),
     overrides={
         panda3d.Position: dict(value=Point3(70, 290, 0)),
         panda3d.ConstantCharacterAI: dict(
@@ -100,7 +100,7 @@ aspects.non_player_character.add(
 # Brownian NPC
 new_npc = Aspect([aspects.avatar, aspects.npc_mind_brownian])
 new_npc.add(
-    base.ecs_world.create_entity(),
+    base.ecs_world.create_entity(name="Randombecca"),
     overrides={
         panda3d.Position: dict(value=Point3(80, 290, 0)),
         mechanics.Clock: dict(parent=map_entity._uid),

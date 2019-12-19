@@ -2,7 +2,7 @@
 {% if loop.index0 > 0 %}
 <hr />
 {% endif%}
-<h2>{{ entity.uid }}</h2>
+<h2>UID: {{ entity.uid.name }}</h2>
 {% for component in entity.components %}
 <h3>{{ component.name }}</h3>
 <table>

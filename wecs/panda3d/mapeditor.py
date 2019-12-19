@@ -39,6 +39,7 @@ def split_translation(entity, at_node):
         if cursor.snapping:
             cellsize = cursor.move_snap
             snapped = True
+
     x, y, z = pos = at_node.get_pos()
     s = cellsize
     pos = (int(x/s)*s, int(y/s)*s, int(z/s)*s)
@@ -230,6 +231,13 @@ class UpdateMapEditor(System):
     def update(self, entities_by_filter):
         for creator_entity in entities_by_filter['creator']:
             creator = creator_entity[Creator]
+            for tilemap_entity in entities_by_filter["tilemap"]:
+                if creator.cooldown > 0:
+                    creator.cooldown -= 1
+                else:
+                    if not self.subconsole.tile_property["name"] == "":
+                        self.edit_map(creator_entity, tilemap_entity)
+                self.manage_files(tilemap_entity)
             # Refresh cursor representation if needed
             if self.subconsole.fresh_tile:
                 creator = creator_entity[Creator]
@@ -242,29 +250,24 @@ class UpdateMapEditor(System):
                 creator.current_tile.reparent_to(model.node)
                 self.subconsole.fresh_tile = False
 
-            for tilemap_entity in entities_by_filter["tilemap"]:
-                tilemap = tilemap_entity[Tilemap]
-                chunks = tilemap.chunks
-                properties = tilemap.tile_properties
-                if self.subconsole.save:
-                    self.save_map(self.subconsole.save, chunks, properties)
-                    self.subconsole.save = None
-                elif self.subconsole.load:
-                    data = self.load_map(self.subconsole.load)
-                    if data:
-                        self.destroy(tilemap)
-                        tilemap.chunks = data[0]
-                        tilemap.tile_properties = data[1]
-                        tilemap.geometry = data[2]
-                    self.subconsole.load = None
-                elif self.subconsole.export:
-                    self.export_map(self.subconsole.export, chunks)
-                    self.subconsole.export = None
-                if creator.cooldown > 0:
-                    creator.cooldown -= 1
-                else:
-                    if not self.subconsole.tile_property["name"] == "":
-                        self.edit_map(creator_entity, tilemap_entity)
+    def manage_files(self, tilemap_entity):
+        tilemap = tilemap_entity[Tilemap]
+        chunks = tilemap.chunks
+        properties = tilemap.tile_properties
+        if self.subconsole.save:
+            self.save_map(self.subconsole.save, chunks, properties)
+            self.subconsole.save = None
+        elif self.subconsole.load:
+            data = self.load_map(self.subconsole.load)
+            if data:
+                self.destroy(tilemap)
+                tilemap.chunks = data[0]
+                tilemap.tile_properties = data[1]
+                tilemap.geometry = data[2]
+            self.subconsole.load = None
+        elif self.subconsole.export:
+            self.export_map(self.subconsole.export, chunks)
+            self.subconsole.export = None
 
     def destroy(self, tilemap):
         for pos in tilemap.chunks:
@@ -293,7 +296,7 @@ class UpdateMapEditor(System):
             creator.place = creator.remove = creator.clear = False
             creator.cooldown = creator.max_cooldown
 
-    # File management
+# File management
 
     def save_map(self, mapname, chunks, tile_properties):
         print("Saving map to {}.map".format(mapname))
@@ -355,5 +358,4 @@ class UpdateMapEditor(System):
         for chunk_pos in chunks:
             chunk = chunks[chunk_pos]
             chunk.node.copy_to(newbam)
-        newbam.flattenStrong()
         newbam.writeBamFile("{}.bam".format(mapname))

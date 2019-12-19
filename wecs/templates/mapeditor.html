@@ -67,25 +67,20 @@
     tileman.load("../../assets/tiles.bam");
   }
 </script>
-<div id="mapeditor">
-  <br>
-
-  <div id="tile_selecting">
+<div id="mapeditor" style="position: fixed; right:0%">
+  <div id="tile_selecting" style="display:grid; width:12em">
       Tileset: <select id="tileset_selector" onchange="tileman.update_tileset()"></select>
       Collection: <select id="collection_selector" onchange="tileman.update_collection()"> </select>
       Tile: <select id="tile_selector" onchange="tileman.update_tile()"> </select>
   </div>
-
-  <div id="file_buttons">
+  <div id="file_buttons" style="display:grid; width:12em">
     <button onclick="load_tiles_test()">Load tileset</button>
     <button onclick="save_map()">Save map</button>
     <button onclick="load_map()">Load map</button>
     <button onclick="export_map()">Export to bam</button>
   </div>
-
-  <div id="map_editor_notes" style="position: fixed; right :0">
+  <div id="map_editor_notes" style="position: fixed; bottom:0%; right:0%">
     <ul>
-
     <li>LIJK - rotate camera</li>
     <li>< >  - rotate cursor</li>
     <li>WASD - fw/bw/l/r</li>
@@ -95,6 +90,7 @@
     <li>backspace - remove tile</li>
     <li>delete - clear cell</li>
     <li>[ ]  - zoom in/out & speed</li>
+    </ul>
   </div>
 
 </div>

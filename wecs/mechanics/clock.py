@@ -37,10 +37,10 @@ class Calendar:
     #                             list(current, max)
     month:  list = field(default_factory=lambda: list((1,12)))
     day:    list = field(default_factory=lambda: list((1,30)))
-    hour:   list = field(default_factory=lambda: list((1,24)))
+    hour:   list = field(default_factory=lambda: list((12,24)))
     minute: list = field(default_factory=lambda: list((0,60)))
-    second: list = field(default_factory=lambda: list((0,1)))
-    tps:    list = field(default_factory=lambda: list((0,0.01))) #(game) time per second
+    second: list = field(default_factory=lambda: list((0,60)))
+    tps:    list = field(default_factory=lambda: list((0,0.003))) #(game) time per second
 
 
 class DetermineTimestep(System):

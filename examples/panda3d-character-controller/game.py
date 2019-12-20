@@ -13,6 +13,8 @@ from wecs.panda3d import aspects
 system_types = [
     panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
     mechanics.DetermineTimestep,  # How long is this frame? Update all clocks.
+    mechanics.UpdateCalendar, # How does the clock relate to fictional in-game time?
+    panda3d.CycleDayNight, # How does fictional in-game time relate to the sun/moon?
     # What movement do the characters intend to do?
     panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     panda3d.Think,  # Input from AIs, the same
@@ -45,6 +47,8 @@ game_map = Aspect(
      panda3d.Scene,
      panda3d.CollidableGeometry,
      panda3d.FlattenStrong,
+     panda3d.Calendar,
+     panda3d.DayNightCycle,
     ],
     overrides={
         mechanics.Clock: dict(clock=panda3d.panda_clock),

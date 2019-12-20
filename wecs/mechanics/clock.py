@@ -1,3 +1,4 @@
+from dataclasses import field
 from types import FunctionType
 from collections import defaultdict
 
@@ -28,6 +29,18 @@ class Clock:
     wall_time: float = 0.0
     frame_time: float = 0.0
     game_time: float = 0.0
+
+
+@Component()
+class Calendar:
+    year:   int = 3000
+    #                             list(current, max)
+    month:  list = field(default_factory=lambda: list((1,12)))
+    day:    list = field(default_factory=lambda: list((1,30)))
+    hour:   list = field(default_factory=lambda: list((1,24)))
+    minute: list = field(default_factory=lambda: list((0,3)))
+    second: list = field(default_factory=lambda: list((0,1)))
+    tps:    list = field(default_factory=lambda: list((0,0.2))) #(game) time per second
 
 
 class DetermineTimestep(System):
@@ -70,3 +83,30 @@ class DetermineTimestep(System):
                         child_clock.game_time = parent_clock.game_time * child_clock.scaling_factor
                         next_parents.add(entity._uid)
             updated_parents = next_parents
+
+
+class UpdateCalendar(System):
+    entity_filters = {
+        'calendar': and_filter([
+            Clock,
+            Calendar,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter["calendar"]:
+            clock = entity[Clock]
+            cal = entity[Calendar]
+            cal.tps[0] += clock.game_time
+            timeframes = [
+                [cal.tps, cal.second],
+                [cal.second, cal.minute],
+                [cal.minute, cal.hour],
+                [cal.hour, cal.day],
+                [cal.day, cal.month],
+                [cal.month, cal.year],
+            ]
+            for timeframe in timeframes:
+                while timeframe[0][0] >= timeframe[0][1]:
+                    timeframe[0][0] -= timeframe[0][1]
+                    timeframe[1][0] +=  1

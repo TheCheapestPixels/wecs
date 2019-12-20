@@ -5,6 +5,7 @@ from .camera import *
 from .character import *
 from .ai import *
 from .animation import *
+from .daynight import *
 
 #__all__ = ['ECSShowBase']
 

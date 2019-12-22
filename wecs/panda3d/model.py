@@ -4,6 +4,10 @@ import direct.actor.Actor
 from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import ClockObject
+from panda3d.core import CardMaker
+from panda3d.core import SamplerState
+from panda3d.core import Texture
+
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletRigidBodyNode
 
@@ -82,6 +86,11 @@ class LoadModels(System):
             ]),
         ]),
     }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cardmaker = CardMaker("maker of cards")
+        # set frame so the bottom edge is centered on 0
+        self.cardmaker.set_frame(-0.5,0.5,0,1)
 
     # TODO
     # Only Model is needed for loading, which then could be done
@@ -90,7 +99,9 @@ class LoadModels(System):
         # Load
         model = entity[Model]
         if model.node is None:
-            if Actor in entity:
+            if Sprite in entity:
+                model.node = NodePath(NodePath(self.cardmaker.generate()))
+            elif Actor in entity:
                 model.node = direct.actor.Actor.Actor(model.model_name)
             else:
                 model.node = base.loader.load_model(model.model_name)
@@ -122,6 +133,97 @@ class LoadModels(System):
     def post_load_hook(self, node, entity):
         pass
 
+# 2d models (aka sprites)
+
+@Component()
+class Sprite:
+    image_name: str = ""
+    texture: Texture = None
+    pixelated: bool = True
+
+
+@Component()
+class SpriteAnimation:
+    animations: dict = field(default_factory=lambda: {
+        "idle" : [0,1],
+    })
+    animation: str = "idle"
+    loop: bool = True
+    sprite_width: int = 16
+    sprite_height: int = 16
+    uv_width: float = 0
+    uv_height: float = 0
+    frame: int = 0
+    framerate: int = 15 #frames-per-second
+    timer: int = 0 # accumulated delta-time
+
+
+class UpdateSprites(System):
+    entity_filters = {
+        'sprite': and_filter([
+            Model,
+            Sprite,
+            Clock,
+        ])
+    }
+
+    def init_entity(self, filter_name, entity):
+        sprite = entity[Sprite]
+        model = entity[Model]
+        if sprite.texture is None:
+            sprite.texture = loader.load_texture(sprite.image_name)
+            model.node.set_texture(sprite.texture)
+        texture = sprite.texture
+        stage = model.node.find_all_texture_stages()[0]
+        # Set minmag filter.
+        if sprite.pixelated:
+            texture.setMagfilter(SamplerState.FT_nearest)
+            texture.setMinfilter(SamplerState.FT_nearest)
+        else:
+            texture.setMagfilter(SamplerState.FT_linear)
+            texture.setMinfilter(SamplerState.FT_linear)
+        if SpriteAnimation in entity:
+            # Scale texture to display a single tile
+            sprite = entity[SpriteAnimation]
+            sprite.uv_width = sprite.sprite_width/texture.get_orig_file_x_size()
+            sprite.uv_height = sprite.sprite_height/texture.get_orig_file_y_size()
+            model.node.set_tex_scale(stage, sprite.uv_width, sprite.uv_height)
+            model.node.set_tex_offset(stage, (0, 1-sprite.uv_height))
+
+    def animate(self, sprite, model):
+        # Increment animation frame
+        animation = sprite.animations[sprite.animation]
+        sprite.frame += 1
+        # Manage end of animation
+        if sprite.frame > len(animation)-1:
+            if sprite.loop: # Start from beginning
+                sprite.frame = 0
+            else: # Reshow last frame
+                sprite.frame -= 1
+        frame = animation[sprite.frame]
+        # get transform for cell
+        w, h = sprite.uv_width, sprite.uv_height
+        rows = 1/w
+        collumns = 1/h
+        u = (frame%rows)*w
+        v = 1-(((frame//collumns)*h)+h)
+        # display it
+        stage = model.node.find_all_texture_stages()[0]
+        model.node.set_tex_offset(stage, (u, v))
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['sprite']:
+            sprite = entity[Sprite]
+            model = entity[Model]
+            clock = entity[Clock]
+            if SpriteAnimation in entity:
+                sprite = entity[SpriteAnimation]
+                animation = sprite.animations[sprite.animation]
+                # Increment frame
+                sprite.timer += clock.frame_time
+                if sprite.timer >= 1/sprite.framerate:
+                    sprite.timer -= 1/sprite.framerate
+                    self.animate(sprite, model)
 
 # Bullet physics
 

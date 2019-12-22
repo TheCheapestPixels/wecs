@@ -29,6 +29,7 @@ system_types = [
     panda3d.ExecuteMovement,  # Turn intention into actual movement.
     panda3d.AnimateCharacter,
     panda3d.Animate,
+    panda3d.UpdateSprites,
     # We're done with character movement, now update the cameras and console.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
@@ -105,4 +106,29 @@ new_npc.add(
         panda3d.Position: dict(value=Point3(80, 290, 0)),
         mechanics.Clock: dict(parent=map_entity._uid),
     },
+)
+
+
+# Sprite
+sprite = Aspect(
+    [
+        aspects.character,
+        aspects.walking,
+        panda3d.Sprite,
+        panda3d.SpriteAnimation,
+        cefconsole.WatchedEntity,
+    ])
+sprite.add(
+    base.ecs_world.create_entity(name="mr. man"),
+    overrides = {
+        mechanics.Clock: dict(parent=map_entity._uid),
+        panda3d.Sprite: dict(image_name="../../assets/mrman.png"),
+        panda3d.SpriteAnimation: dict(
+            animations={
+                "walking" : [6, 7, 8, 9, 10, 11]
+            },
+            animation="walking",
+        ),
+        panda3d.Position: dict(value=Point3(52, 292, 0)),
+    }
 )

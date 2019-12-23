@@ -45,6 +45,7 @@ class DayNightCycle:
         (0.6, 0.2, 0.2, 0.3), # Evening
     )))
     time_of_day: float = 0.5 # time of day
+    day_speed: int = 0.05 # speed of day
 
 
 class CycleDayNight(System):
@@ -52,7 +53,7 @@ class CycleDayNight(System):
         'daynightcycle': and_filter([
             Scene,
             Model,
-            Calendar,
+            Clock,
             DayNightCycle,
         ]),
     }
@@ -90,10 +91,12 @@ class CycleDayNight(System):
             if Calendar in entity:
                 time_of_day = time_of_day_from_calender(entity[Calendar])
             else:
+                cycle.time_of_day += (entity[Clock].game_time*cycle.day_speed)
+                cycle.time_of_day = cycle.time_of_day%1
                 time_of_day = cycle.time_of_day
-
+            # rotate lights
             cycle.lights_node.getChild(0).set_p(90+(time_of_day*360))
             cycle.lights_node.getChild(1).set_p((-90+(time_of_day*360)))
-            # set color according to time_of_day
+            # color according to time_of_day
             cycle.sun.set_color(tod_color(time_of_day, cycle.sun_colors))
             cycle.moon.set_color(tod_color(time_of_day, cycle.moon_colors))

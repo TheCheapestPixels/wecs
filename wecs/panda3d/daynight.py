@@ -44,6 +44,7 @@ class DayNightCycle:
         (0.1, 0.0, 0.1, 0.1), # Afternoon
         (0.6, 0.2, 0.2, 0.3), # Evening
     )))
+    time_of_day: float = 0.5 # time of day
 
 
 class CycleDayNight(System):
@@ -68,24 +69,31 @@ class CycleDayNight(System):
         entity[Scene].node.set_light(moonnp)
         cycle.lights_node.reparent_to(entity[Scene].node)
 
+    def time_of_day_from_calendar(self, calendar):
+        timeframes = list(calendar.timeframes.keys())
+        timeframes.reverse()
+        timeframe_sizes = []
+        time_of_day = 0
+        for timeframe in timeframes:
+            if timeframe == calendar.cycle or len(timeframe_sizes) > 0:
+                maxes.append(calendar.timeframes[timeframe][1])
+                time = calendar.timeframes[timeframe][0]
+                for timeframe_size in timeframe_sizes:
+                    time /= timeframe_size
+                time_of_day += time
+        return time_of_day
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter['daynightcycle']:
-            calendar = entity[Calendar]
             cycle = entity[DayNightCycle]
-            print
-            timeframes = list(calendar.timeframes.keys())
-            timeframes.reverse()
-            maxes = []
-            tod = 0
-            for timeframe in timeframes:
-                if timeframe == calendar.cycle or len(maxes) > 0:
-                    maxes.append(calendar.timeframes[timeframe][1])
-                    time = calendar.timeframes[timeframe][0]
-                    for max in maxes:
-                        time /= max
-                    tod += time
-            cycle.lights_node.getChild(0).set_p(90+(tod*360))
-            cycle.lights_node.getChild(1).set_p((-90+(tod*360)))
-            # set color according to tod
-            cycle.sun.set_color(tod_color(tod, cycle.sun_colors))
-            cycle.moon.set_color(tod_color(tod, cycle.moon_colors))
+            # get time_of_day as a float between 0 and 1
+            if Calendar in entity:
+                time_of_day = time_of_day_from_calender(entity[Calendar])
+            else:
+                time_of_day = cycle.time_of_day
+
+            cycle.lights_node.getChild(0).set_p(90+(time_of_day*360))
+            cycle.lights_node.getChild(1).set_p((-90+(time_of_day*360)))
+            # set color according to time_of_day
+            cycle.sun.set_color(tod_color(time_of_day, cycle.sun_colors))
+            cycle.moon.set_color(tod_color(time_of_day, cycle.moon_colors))

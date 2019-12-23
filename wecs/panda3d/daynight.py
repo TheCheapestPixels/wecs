@@ -29,7 +29,7 @@ def tod_color(tod, colors):
 
 @Component()
 class DayNightCycle:
-    heaven: NodePath = field(default_factory=lambda: NodePath("heaven"))
+    lights_node: NodePath = field(default_factory=lambda: NodePath("Day/Night Cycle Lights"))
     sun: DirectionalLight = field(default_factory=lambda: DirectionalLight("sun"))
     moon: DirectionalLight = field(default_factory=lambda: DirectionalLight("moon"))
     sun_colors: list = field(default_factory= lambda: list((
@@ -61,25 +61,31 @@ class CycleDayNight(System):
         cycle = entity[DayNightCycle]
         # Init begin of dawn
         cycle.sun.set_color(cycle.sun_colors[0])
-        sunnp = cycle.heaven.attach_new_node(cycle.sun)
+        sunnp = cycle.lights_node.attach_new_node(cycle.sun)
         cycle.moon.set_color(cycle.moon_colors[0])
-        moonnp = cycle.heaven.attach_new_node(cycle.moon)
-        model.node.set_light(sunnp)
-        model.node.set_light(moonnp)
+        moonnp = cycle.lights_node.attach_new_node(cycle.moon)
+        entity[Scene].node.set_light(sunnp)
+        entity[Scene].node.set_light(moonnp)
+        cycle.lights_node.reparent_to(entity[Scene].node)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['daynightcycle']:
             calendar = entity[Calendar]
             cycle = entity[DayNightCycle]
-            # get time of day (tod) from calender as float between 0 and 1
-            # this many decimals is probably imprecise,
-            # in which case multiply all timeframes before dividing
-            #print(calendar)
-            tod = (calendar.hour[0]/calendar.hour[1])
-            tod += (calendar.minute[0]/calendar.minute[1])/calendar.hour[1]
-            tod += ((calendar.second[0]/calendar.second[1])/calendar.minute[1])/calendar.hour[1]
-            cycle.heaven.getChild(0).set_p(90+(tod*360))
-            cycle.heaven.getChild(1).set_p((-90+(tod*360)))
+            print
+            timeframes = list(calendar.timeframes.keys())
+            timeframes.reverse()
+            maxes = []
+            tod = 0
+            for timeframe in timeframes:
+                if timeframe == calendar.cycle or len(maxes) > 0:
+                    maxes.append(calendar.timeframes[timeframe][1])
+                    time = calendar.timeframes[timeframe][0]
+                    for max in maxes:
+                        time /= max
+                    tod += time
+            cycle.lights_node.getChild(0).set_p(90+(tod*360))
+            cycle.lights_node.getChild(1).set_p((-90+(tod*360)))
             # set color according to tod
             cycle.sun.set_color(tod_color(tod, cycle.sun_colors))
             cycle.moon.set_color(tod_color(tod, cycle.moon_colors))

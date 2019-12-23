@@ -33,14 +33,17 @@ class Clock:
 
 @Component()
 class Calendar:
-    year:   int = 3000
-    #                             list(current, max)
-    month:  list = field(default_factory=lambda: list((1,12)))
-    day:    list = field(default_factory=lambda: list((1,30)))
-    hour:   list = field(default_factory=lambda: list((12,24)))
-    minute: list = field(default_factory=lambda: list((0,60)))
-    second: list = field(default_factory=lambda: list((0,60)))
-    tps:    list = field(default_factory=lambda: list((0,0.003))) #(game) time per second
+    timeframes: dict = field(default_factory=lambda: {
+        "second": [0,59], # in a minute
+        "minute": [0,59], # in an hour
+        "hour":   [12,23],# in a day
+        "day":    [1,30], # in a month
+        "month":  [1,11], # in a year
+        "year":   [2084], # last timeframe doesn't need a maximum
+    })
+    cycle = "day"
+    framerate: float = 200000 #seconds per frame
+    timer: float = 0
 
 
 class DetermineTimestep(System):
@@ -93,20 +96,24 @@ class UpdateCalendar(System):
         ]),
     }
 
+    def increment_timeframes(self, calendar, time_since):
+        timeframes = list(calendar.timeframes.keys())
+        calendar.timeframes[timeframes[0]][0]+=time_since
+        for t, timeframe in enumerate(timeframes):
+            if t < len(timeframes)-1:
+                current = calendar.timeframes[timeframes[t]]
+                if current[0] >= current[1]:
+                    accumulated = current[0]//current[1]
+                    calendar.timeframes[timeframes[t+1]][0] += accumulated
+                    current[0] -= (accumulated*current[1])
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter["calendar"]:
             clock = entity[Clock]
-            cal = entity[Calendar]
-            cal.tps[0] += clock.game_time
-            timeframes = [
-                [cal.tps, cal.second],
-                [cal.second, cal.minute],
-                [cal.minute, cal.hour],
-                [cal.hour, cal.day],
-                [cal.day, cal.month],
-                [cal.month, cal.year],
-            ]
-            for timeframe in timeframes:
-                while timeframe[0][0] >= timeframe[0][1]:
-                    timeframe[0][0] -= timeframe[0][1]
-                    timeframe[1][0] +=  1
+            calendar = entity[Calendar]
+            calendar.timer += clock.game_time
+            rate = 1/calendar.framerate
+            if calendar.timer >= rate:
+                accumulated = calendar.timer//rate
+                self.increment_timeframes(calendar, accumulated)
+                calendar.timer -= (accumulated*rate)

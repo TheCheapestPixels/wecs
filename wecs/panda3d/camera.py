@@ -9,7 +9,7 @@ from panda3d.core import CollisionSegment
 
 from wecs.core import Component
 from wecs.core import System
-from wecs.core import and_filter
+from wecs.core import and_filter, or_filter
 
 from .model import Model
 from .model import Clock

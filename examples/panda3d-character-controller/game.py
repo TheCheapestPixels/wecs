@@ -33,6 +33,7 @@ system_types = [
     # We're done with character movement, now update the cameras and console.
     panda3d.UpdateCameras,
     panda3d.CollideCamerasWithTerrain,
+    panda3d.UpdateBillboards,
     cefconsole.UpdateWecsSubconsole,
     cefconsole.WatchEntitiesInSubconsole,
 ]
@@ -116,6 +117,7 @@ sprite = Aspect(
         aspects.walking,
         panda3d.Sprite,
         panda3d.SpriteAnimation,
+        panda3d.Billboard,
         cefconsole.WatchedEntity,
     ])
 sprite.add(

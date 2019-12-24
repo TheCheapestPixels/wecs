@@ -23,6 +23,7 @@ from wecs.mechanics.clock import Clock
 @Component()
 class Model:
     model_name: str = ''
+    geometry: NodePath = None
     node: NodePath = None
 
 
@@ -54,6 +55,31 @@ class Position:
     value: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
 
 
+# 2d models (aka sprites)
+
+@Component()
+class Sprite:
+    image_name: str = ""
+    texture: Texture = None
+    pixelated: bool = True
+
+
+@Component()
+class SpriteAnimation:
+    animations: dict = field(default_factory=lambda: {
+        "idle" : [0,1],
+    })
+    animation: str = "idle"
+    loop: bool = True
+    sprite_width: int = 16
+    sprite_height: int = 16
+    uv_width: float = 0
+    uv_height: float = 0
+    frame: int = 0
+    framerate: int = 15 #frames-per-second
+    timer: int = 0 # accumulated delta-time
+
+
 # Bullet physics
 
 @Component()
@@ -71,6 +97,11 @@ class PhysicsBody:
     _world: UID = None
     scene: UID = None
     _scene: UID = None
+
+
+@Component()
+class Billboard:
+    pass
 
 
 # Loading / reparenting / destroying models
@@ -99,12 +130,17 @@ class LoadModels(System):
         # Load
         model = entity[Model]
         if model.node is None:
+            model.node = NodePath(model.model_name)
+
+        if model.geometry is None:
             if Sprite in entity:
-                model.node = NodePath(NodePath(self.cardmaker.generate()))
+                model.geometry = NodePath(self.cardmaker.generate())
             elif Actor in entity:
-                model.node = direct.actor.Actor.Actor(model.model_name)
+                model.geometry = direct.actor.Actor.Actor(model.model_name)
             else:
-                model.node = base.loader.load_model(model.model_name)
+                model.geometry = base.loader.load_model(model.model_name)
+
+        model.geometry.reparent_to(model.node)
 
         # Load hook
         self.post_load_hook(model.node, entity)
@@ -132,30 +168,6 @@ class LoadModels(System):
 
     def post_load_hook(self, node, entity):
         pass
-
-# 2d models (aka sprites)
-
-@Component()
-class Sprite:
-    image_name: str = ""
-    texture: Texture = None
-    pixelated: bool = True
-
-
-@Component()
-class SpriteAnimation:
-    animations: dict = field(default_factory=lambda: {
-        "idle" : [0,1],
-    })
-    animation: str = "idle"
-    loop: bool = True
-    sprite_width: int = 16
-    sprite_height: int = 16
-    uv_width: float = 0
-    uv_height: float = 0
-    frame: int = 0
-    framerate: int = 15 #frames-per-second
-    timer: int = 0 # accumulated delta-time
 
 
 class UpdateSprites(System):
@@ -225,6 +237,7 @@ class UpdateSprites(System):
                     sprite.timer -= 1/sprite.framerate
                     self.animate(sprite, model)
 
+
 # Bullet physics
 
 class SetUpPhysics(System):
@@ -291,3 +304,15 @@ class DoPhysics(System):
         for entity in entities_by_filter['world']:
             world = entity.get_component(PhysicsWorld)
             world.world.do_physics(world.timestep)
+
+
+class UpdateBillboards(System):
+    entity_filters = {
+        'sprite': and_filter([
+            Model,
+            Billboard,
+        ])
+    }
+
+    def init_entity(self, filter_name, entity):
+        entity[Model].geometry.setBillboardPointEye()

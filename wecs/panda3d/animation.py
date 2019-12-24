@@ -33,7 +33,7 @@ class AnimateCharacter(System):
         for entity in entities_by_filter['animated_character']:
             controller = entity[CharacterController]
             animation = entity[Animation]
-            actor = entity[Model].node
+            actor = entity[Model].geometry
 
             if FallingMovement in entity:
                 grounded = entity[FallingMovement].ground_contact
@@ -104,13 +104,13 @@ class AnimateCharacter(System):
             #             animation.to_play.append("walk_right")
             #         elif strafe_speed < 0:
             #             animation.to_play.append("walk_left")
-            # 
+            #
             #     animation.framerate = (0.5+(forward_speed + abs(strafe_speed)))
             #     # If walking backwards simply play the animation in reverse
             #     # Only do this when there's no animations for walking backwards?
             #     if controller.last_translation_speed.y < 0:
             #         animation.framerate = -animation.framerate
-            # 
+            #
             # animation.blends = blends
 
 
@@ -125,7 +125,7 @@ class Animate(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animation']:
             animation = entity[Animation]
-            actor = entity[Model].node
+            actor = entity[Model].geometry
             if not animation.playing == animation.to_play:
                 if len(animation.to_play) > 0:
                     actor.enableBlend()

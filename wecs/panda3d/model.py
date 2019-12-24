@@ -184,9 +184,9 @@ class UpdateSprites(System):
         model = entity[Model]
         if sprite.texture is None:
             sprite.texture = loader.load_texture(sprite.image_name)
-            model.node.set_texture(sprite.texture)
+            model.geometry.set_texture(sprite.texture)
         texture = sprite.texture
-        stage = model.node.find_all_texture_stages()[0]
+        stage = model.geometry.find_all_texture_stages()[0]
         # Set minmag filter.
         if sprite.pixelated:
             texture.setMagfilter(SamplerState.FT_nearest)
@@ -199,8 +199,10 @@ class UpdateSprites(System):
             sprite = entity[SpriteAnimation]
             sprite.uv_width = sprite.sprite_width/texture.get_orig_file_x_size()
             sprite.uv_height = sprite.sprite_height/texture.get_orig_file_y_size()
-            model.node.set_tex_scale(stage, sprite.uv_width, sprite.uv_height)
-            model.node.set_tex_offset(stage, (0, 1-sprite.uv_height))
+            model.geometry.set_tex_scale(stage, sprite.uv_width, sprite.uv_height)
+            model.geometry.set_tex_offset(stage, (0, 1-sprite.uv_height))
+        model.geometry.set_transparency(True)
+
 
     def animate(self, sprite, model):
         # Increment animation frame
@@ -220,8 +222,8 @@ class UpdateSprites(System):
         u = (frame%rows)*w
         v = 1-(((frame//collumns)*h)+h)
         # display it
-        stage = model.node.find_all_texture_stages()[0]
-        model.node.set_tex_offset(stage, (u, v))
+        stage = model.geometry.find_all_texture_stages()[0]
+        model.geometry.set_tex_offset(stage, (u, v))
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['sprite']:

@@ -115,6 +115,7 @@ sprite = Aspect(
     [
         aspects.character,
         aspects.walking,
+        panda3d.ConstantCharacterAI,
         panda3d.Sprite,
         panda3d.SpriteAnimation,
         panda3d.Billboard,
@@ -130,6 +131,10 @@ sprite.add(
                 "walking" : [6, 7, 8, 9, 10, 11]
             },
             animation="walking",
+        ),
+        panda3d.ConstantCharacterAI: dict(
+            move=Vec3(0.0, 0.25, 0.0),
+            heading=-0.5,
         ),
         panda3d.Position: dict(value=Point3(52, 292, 0)),
     }

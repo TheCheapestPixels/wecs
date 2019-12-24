@@ -8,6 +8,7 @@ from wecs.core import or_filter
 from .input import Input
 from .character import CharacterController, FallingMovement
 from .model import Model
+from .model import Actor
 from .model import Scene
 from .model import Clock
 
@@ -23,6 +24,7 @@ class Animation:
 class AnimateCharacter(System):
     entity_filters = {
         'animated_character': and_filter([
+            Actor,
             Animation,
             Model,
             CharacterController
@@ -117,6 +119,7 @@ class AnimateCharacter(System):
 class Animate(System):
     entity_filters = {
         'animation': and_filter([
+            Actor,
             Animation,
             Model,
         ])

@@ -88,6 +88,11 @@ class TurningBackToCameraMovement:
 
 
 @Component()
+class TurningGeometryMovement:
+    pass
+
+
+@Component()
 class BumpingMovement:
     tag_name: str = 'bumping'
     solids: dict = field(default_factory=lambda:dict())
@@ -152,8 +157,8 @@ class UpdateCharacter(System):
                 xy_scaling = 1.0 / xy_dist
             x = controller.move.x * xy_scaling
             y = controller.move.y * xy_scaling
-            controller.translation = Vec3(x * dt, y * dt, 0)
-
+            z = controller.move.z * xy_scaling
+            controller.translation = Vec3(x * dt, y * dt, z * dt)
 
 # Movement systems
 #
@@ -275,7 +280,6 @@ class TurningBackToCamera(System):
             else:
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
-
             if not (character.move.x == 0 and character.move.y == 0):
                 # What's the angle to turn?
                 camera_heading = turntable.pivot.get_h() % 360
@@ -299,6 +303,24 @@ class TurningBackToCamera(System):
                 # We don't clamp the result. Too fast cameras are not a
                 # problem, and this hopefully feels more consistent.
                 turntable.heading -= delta_heading_angle / turntable.turning_speed / dt
+
+
+class TurningGeometry(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Model,
+            Clock,
+            TurningGeometryMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            model = entity[Model]
+            controller = entity[CharacterController]
+            x,y,z = controller.last_translation_speed
+            model.geometry.look_at(x, y, 0)
 
 
 class Inertiing(System):

@@ -88,7 +88,7 @@ class TurningBackToCameraMovement:
 
 
 @Component()
-class TurningGeometryMovement:
+class FacingMovement:
     pass
 
 
@@ -305,7 +305,7 @@ class TurningBackToCamera(System):
                 turntable.heading -= delta_heading_angle / turntable.turning_speed / dt
 
 
-class TurningGeometry(System):
+class FaceMovement(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,

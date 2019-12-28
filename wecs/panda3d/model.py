@@ -68,8 +68,6 @@ class Sprite: # Displayes an image on a card
 class SpriteSheet:
     sprite_width: int = 16
     sprite_height: int = 16
-    uv_width: float = 0
-    uv_height: float = 0
     frame: int = 0
     update: bool = True
 

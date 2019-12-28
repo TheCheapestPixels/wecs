@@ -117,6 +117,7 @@ sprite = Aspect(
         aspects.walking,
         panda3d.ConstantCharacterAI,
         panda3d.Sprite,
+        panda3d.SpriteSheet,
         panda3d.SpriteAnimation,
         panda3d.Billboard,
         cefconsole.WatchedEntity,

@@ -58,26 +58,37 @@ class Position:
 # 2d models (aka sprites)
 
 @Component()
-class Sprite:
+class Sprite: # Displayes an image on a card
     image_name: str = ""
     texture: Texture = None
     pixelated: bool = True
 
 
-@Component()
-class SpriteAnimation:
-    animations: dict = field(default_factory=lambda: {
-        "idle" : [0,1],
-    })
-    animation: str = "idle"
-    loop: bool = True
+@Component() # Displays part of an image
+class SpriteSheet:
     sprite_width: int = 16
     sprite_height: int = 16
     uv_width: float = 0
     uv_height: float = 0
     frame: int = 0
+    update: bool = True
+
+
+@Component() # Display parts of an image in sequence
+class SpriteAnimation:
+    animations: dict = field(default_factory=lambda: {
+        "idle" : [0,1],
+    })
+    animation: str = None
+    loop: bool = True
     framerate: int = 15 #frames-per-second
     timer: int = 0 # accumulated delta-time
+    frame: int = 0 # current frame in the animation
+
+
+@Component() # Always face the camera
+class Billboard:
+    pass
 
 
 # Bullet physics
@@ -97,11 +108,6 @@ class PhysicsBody:
     _world: UID = None
     scene: UID = None
     _scene: UID = None
-
-
-@Component()
-class Billboard:
-    pass
 
 
 # Loading / reparenting / destroying models
@@ -185,59 +191,64 @@ class UpdateSprites(System):
         if sprite.texture is None:
             sprite.texture = loader.load_texture(sprite.image_name)
             model.geometry.set_texture(sprite.texture)
+        # Set min and mag filter.
         texture = sprite.texture
-        stage = model.geometry.find_all_texture_stages()[0]
-        # Set minmag filter.
         if sprite.pixelated:
             texture.setMagfilter(SamplerState.FT_nearest)
             texture.setMinfilter(SamplerState.FT_nearest)
         else:
             texture.setMagfilter(SamplerState.FT_linear)
             texture.setMinfilter(SamplerState.FT_linear)
-        if SpriteAnimation in entity:
-            # Scale texture to display a single tile
-            sprite = entity[SpriteAnimation]
-            sprite.uv_width = sprite.sprite_width/texture.get_orig_file_x_size()
-            sprite.uv_height = sprite.sprite_height/texture.get_orig_file_y_size()
-            model.geometry.set_tex_scale(stage, sprite.uv_width, sprite.uv_height)
-            model.geometry.set_tex_offset(stage, (0, 1-sprite.uv_height))
         model.geometry.set_transparency(True)
 
-
-    def animate(self, sprite, model):
+    def animate(self, entity):
+        sheet = entity[SpriteSheet]
+        sprite_animation = entity[SpriteAnimation]
         # Increment animation frame
-        animation = sprite.animations[sprite.animation]
-        sprite.frame += 1
+        animation = sprite_animation.animations[sprite_animation.animation]
+        sprite_animation.frame += 1
         # Manage end of animation
-        if sprite.frame > len(animation)-1:
-            if sprite.loop: # Start from beginning
-                sprite.frame = 0
+        if sprite_animation.frame > len(animation)-1:
+            if sprite_animation.loop: # Start from beginning
+                sprite_animation.frame = 0
             else: # Reshow last frame
-                sprite.frame -= 1
-        frame = animation[sprite.frame]
-        # get transform for cell
-        w, h = sprite.uv_width, sprite.uv_height
+                sprite_animation.frame -= 1
+        sheet.frame = animation[sprite_animation.frame]
+        sheet.update = True
+
+    def set_frame(self, entity):
+        model = entity[Model]
+        sprite = entity[Sprite]
+        sheet = entity[SpriteSheet]
+        # get transform for frame
+        w = sheet.sprite_width/sprite.texture.get_orig_file_x_size()
+        h = sheet.sprite_height/sprite.texture.get_orig_file_y_size()
         rows = 1/w
         collumns = 1/h
-        u = (frame%rows)*w
-        v = 1-(((frame//collumns)*h)+h)
+        u = (sheet.frame%rows)*w
+        v = 1-(((sheet.frame//collumns)*h)+h)
         # display it
         stage = model.geometry.find_all_texture_stages()[0]
+        model.geometry.set_tex_scale(stage, w, h)
         model.geometry.set_tex_offset(stage, (u, v))
+        sheet.update = False
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['sprite']:
-            sprite = entity[Sprite]
-            model = entity[Model]
             clock = entity[Clock]
-            if SpriteAnimation in entity:
-                sprite = entity[SpriteAnimation]
-                animation = sprite.animations[sprite.animation]
-                # Increment frame
-                sprite.timer += clock.frame_time
-                if sprite.timer >= 1/sprite.framerate:
-                    sprite.timer -= 1/sprite.framerate
-                    self.animate(sprite, model)
+            if SpriteSheet in entity:
+                sheet = entity[SpriteSheet]
+                if SpriteAnimation in entity:
+                    sprite = entity[SpriteAnimation]
+                    if sprite.animation:
+                        animation = sprite.animations[sprite.animation]
+                        # Increment frame
+                        sprite.timer += clock.game_time
+                        if sprite.timer >= 1/sprite.framerate:
+                            sprite.timer -= 1/sprite.framerate
+                            self.animate(entity)
+                if sheet.update:
+                    self.set_frame(entity)
 
 
 # Bullet physics

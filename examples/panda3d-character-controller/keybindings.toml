@@ -1,0 +1,42 @@
+[character_movement]
+
+  [character_movement.direction]
+  _type = "axis2d"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "left_x,left_y"
+  keyboard = "a,d,s,w"
+
+  [character_movement.rotation]
+  _type = "axis2d"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "dpad_left,dpad_right,dpad_down,dpad_up"
+  keyboard = "arrow_left,arrow_right,arrow_down,arrow_up"
+
+  [character_movement.camera]
+  _type = "axis2d"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "right_x,right_y"
+  keyboard = "j,l,k,i"
+
+  [character_movement.jump]
+  _type = "button"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "face_x"
+  keyboard = "space"
+
+  [character_movement.crouch]
+  _type = "button"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "face_b"
+  keyboard = "c"
+
+  [character_movement.sprint]
+  _type = "button"
+  _device_order = ["gamepad", "keyboard"]
+  gamepad = "face_y"
+  keyboard = "e"
+
+  [character_movement.clock_control]
+  _type = "axis"
+  _device_order = ["keyboard"]
+  keyboard = "-,+"

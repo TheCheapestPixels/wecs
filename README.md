@@ -557,6 +557,7 @@ Two approaches offer themselves:
   * A waste bin that destroys entities / components dragged onto it
   * Adding / removing aspects
   * There should also be a column set for system membership
+* `pman create`
 
 
 ## Icebox

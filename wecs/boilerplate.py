@@ -10,11 +10,16 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 from wecs.panda3d import ECSShowBase as ShowBase
 
 
-def run_game(simplepbr=False, simplepbr_kwargs=None, console=False):
+def run_game(simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False):
     # Application Basics
     ShowBase()
     base.win.setClearColor((0.5,0.7,0.9,1))
     base.disable_mouse()
+
+    if keybindings:
+        from keybindings.device_listener import add_device_listener
+        from keybindings.device_listener import SinglePlayerAssigner
+        add_device_listener(debug=True, assigner=SinglePlayerAssigner())
     if simplepbr is True:
         import simplepbr
         if simplepbr_kwargs is None:

@@ -14,15 +14,12 @@ from .character import JumpingMovement
 
 @Component()
 class Input:
-    context: str = "character_movement"
+    contexts = ['character_movement', 'camera_movement', 'clock_control']
 
 
 class AcceptInput(System):
     entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            Input,
-        ]),
+        'input': and_filter([Input]),
     }
 
     def init_entity(self, filter_name, entity):
@@ -31,35 +28,38 @@ class AcceptInput(System):
             int(base.win.getXSize() / 2),
             int(base.win.getYSize() / 2),
         )
-        #entity[Input].last_mouse_pos = None
 
     def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
+        for entity in entities_by_filter['input']:
             input = entity[Input]
-            context = base.device_listener.read_context(input.context)
+            if CharacterController in entity and 'character_movement' in input.contexts:
+                context = base.device_listener.read_context('character_movement')
+                character = entity[CharacterController]
 
-            character.move.x = context['direction'].x
-            character.move.y = context['direction'].y
-            character.heading = context['rotation'].x
-            character.pitch = context['rotation'].y
+                character.move.x = context['direction'].x
+                character.move.y = context['direction'].y
+                character.heading = -context['rotation'].x
+                character.pitch = context['rotation'].y
 
-            if TurntableCamera in entity:
-                camera = entity[TurntableCamera]
-                camera.heading = context['camera'].x
-                camera.pitch = context['camera'].y
+                # Special movement modes.
+                # By default, you run ("sprint"), unless you press e, in
+                # which case you walk. You can crouch by pressing q; this
+                # overrides walking and running. Jump by pressing space.
+                # This logic is implemented by the Walking system. Here,
+                # only intention is signalled.
+                character.jumps = context['jump']
+                character.sprints = context['sprint']
+                character.crouches = context['crouch']
 
-            # Special movement modes.
-            # By default, you run ("sprint"), unless you press e, in
-            # which case you walk. You can crouch by pressing q; this
-            # overrides walking and running. Jump by pressing space.
-            # This logic is implemented by the Walking system. Here,
-            # only intention is signalled.
-            character.jumps = context['jump']
-            character.sprints = context['sprint']
-            character.crouches = context['crouch']
+            if TurntableCamera in entity and 'camera_movement' in input.contexts:
+                context = base.device_listener.read_context('camera_movement')
+                turntable = entity[TurntableCamera]
+                turntable.heading = -context['rotation'].x
+                turntable.pitch = context['rotation'].y
+
 
             # Time control
-            if Clock in entity:
+            if Clock in entity and 'clock_control' in input.contexts:
+                context = base.device_listener.read_context('clock_control')
                 clock = entity[Clock]
-                clock.scaling_factor *= 1 + context['clock_control']
+                clock.scaling_factor *= 1 + context['time_zoom']

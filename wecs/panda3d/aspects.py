@@ -95,7 +95,15 @@ spectator = Aspect([character, panda3d.FloatingMovement, panda3d.BumpingMovement
 )
 
 
-pc_mind = Aspect([panda3d.Input])
+pc_mind = Aspect([panda3d.Input],
+                 overrides={
+                     panda3d.Input: dict(contexts=[
+                         'character_movement',
+                         'camera_movement',
+                         'clock_control',
+                     ]),
+                 },
+)
 npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
 npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
 

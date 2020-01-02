@@ -14,6 +14,7 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 from wecs.core import or_filter
+from wecs.panda3d.input import Input
 
 from .model import Model
 from .model import Scene
@@ -127,9 +128,35 @@ class UpdateCharacter(System):
             Clock,
             Model,
         ]),
+        'input': and_filter([
+            CharacterController,
+            Input,
+        ]),
     }
-
+    input_context = 'character_movement'
+    
     def update(self, entities_by_filter):
+        for entity in entities_by_filter['input']:
+            input = entity[Input]
+            if self.input_context in input.contexts:
+                context = base.device_listener.read_context(self.input_context)
+                character = entity[CharacterController]
+
+                character.move.x = context['direction'].x
+                character.move.y = context['direction'].y
+                character.heading = -context['rotation'].x
+                character.pitch = context['rotation'].y
+
+                # Special movement modes.
+                # By default, you run ("sprint"), unless you press e, in
+                # which case you walk. You can crouch by pressing q; this
+                # overrides walking and running. Jump by pressing space.
+                # This logic is implemented by the Walking system. Here,
+                # only intention is signalled.
+                character.jumps = context['jump']
+                character.sprints = context['sprint']
+                character.crouches = context['crouch']
+
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             model = entity[Model]

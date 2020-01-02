@@ -10,6 +10,7 @@ from panda3d.core import CollisionSegment
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
+from wecs.panda3d.input import Input
 
 from .model import Model
 from .model import Clock
@@ -64,7 +65,12 @@ class UpdateCameras(System):
             ThirdPersonCamera,
             Clock,
         ]),
+        'input': and_filter([
+            TurntableCamera,
+            Input,
+        ]),
     }
+    input_context = 'camera_movement'
 
     def init_entity(self, filter_name, entity):
         model = entity[Model]
@@ -99,6 +105,14 @@ class UpdateCameras(System):
         turntable.attached = True
 
     def update(self, entities_by_filter):
+        for entity in entities_by_filter['input']:
+            input = entity[Input]
+            if self.input_context in input.contexts:
+                context = base.device_listener.read_context(self.input_context)
+                turntable = entity[TurntableCamera]
+                turntable.heading = -context['rotation'].x
+                turntable.pitch = context['rotation'].y
+
         for entity in entities_by_filter["3rdPerson"]:
             if TurntableCamera in entity and Clock in entity:
                 model = entity[Model]

@@ -12,9 +12,9 @@ from wecs.panda3d import aspects
 # Each frame, run these systems. This defines the game itself.
 system_types = [
     panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
-    mechanics.DetermineTimestep,  # How long is this frame? Update all clocks.
+    panda3d.UpdateClocks,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
-    panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
+    # panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     panda3d.Think,  # Input from AIs, the same
     panda3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
     panda3d.TurningBackToCamera,  # Characters can have a tendency towards walk towards away-from-camera that adjusts their intention.

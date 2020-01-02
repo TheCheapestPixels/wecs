@@ -1,0 +1,7 @@
+wecs
+====
+
+.. toctree::
+   :maxdepth: 4
+
+   api.wecs

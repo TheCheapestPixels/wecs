@@ -11,8 +11,6 @@ Welcome to WECS's documentation!
    :caption: Contents:
 
    api/wecs
-   api/wecs.mechanics
-   api/wecs.panda3d
 
 Indices and tables
 ==================

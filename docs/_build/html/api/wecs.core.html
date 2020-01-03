@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>wecs.core module &mdash; WECS  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="wecs.equipment module" href="wecs.equipment.html" />
+    <link rel="prev" title="wecs.cefconsole module" href="wecs.cefconsole.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #735cdd" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> WECS
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="wecs.html">wecs package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="wecs.mechanics.html">wecs.mechanics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.mechanics.clock.html">wecs.mechanics.clock module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.panda3d.html">wecs.panda3d package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.ai.html">wecs.panda3d.ai module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.animation.html">wecs.panda3d.animation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.aspects.html">wecs.panda3d.aspects module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.camera.html">wecs.panda3d.camera module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.character.html">wecs.panda3d.character module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.core.html">wecs.panda3d.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.input.html">wecs.panda3d.input module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.model.html">wecs.panda3d.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.aspects.html">wecs.aspects module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.boilerplate.html">wecs.boilerplate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.cefconsole.html">wecs.cefconsole module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wecs.core module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.equipment.html">wecs.equipment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.graphviz.html">wecs.graphviz module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.inventory.html">wecs.inventory module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.repl.html">wecs.repl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.rooms.html">wecs.rooms module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WECS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content style-external-links">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="wecs.html">wecs package</a> &raquo;</li>
+        
+      <li>wecs.core module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/wecs.core.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="wecs.equipment.html" class="btn btn-neutral float-right" title="wecs.equipment module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wecs.cefconsole.html" class="btn btn-neutral float-left" title="wecs.cefconsole module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-wecs.core">
+<span id="wecs-core-module"></span><h1>wecs.core module<a class="headerlink" href="#module-wecs.core" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="wecs.core.UID">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">UID</code><a class="headerlink" href="#wecs.core.UID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Object for referencing a
+<a class="reference internal" href="#wecs.core.Entity" title="wecs.core.Entity"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.Entity</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="wecs.core.NoSuchUID">
+<em class="property">exception </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">NoSuchUID</code><a class="headerlink" href="#wecs.core.NoSuchUID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.World">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">World</code><a class="headerlink" href="#wecs.core.World" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Has a set of
+<a class="reference internal" href="#wecs.core.Entity" title="wecs.core.Entity"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.Entity</span></code></a></p>
+<p>and a set of
+<a class="reference internal" href="#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
+<dl class="method">
+<dt id="wecs.core.World.create_entity">
+<code class="sig-name descname">create_entity</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.create_entity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt><a href="#id1"><span class="problematic" id="id2">*</span></a>args</dt><dd><p>Initial Components.</p>
+</dd>
+<dt>name</dt><dd><p>Entity name string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.get_entity">
+<code class="sig-name descname">get_entity</code><span class="sig-paren">(</span><em class="sig-param">uid</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.get_entity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>uid</dt><dd><p>The
+:core:’wecs.core.UID’ of entity to return</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>‘wecs.core.Entity’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.destroy_entity">
+<code class="sig-name descname">destroy_entity</code><span class="sig-paren">(</span><em class="sig-param">uid_or_entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.destroy_entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.remove_entity">
+<code class="sig-name descname">remove_entity</code><span class="sig-paren">(</span><em class="sig-param">uid_or_entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.remove_entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.add_system">
+<code class="sig-name descname">add_system</code><span class="sig-paren">(</span><em class="sig-param">system</em>, <em class="sig-param">sort</em>, <em class="sig-param">add_duplicates=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.add_system" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>system</dt><dd><p>System to add</p>
+</dd>
+<dt>sort</dt><dd><p>Order the system should run</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Entity</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.has_system">
+<code class="sig-name descname">has_system</code><span class="sig-paren">(</span><em class="sig-param">system_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.has_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.get_systems">
+<code class="sig-name descname">get_systems</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.get_systems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.get_system">
+<code class="sig-name descname">get_system</code><span class="sig-paren">(</span><em class="sig-param">system_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.get_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.remove_system">
+<code class="sig-name descname">remove_system</code><span class="sig-paren">(</span><em class="sig-param">system_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.remove_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.get_system_component_dependencies">
+<code class="sig-name descname">get_system_component_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.get_system_component_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.register_entity_for_components_update">
+<code class="sig-name descname">register_entity_for_components_update</code><span class="sig-paren">(</span><em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.register_entity_for_components_update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.flush_component_updates">
+<code class="sig-name descname">flush_component_updates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.flush_component_updates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.update_entity_filters">
+<code class="sig-name descname">update_entity_filters</code><span class="sig-paren">(</span><em class="sig-param">entities</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.update_entity_filters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.World.update_system">
+<code class="sig-name descname">update_system</code><span class="sig-paren">(</span><em class="sig-param">system</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.World.update_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.Entity">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">Entity</code><span class="sig-paren">(</span><em class="sig-param">world</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Everything in a
+<a class="reference internal" href="#wecs.core.World" title="wecs.core.World"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.World</span></code></a> is an Entity. They have a set of
+<a class="reference internal" href="#wecs.core.Component" title="wecs.core.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.Component</span></code></a> and are, with regard to how they are processed,
+type- and stateless.</p>
+<p>They are usually created with <a class="reference internal" href="#wecs.core.World.create_entity" title="wecs.core.World.create_entity"><code class="xref py py-func docutils literal notranslate"><span class="pre">wecs.core.World.create_entity()</span></code></a></p>
+<dl class="method">
+<dt id="wecs.core.Entity.add_component">
+<code class="sig-name descname">add_component</code><span class="sig-paren">(</span><em class="sig-param">component</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.add_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.get_components">
+<code class="sig-name descname">get_components</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.get_components" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.get_component">
+<code class="sig-name descname">get_component</code><span class="sig-paren">(</span><em class="sig-param">component_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.get_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.has_component">
+<code class="sig-name descname">has_component</code><span class="sig-paren">(</span><em class="sig-param">component_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.has_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.remove_component">
+<code class="sig-name descname">remove_component</code><span class="sig-paren">(</span><em class="sig-param">component_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.remove_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.update_components">
+<code class="sig-name descname">update_components</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.update_components" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.get_dropped_components_by_type">
+<code class="sig-name descname">get_dropped_components_by_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.get_dropped_components_by_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.drop_component_updates">
+<code class="sig-name descname">drop_component_updates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.drop_component_updates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.Entity.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Entity.destroy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.Component">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">Component</code><span class="sig-paren">(</span><em class="sig-param">unique=True</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>New components should inherrit from this class like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@Component</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">SomeNewComponent</span><span class="p">:</span>
+    <span class="n">some_variable</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.System">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">System</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.System" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Example of a system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Print</span><span class="p">(</span><span class="n">System</span><span class="p">):</span>
+    <span class="c1"># Filter all entities in the world described as Printer</span>
+    <span class="n">entity_filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;printers&#39;</span> <span class="p">:</span> <span class="n">and_filter</span><span class="p">([</span><span class="n">Printer</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities_by_filter</span><span class="p">):</span>
+        <span class="c1"># Iterate over all filtered entities</span>
+        <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities_by_filter</span><span class="p">[</span><span class="s1">&#39;printers&#39;</span><span class="p">]:</span>
+            <span class="c1"># Print their message</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="n">Printer</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then add it with <a class="reference internal" href="#wecs.core.World.add_system" title="wecs.core.World.add_system"><code class="xref py py-func docutils literal notranslate"><span class="pre">wecs.core.World.add_system()</span></code></a></p>
+<dl class="method">
+<dt id="wecs.core.System.init_entity">
+<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.System.init_entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.System.destroy_entity">
+<code class="sig-name descname">destroy_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em>, <em class="sig-param">components_by_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.System.destroy_entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.System.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.System.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.core.System.get_component_dependencies">
+<code class="sig-name descname">get_component_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.System.get_component_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.Filter">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">Filter</code><a class="headerlink" href="#wecs.core.Filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="wecs.core.Filter.get_component_dependencies">
+<code class="sig-name descname">get_component_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.Filter.get_component_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.AndFilter">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">AndFilter</code><span class="sig-paren">(</span><em class="sig-param">types_and_filters</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.AndFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#wecs.core.Filter" title="wecs.core.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.Filter</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wecs.core.and_filter">
+<code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">and_filter</code><span class="sig-paren">(</span><em class="sig-param">types_and_filters</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.and_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="wecs.core.OrFilter">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">OrFilter</code><span class="sig-paren">(</span><em class="sig-param">types_and_filters</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.OrFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#wecs.core.Filter" title="wecs.core.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.Filter</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wecs.core.or_filter">
+<code class="sig-prename descclassname">wecs.core.</code><code class="sig-name descname">or_filter</code><span class="sig-paren">(</span><em class="sig-param">types_and_filters</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.core.or_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="wecs.equipment.html" class="btn btn-neutral float-right" title="wecs.equipment module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wecs.cefconsole.html" class="btn btn-neutral float-left" title="wecs.cefconsole module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, TheCheapestPixels
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

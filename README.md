@@ -11,11 +11,10 @@ boilerplate code. In particular, a module for Panda3D is provided.
 
 ## In WECS.
 
-A 'World' holds 'Entities' and 'Systems'.
-These 'Entities' are made up of 'Components'.
-The 'Components' contain an entity's data/variables.
-The 'Systems' then 'filter' all the world's entities by their components,
-iterates over them and applies logic to component data.
+* A 'World' holds 'Entities' and 'Systems'.
+* 'Entities' are made up of 'Components'.
+* 'Components' contain an entity's data/variables.
+* 'Systems' then 'filter' all the world's entities by their components, iterates over them and applies logic to component data.
 
 This keeps data and logic seperated, modular, readable and reusable.
 
@@ -60,6 +59,7 @@ printer_entity = world.create_entity() # A new entity
 printer_entity.add_component(Printer(message="Hello World"))
 world.update() # Run all added systems
 ```
+
 
 ## WECS for Panda3D
 There are some game mechanics for panda3d that come out of the box:

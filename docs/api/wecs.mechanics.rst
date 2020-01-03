@@ -1,17 +1,9 @@
-wecs.mechanics
+wecs.mechanics package
 ======================
 
-wecs.mechanics.clock module
----------------------------
+.. toctree::
 
-.. automodule:: wecs.mechanics.clock
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
+   wecs.mechanics.clock
 
 .. automodule:: wecs.mechanics
    :members:

@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>wecs.repl module &mdash; WECS  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="wecs.rooms module" href="wecs.rooms.html" />
+    <link rel="prev" title="wecs.inventory module" href="wecs.inventory.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #735cdd" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> WECS
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="wecs.html">wecs package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="wecs.mechanics.html">wecs.mechanics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.mechanics.clock.html">wecs.mechanics.clock module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.panda3d.html">wecs.panda3d package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.ai.html">wecs.panda3d.ai module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.animation.html">wecs.panda3d.animation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.aspects.html">wecs.panda3d.aspects module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.camera.html">wecs.panda3d.camera module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.character.html">wecs.panda3d.character module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.core.html">wecs.panda3d.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.input.html">wecs.panda3d.input module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.model.html">wecs.panda3d.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.aspects.html">wecs.aspects module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.boilerplate.html">wecs.boilerplate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.cefconsole.html">wecs.cefconsole module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.core.html">wecs.core module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.equipment.html">wecs.equipment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.graphviz.html">wecs.graphviz module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.inventory.html">wecs.inventory module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wecs.repl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.rooms.html">wecs.rooms module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WECS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content style-external-links">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="wecs.html">wecs package</a> &raquo;</li>
+        
+      <li>wecs.repl module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/wecs.repl.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="wecs.rooms.html" class="btn btn-neutral float-right" title="wecs.rooms module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wecs.inventory.html" class="btn btn-neutral float-left" title="wecs.inventory module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-wecs.repl">
+<span id="wecs-repl-module"></span><h1>wecs.repl module<a class="headerlink" href="#module-wecs.repl" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="wecs.repl.Interpreter">
+<em class="property">class </em><code class="sig-prename descclassname">wecs.repl.</code><code class="sig-name descname">Interpreter</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">code.InteractiveConsole</span></code></p>
+<dl class="method">
+<dt id="wecs.repl.Interpreter.runline">
+<code class="sig-name descname">runline</code><span class="sig-paren">(</span><em class="sig-param">line</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter.runline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="wecs.repl.Interpreter.showsyntaxerror">
+<code class="sig-name descname">showsyntaxerror</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter.showsyntaxerror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the syntax error that just occurred.</p>
+<p>This doesn’t display a stack trace because there isn’t one.</p>
+<p>If a filename is given, it is stuffed in the exception instead
+of what was there before (because Python’s parser always uses
+“&lt;string&gt;” when reading from a string).</p>
+<p>The output is written by self.write(), below.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.repl.Interpreter.runcode">
+<code class="sig-name descname">runcode</code><span class="sig-paren">(</span><em class="sig-param">code</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter.runcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a code object.</p>
+<p>When an exception occurs, self.showtraceback() is called to
+display a traceback.  All exceptions are caught except
+SystemExit, which is reraised.</p>
+<p>A note about KeyboardInterrupt: this exception may occur
+elsewhere in this code, and may not always be caught.  The
+caller should be prepared to deal with it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.repl.Interpreter.showtraceback">
+<code class="sig-name descname">showtraceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter.showtraceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the exception that just occurred.</p>
+<p>We remove the first stack item because it is our own code.</p>
+<p>The output is written by self.write(), below.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="wecs.repl.Interpreter.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">output_string</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.repl.Interpreter.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a string.</p>
+<p>The base implementation writes to sys.stderr; a subclass may
+replace this with a different implementation.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="wecs.rooms.html" class="btn btn-neutral float-right" title="wecs.rooms module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wecs.inventory.html" class="btn btn-neutral float-left" title="wecs.inventory module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, TheCheapestPixels
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

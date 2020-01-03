@@ -1,73 +1,16 @@
-wecs.panda3d
+wecs.panda3d package
 ====================
 
-wecs.panda3d.ai module
-----------------------
+.. toctree::
 
-.. automodule:: wecs.panda3d.ai
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.animation module
------------------------------
-
-.. automodule:: wecs.panda3d.animation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.aspects module
----------------------------
-
-.. automodule:: wecs.panda3d.aspects
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.camera module
---------------------------
-
-.. automodule:: wecs.panda3d.camera
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.character module
------------------------------
-
-.. automodule:: wecs.panda3d.character
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.core module
-------------------------
-
-.. automodule:: wecs.panda3d.core
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.input module
--------------------------
-
-.. automodule:: wecs.panda3d.input
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-wecs.panda3d.model module
--------------------------
-
-.. automodule:: wecs.panda3d.model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
+   wecs.panda3d.ai
+   wecs.panda3d.animation
+   wecs.panda3d.aspects
+   wecs.panda3d.camera
+   wecs.panda3d.character
+   wecs.panda3d.core
+   wecs.panda3d.input
+   wecs.panda3d.model
 
 .. automodule:: wecs.panda3d
    :members:

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>wecs.panda3d &mdash; WECS  documentation</title>
+  <title>wecs.panda3d package &mdash; WECS  documentation</title>
   
 
   
@@ -35,7 +35,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="wecs.mechanics" href="wecs.mechanics.html" /> 
+    <link rel="next" title="wecs.panda3d.ai module" href="wecs.panda3d.ai.html" />
+    <link rel="prev" title="wecs.mechanics.clock module" href="wecs.mechanics.clock.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -45,7 +46,7 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #735cdd" >
           
 
           
@@ -55,9 +56,6 @@
           
           </a>
 
-          
-            
-            
           
 
           
@@ -81,18 +79,31 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="wecs.html">wecs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wecs.mechanics.html">wecs.mechanics</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">wecs.panda3d</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wecs-panda3d-ai-module">wecs.panda3d.ai module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wecs-panda3d-animation-module">wecs.panda3d.animation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wecs-panda3d-aspects-module">wecs.panda3d.aspects module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-wecs.panda3d.camera">wecs.panda3d.camera module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wecs-panda3d-character-module">wecs.panda3d.character module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-wecs.panda3d.core">wecs.panda3d.core module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wecs-panda3d-input-module">wecs.panda3d.input module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-wecs.panda3d.model">wecs.panda3d.model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="wecs.html">wecs package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="wecs.mechanics.html">wecs.mechanics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.mechanics.clock.html">wecs.mechanics.clock module</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wecs.panda3d package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.ai.html">wecs.panda3d.ai module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.animation.html">wecs.panda3d.animation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.aspects.html">wecs.panda3d.aspects module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.camera.html">wecs.panda3d.camera module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.character.html">wecs.panda3d.character module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.core.html">wecs.panda3d.core module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.input.html">wecs.panda3d.input module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wecs.panda3d.model.html">wecs.panda3d.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.aspects.html">wecs.aspects module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.boilerplate.html">wecs.boilerplate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.cefconsole.html">wecs.cefconsole module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.core.html">wecs.core module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.equipment.html">wecs.equipment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.graphviz.html">wecs.graphviz module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.inventory.html">wecs.inventory module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.repl.html">wecs.repl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wecs.rooms.html">wecs.rooms module</a></li>
 </ul>
 </li>
 </ul>
@@ -116,7 +127,7 @@
 
       <div class="wy-nav-content">
         
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
         
           
 
@@ -140,7 +151,9 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>wecs.panda3d</li>
+          <li><a href="wecs.html">wecs package</a> &raquo;</li>
+        
+      <li>wecs.panda3d package</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -154,490 +167,39 @@
   </ul>
 
   
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="wecs.panda3d.ai.html" class="btn btn-neutral float-right" title="wecs.panda3d.ai module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wecs.mechanics.clock.html" class="btn btn-neutral float-left" title="wecs.mechanics.clock module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="wecs-panda3d">
-<h1>wecs.panda3d<a class="headerlink" href="#wecs-panda3d" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="wecs-panda3d-ai-module">
-<h2>wecs.panda3d.ai module<a class="headerlink" href="#wecs-panda3d-ai-module" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="wecs-panda3d-package">
+<h1>wecs.panda3d package<a class="headerlink" href="#wecs-panda3d-package" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.ai.html">wecs.panda3d.ai module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.animation.html">wecs.panda3d.animation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.aspects.html">wecs.panda3d.aspects module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.camera.html">wecs.panda3d.camera module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.character.html">wecs.panda3d.character module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.core.html">wecs.panda3d.core module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.input.html">wecs.panda3d.input module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wecs.panda3d.model.html">wecs.panda3d.model module</a></li>
+</ul>
 </div>
-<div class="section" id="wecs-panda3d-animation-module">
-<h2>wecs.panda3d.animation module<a class="headerlink" href="#wecs-panda3d-animation-module" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="wecs-panda3d-aspects-module">
-<h2>wecs.panda3d.aspects module<a class="headerlink" href="#wecs-panda3d-aspects-module" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-wecs.panda3d.camera">
-<span id="wecs-panda3d-camera-module"></span><h2>wecs.panda3d.camera module<a class="headerlink" href="#module-wecs.panda3d.camera" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="wecs.panda3d.camera.CollideCamerasWithTerrain">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">CollideCamerasWithTerrain</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.CollideCamerasWithTerrain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.CollideCamerasWithTerrain.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'camera': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.camera.CollideCamerasWithTerrain.entity_filters" title="Permalink to this definition">¶</a></dt>
+<span class="target" id="module-wecs.panda3d"></span><dl class="function">
+<dt id="wecs.panda3d.panda_clock">
+<code class="sig-prename descclassname">wecs.panda3d.</code><code class="sig-name descname">panda_clock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.panda_clock" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="wecs.panda3d.camera.CollideCamerasWithTerrain.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.CollideCamerasWithTerrain.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.camera.CollideCamerasWithTerrain.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.CollideCamerasWithTerrain.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.camera.CollisionZoom">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">CollisionZoom</code><span class="sig-paren">(</span><em class="sig-param">collision: panda3d.core.CollisionNode = &lt;factory&gt;</em>, <em class="sig-param">traverser: panda3d.core.CollisionTraverser = &lt;factory&gt;</em>, <em class="sig-param">queue: panda3d.core.CollisionHandlerQueue = &lt;factory&gt;</em>, <em class="sig-param">body_width: float = 0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.CollisionZoom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.CollisionZoom.body_width">
-<code class="sig-name descname">body_width</code><em class="property"> = 0.5</em><a class="headerlink" href="#wecs.panda3d.camera.CollisionZoom.body_width" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.camera.FirstPersonCamera">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">FirstPersonCamera</code><span class="sig-paren">(</span><em class="sig-param">camera: panda3d.core.NodePath = &lt;factory&gt;</em>, <em class="sig-param">anchor_name: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.FirstPersonCamera" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.FirstPersonCamera.anchor_name">
-<code class="sig-name descname">anchor_name</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.camera.FirstPersonCamera.anchor_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.camera.ThirdPersonCamera">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">ThirdPersonCamera</code><span class="sig-paren">(</span><em class="sig-param">camera: panda3d.core.NodePath = &lt;factory&gt;</em>, <em class="sig-param">height: float = 2.0</em>, <em class="sig-param">distance: float = 10.0</em>, <em class="sig-param">focus_height: float = 1.8</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.ThirdPersonCamera" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.ThirdPersonCamera.distance">
-<code class="sig-name descname">distance</code><em class="property"> = 10.0</em><a class="headerlink" href="#wecs.panda3d.camera.ThirdPersonCamera.distance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.ThirdPersonCamera.focus_height">
-<code class="sig-name descname">focus_height</code><em class="property"> = 1.8</em><a class="headerlink" href="#wecs.panda3d.camera.ThirdPersonCamera.focus_height" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.ThirdPersonCamera.height">
-<code class="sig-name descname">height</code><em class="property"> = 2.0</em><a class="headerlink" href="#wecs.panda3d.camera.ThirdPersonCamera.height" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.camera.TurntableCamera">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">TurntableCamera</code><span class="sig-paren">(</span><em class="sig-param">turning_speed: float = 60.0</em>, <em class="sig-param">heading: float = 0</em>, <em class="sig-param">pitch: float = 0</em>, <em class="sig-param">min_pitch: float = -80.0</em>, <em class="sig-param">max_pitch: float = 45.0</em>, <em class="sig-param">pivot: panda3d.core.NodePath = &lt;factory&gt;</em>, <em class="sig-param">attached: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.attached">
-<code class="sig-name descname">attached</code><em class="property"> = False</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.attached" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.heading">
-<code class="sig-name descname">heading</code><em class="property"> = 0</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.heading" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.max_pitch">
-<code class="sig-name descname">max_pitch</code><em class="property"> = 45.0</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.max_pitch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.min_pitch">
-<code class="sig-name descname">min_pitch</code><em class="property"> = -80.0</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.min_pitch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.pitch">
-<code class="sig-name descname">pitch</code><em class="property"> = 0</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.pitch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.TurntableCamera.turning_speed">
-<code class="sig-name descname">turning_speed</code><em class="property"> = 60.0</em><a class="headerlink" href="#wecs.panda3d.camera.TurntableCamera.turning_speed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.camera.UpdateCameras">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.camera.</code><code class="sig-name descname">UpdateCameras</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.UpdateCameras" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="method">
-<dt id="wecs.panda3d.camera.UpdateCameras.attach_turntable">
-<code class="sig-name descname">attach_turntable</code><span class="sig-paren">(</span><em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.UpdateCameras.attach_turntable" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.camera.UpdateCameras.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'1stPerson': &lt;wecs.core.AndFilter object&gt;, '3rdPerson': &lt;wecs.core.AndFilter object&gt;, 'turntable': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.camera.UpdateCameras.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.camera.UpdateCameras.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.UpdateCameras.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.camera.UpdateCameras.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.camera.UpdateCameras.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="wecs-panda3d-character-module">
-<h2>wecs.panda3d.character module<a class="headerlink" href="#wecs-panda3d-character-module" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-wecs.panda3d.core">
-<span id="wecs-panda3d-core-module"></span><h2>wecs.panda3d.core module<a class="headerlink" href="#module-wecs.panda3d.core" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="wecs.panda3d.core.ECSShowBase">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.core.</code><code class="sig-name descname">ECSShowBase</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.core.ECSShowBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">direct.showbase.ShowBase.ShowBase</span></code></p>
-<dl class="method">
-<dt id="wecs.panda3d.core.ECSShowBase.add_system">
-<code class="sig-name descname">add_system</code><span class="sig-paren">(</span><em class="sig-param">system</em>, <em class="sig-param">sort</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.core.ECSShowBase.add_system" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.core.ECSShowBase.run_system">
-<code class="sig-name descname">run_system</code><span class="sig-paren">(</span><em class="sig-param">system</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.core.ECSShowBase.run_system" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="wecs-panda3d-input-module">
-<h2>wecs.panda3d.input module<a class="headerlink" href="#wecs-panda3d-input-module" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-wecs.panda3d.model">
-<span id="wecs-panda3d-model-module"></span><h2>wecs.panda3d.model module<a class="headerlink" href="#module-wecs.panda3d.model" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="wecs.panda3d.model.Actor">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Actor</code><a class="headerlink" href="#wecs.panda3d.model.Actor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.Billboard">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Billboard</code><a class="headerlink" href="#wecs.panda3d.model.Billboard" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.CollidableGeometry">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">CollidableGeometry</code><span class="sig-paren">(</span><em class="sig-param">collide_mask: int = 1</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.CollidableGeometry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.CollidableGeometry.collide_mask">
-<code class="sig-name descname">collide_mask</code><em class="property"> = 1</em><a class="headerlink" href="#wecs.panda3d.model.CollidableGeometry.collide_mask" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.DeterminePhysicsTimestep">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">DeterminePhysicsTimestep</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.DeterminePhysicsTimestep" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.DeterminePhysicsTimestep.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'body': &lt;wecs.core.AndFilter object&gt;, 'world': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.DeterminePhysicsTimestep.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.DeterminePhysicsTimestep.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.DeterminePhysicsTimestep.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.DoPhysics">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">DoPhysics</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.DoPhysics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.DoPhysics.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'world': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.DoPhysics.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.DoPhysics.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.DoPhysics.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.FlattenStrong">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">FlattenStrong</code><a class="headerlink" href="#wecs.panda3d.model.FlattenStrong" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.LoadModels">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">LoadModels</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.LoadModels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="method">
-<dt id="wecs.panda3d.model.LoadModels.destroy_entity">
-<code class="sig-name descname">destroy_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em>, <em class="sig-param">component</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.LoadModels.destroy_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.LoadModels.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'model': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.LoadModels.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.LoadModels.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.LoadModels.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.LoadModels.post_load_hook">
-<code class="sig-name descname">post_load_hook</code><span class="sig-paren">(</span><em class="sig-param">node</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.LoadModels.post_load_hook" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.Model">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param">model_name: str = ''</em>, <em class="sig-param">geometry: panda3d.core.NodePath = None</em>, <em class="sig-param">node: panda3d.core.NodePath = None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.Model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Model.geometry">
-<code class="sig-name descname">geometry</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.Model.geometry" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Model.model_name">
-<code class="sig-name descname">model_name</code><em class="property"> = ''</em><a class="headerlink" href="#wecs.panda3d.model.Model.model_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Model.node">
-<code class="sig-name descname">node</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.Model.node" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.PhysicsBody">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">PhysicsBody</code><span class="sig-paren">(</span><em class="sig-param">node: panda3d.core.NodePath = None</em>, <em class="sig-param">body: panda3d.core.NodePath = &lt;factory&gt;</em>, <em class="sig-param">timestep: float = 0.0</em>, <em class="sig-param">world: wecs.core.UID = None</em>, <em class="sig-param">_world: wecs.core.UID = None</em>, <em class="sig-param">scene: wecs.core.UID = None</em>, <em class="sig-param">_scene: wecs.core.UID = None</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.PhysicsBody" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.PhysicsBody.node">
-<code class="sig-name descname">node</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.PhysicsBody.node" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.PhysicsBody.scene">
-<code class="sig-name descname">scene</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.PhysicsBody.scene" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.PhysicsBody.timestep">
-<code class="sig-name descname">timestep</code><em class="property"> = 0.0</em><a class="headerlink" href="#wecs.panda3d.model.PhysicsBody.timestep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.PhysicsBody.world">
-<code class="sig-name descname">world</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.PhysicsBody.world" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.PhysicsWorld">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">PhysicsWorld</code><span class="sig-paren">(</span><em class="sig-param">timestep: float = 0.0</em>, <em class="sig-param">world: panda3d.bullet.BulletWorld = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.PhysicsWorld" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.PhysicsWorld.timestep">
-<code class="sig-name descname">timestep</code><em class="property"> = 0.0</em><a class="headerlink" href="#wecs.panda3d.model.PhysicsWorld.timestep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.Position">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Position</code><span class="sig-paren">(</span><em class="sig-param">value: panda3d.core.LVector3f = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.Position" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.Scene">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Scene</code><span class="sig-paren">(</span><em class="sig-param">node: panda3d.core.NodePath = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.Scene" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.SetUpPhysics">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">SetUpPhysics</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SetUpPhysics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="method">
-<dt id="wecs.panda3d.model.SetUpPhysics.destroy_entity">
-<code class="sig-name descname">destroy_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em>, <em class="sig-param">components_by_type</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SetUpPhysics.destroy_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SetUpPhysics.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'body': &lt;wecs.core.AndFilter object&gt;, 'world': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.SetUpPhysics.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.SetUpPhysics.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SetUpPhysics.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.SetUpPhysics.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SetUpPhysics.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.Sprite">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">Sprite</code><span class="sig-paren">(</span><em class="sig-param">image_name: str = ''</em>, <em class="sig-param">texture: panda3d.core.Texture = None</em>, <em class="sig-param">pixelated: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.Sprite" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Sprite.image_name">
-<code class="sig-name descname">image_name</code><em class="property"> = ''</em><a class="headerlink" href="#wecs.panda3d.model.Sprite.image_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Sprite.pixelated">
-<code class="sig-name descname">pixelated</code><em class="property"> = True</em><a class="headerlink" href="#wecs.panda3d.model.Sprite.pixelated" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.Sprite.texture">
-<code class="sig-name descname">texture</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.Sprite.texture" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.SpriteAnimation">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">SpriteAnimation</code><span class="sig-paren">(</span><em class="sig-param">animations: dict = &lt;factory&gt;</em>, <em class="sig-param">animation: str = None</em>, <em class="sig-param">loop: bool = True</em>, <em class="sig-param">framerate: int = 15</em>, <em class="sig-param">timer: int = 0</em>, <em class="sig-param">frame: int = 0</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteAnimation.animation">
-<code class="sig-name descname">animation</code><em class="property"> = None</em><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation.animation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteAnimation.frame">
-<code class="sig-name descname">frame</code><em class="property"> = 0</em><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation.frame" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteAnimation.framerate">
-<code class="sig-name descname">framerate</code><em class="property"> = 15</em><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation.framerate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteAnimation.loop">
-<code class="sig-name descname">loop</code><em class="property"> = True</em><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation.loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteAnimation.timer">
-<code class="sig-name descname">timer</code><em class="property"> = 0</em><a class="headerlink" href="#wecs.panda3d.model.SpriteAnimation.timer" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.SpriteSheet">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">SpriteSheet</code><span class="sig-paren">(</span><em class="sig-param">sprite_width: int = 16</em>, <em class="sig-param">sprite_height: int = 16</em>, <em class="sig-param">frame: int = 0</em>, <em class="sig-param">update: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.SpriteSheet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteSheet.frame">
-<code class="sig-name descname">frame</code><em class="property"> = 0</em><a class="headerlink" href="#wecs.panda3d.model.SpriteSheet.frame" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteSheet.sprite_height">
-<code class="sig-name descname">sprite_height</code><em class="property"> = 16</em><a class="headerlink" href="#wecs.panda3d.model.SpriteSheet.sprite_height" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteSheet.sprite_width">
-<code class="sig-name descname">sprite_width</code><em class="property"> = 16</em><a class="headerlink" href="#wecs.panda3d.model.SpriteSheet.sprite_width" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.SpriteSheet.update">
-<code class="sig-name descname">update</code><em class="property"> = True</em><a class="headerlink" href="#wecs.panda3d.model.SpriteSheet.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.UpdateBillboards">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">UpdateBillboards</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateBillboards" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="attribute">
-<dt id="wecs.panda3d.model.UpdateBillboards.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'sprite': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.UpdateBillboards.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.UpdateBillboards.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateBillboards.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="wecs.panda3d.model.UpdateSprites">
-<em class="property">class </em><code class="sig-prename descclassname">wecs.panda3d.model.</code><code class="sig-name descname">UpdateSprites</code><span class="sig-paren">(</span><em class="sig-param">throw_exc=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="wecs.html#wecs.core.System" title="wecs.core.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">wecs.core.System</span></code></a></p>
-<dl class="method">
-<dt id="wecs.panda3d.model.UpdateSprites.animate">
-<code class="sig-name descname">animate</code><span class="sig-paren">(</span><em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites.animate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="wecs.panda3d.model.UpdateSprites.entity_filters">
-<code class="sig-name descname">entity_filters</code><em class="property"> = {'sprite': &lt;wecs.core.AndFilter object&gt;}</em><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites.entity_filters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.UpdateSprites.init_entity">
-<code class="sig-name descname">init_entity</code><span class="sig-paren">(</span><em class="sig-param">filter_name</em>, <em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites.init_entity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.UpdateSprites.set_frame">
-<code class="sig-name descname">set_frame</code><span class="sig-paren">(</span><em class="sig-param">entity</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites.set_frame" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="wecs.panda3d.model.UpdateSprites.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">entities_by_filter</em><span class="sig-paren">)</span><a class="headerlink" href="#wecs.panda3d.model.UpdateSprites.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
-</div>
 </div>
 
 
@@ -648,8 +210,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="wecs.panda3d.ai.html" class="btn btn-neutral float-right" title="wecs.panda3d.ai module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="wecs.mechanics.html" class="btn btn-neutral float-left" title="wecs.mechanics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="wecs.mechanics.clock.html" class="btn btn-neutral float-left" title="wecs.mechanics.clock module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

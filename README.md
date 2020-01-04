@@ -26,6 +26,10 @@ These are sets of components meant to be reinstanciated as new entities.
   pip install wecs
 ```
 
+## Documentation
+
+We're currently working on documentation. You can see it here: https://wecs.readthedocs.io/en/sphinx-start/
+
 ## A Hello World
 
 ```

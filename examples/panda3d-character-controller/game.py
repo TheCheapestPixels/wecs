@@ -12,12 +12,12 @@ from wecs.panda3d import aspects
 # Each frame, run these systems. This defines the game itself.
 system_types = [
     panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
+    panda3d.PrepareCameras,  # Attach / detach camera pivots to / from models.
     panda3d.UpdateClocks,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
     # panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     panda3d.Think,  # Input from AIs, the same
     panda3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
-    panda3d.TurningBackToCamera,  # Characters can have a tendency towards walk towards away-from-camera that adjusts their intention.
     panda3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."
     # The following systems adjust the intended movement
     panda3d.Floating,  # Scale by speed for floating
@@ -26,12 +26,13 @@ system_types = [
     panda3d.Bumping,  # Bump into things (and out again).
     panda3d.Falling,  # Fall, or stand on the ground.
     panda3d.Jumping,  # Impart upward impulse.
+    panda3d.TurningBackToCamera,  # Head towards where the camera is pointing.
     panda3d.ExecuteMovement,  # Turn intention into actual movement.
     panda3d.AnimateCharacter,
     panda3d.Animate,
     # We're done with character movement, now update the cameras and console.
-    panda3d.UpdateCameras,
-    panda3d.CollideCamerasWithTerrain,
+    panda3d.ReorientObjectCentricCamera,
+    #panda3d.CollideCamerasWithTerrain,
     cefconsole.UpdateWecsSubconsole,
     cefconsole.WatchEntitiesInSubconsole,
 ]

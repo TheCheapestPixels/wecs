@@ -40,6 +40,11 @@
   gamepad = "right_x,right_y"
   keyboard = "j,l,k,i"
 
+  [camera_movement.zoom]
+  _type = "axis"
+  _device_order = ["keyboard"]
+  keyboard = "u,o"
+
 [clock_control]
 
   [clock_control.time_zoom]

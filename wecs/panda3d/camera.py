@@ -132,34 +132,39 @@ class CollisionZoom:
     body_width: float = 0.5
 
 
-# class CollideCamerasWithTerrain(System):
-#     entity_filters = {
-#         'camera': and_filter([
-#             ThirdPersonCamera,
-#             CollisionZoom,
-#         ])
-#     }
-# 
-#     def init_entity(self, filter_name, entity):
-#         camera = entity[ThirdPersonCamera]
-#         camera_col = entity[CollisionZoom]
-#         w = camera_col.body_width/2
-#         segs = ((0,0,w), (0,0,-w), (w,0,0), (-w,0,0))
-#         for seg in segs:
-#             segment = CollisionSegment(seg,(0,-camera.distance,0))
-#             camera_col.collision.addSolid(segment)
-#         camera_col.collision.set_into_collide_mask(0)
-#         cn = camera.camera.parent.attachNewNode(camera_col.collision)
-#         camera_col.traverser.addCollider(cn, camera_col.queue)
-# 
-#     def update(self, entities_by_filter):
-#         for entity in entities_by_filter["camera"]:
-#             camera = entity[ThirdPersonCamera]
-#             camera_col = entity[CollisionZoom]
-#             camera_col.traverser.traverse(render)
-#             entries = list(camera_col.queue.entries)
-#             if len(entries) > 0:
-#                 hit_pos = entries[0].get_surface_point(camera.camera.parent)
-#                 camera.camera.set_pos(hit_pos)
-#             else:
-#                 camera.camera.set_pos(0, -camera.distance, 0)
+class CollideCamerasWithTerrain(System):
+    entity_filters = {
+        'camera': and_filter([
+            Camera,
+            ObjectCentricCameraMode,
+            CollisionZoom,
+        ])
+    }
+
+    def init_entity(self, filter_name, entity):
+        camera = entity[Camera]
+        center = entity[ObjectCentricCameraMode]
+        zoom = entity[CollisionZoom]
+
+        w = zoom.body_width / 2
+        segs = ((0, 0, w), (0, 0, -w), (w, 0, 0), (-w, 0, 0))
+        for seg in segs:
+            segment = CollisionSegment(seg,(0, -center.distance, 0))
+            zoom.collision.add_solid(segment)
+        zoom.collision.set_into_collide_mask(0)
+        cn = camera.camera.parent.attach_new_node(zoom.collision)
+        zoom.traverser.add_collider(cn, zoom.queue)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['camera']:
+            camera = entity[Camera]
+            center = entity[ObjectCentricCameraMode]
+            zoom = entity[CollisionZoom]
+
+            zoom.traverser.traverse(render)
+            entries = list(zoom.queue.entries)
+            if len(entries) > 0:
+                hit_pos = entries[0].get_surface_point(camera.camera.parent)
+                camera.camera.set_pos(hit_pos)
+            else:
+                camera.camera.set_pos(0, -center.distance, 0)

@@ -113,7 +113,7 @@ third_person = Aspect([
     panda3d.Camera,
     panda3d.ObjectCentricCameraMode,
     panda3d.TurningBackToCameraMovement,
-    #panda3d.CollisionZoom,
+    panda3d.CollisionZoom,
 ])
 
 

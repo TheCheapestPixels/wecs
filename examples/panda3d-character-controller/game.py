@@ -32,7 +32,7 @@ system_types = [
     panda3d.Animate,
     # We're done with character movement, now update the cameras and console.
     panda3d.ReorientObjectCentricCamera,
-    #panda3d.CollideCamerasWithTerrain,
+    panda3d.CollideCamerasWithTerrain,
     cefconsole.UpdateWecsSubconsole,
     cefconsole.WatchEntitiesInSubconsole,
 ]

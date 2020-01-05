@@ -7,7 +7,7 @@ from wecs.core import or_filter
 
 from .input import Input
 from .character import CharacterController, FallingMovement
-from .model import Model
+from .model import Geometry
 from .model import Actor
 from .model import Scene
 from .model import Clock
@@ -26,7 +26,7 @@ class AnimateCharacter(System):
         'animated_character': and_filter([
             Actor,
             Animation,
-            Model,
+            Geometry,
             CharacterController
         ])
     }
@@ -35,7 +35,7 @@ class AnimateCharacter(System):
         for entity in entities_by_filter['animated_character']:
             controller = entity[CharacterController]
             animation = entity[Animation]
-            actor = entity[Model].geometry
+            actor = entity[Geometry].node
 
             if FallingMovement in entity:
                 grounded = entity[FallingMovement].ground_contact
@@ -121,14 +121,14 @@ class Animate(System):
         'animation': and_filter([
             Actor,
             Animation,
-            Model,
+            Geometry,
         ])
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animation']:
             animation = entity[Animation]
-            actor = entity[Model].geometry
+            actor = entity[Geometry].node
             if not animation.playing == animation.to_play:
                 if len(animation.to_play) > 0:
                     actor.enableBlend()

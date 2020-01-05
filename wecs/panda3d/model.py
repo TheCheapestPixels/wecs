@@ -22,8 +22,12 @@ from wecs.mechanics.clock import Clock
 
 @Component()
 class Model:
-    model_name: str = ''
-    geometry: NodePath = None
+    node: NodePath = field(default_factory=lambda:NodePath(""))
+
+
+@Component()
+class Geometry:
+    file: str = ''
     node: NodePath = None
 
 
@@ -109,8 +113,50 @@ class PhysicsBody:
 
 
 # Loading / reparenting / destroying models
+class LoadGeometry(System):
+    entity_filters = {
+        'model': and_filter([
+            Geometry,
+            Model,
+        ]),
+    }
 
-class LoadModels(System):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cardmaker = CardMaker("maker of cards")
+        # set frame so the bottom edge is centered on 0
+        self.cardmaker.set_frame(-0.5,0.5,0,1)
+
+    def init_entity(self, filter_name, entity):
+        geometry = entity[Geometry]
+        model = entity[Model]
+        if model.node.name == "":
+            model.node.name = entity._uid.name
+
+        if geometry.node is None:
+            if Sprite in entity:
+                geometry.node = NodePath(self.cardmaker.generate())
+            elif Actor in entity:
+                geometry.node = direct.actor.Actor.Actor(geometry.file)
+            else:
+                geometry.node = base.loader.load_model(geometry.file)
+        geometry.node.reparent_to(model.node)
+        # Load hook
+        self.post_load_hook(model.node, entity)
+
+    def destroy_entity(self, filter_name, entity, component):
+        # TODO
+        # Destroy node if and only if the Model is removed.
+        if isinstance(component, Geometry):
+            component.node.destroy_node()
+        else:
+            entity.get_component(Geometry).node.destroy_node()
+
+    def post_load_hook(self, node, entity):
+        pass
+
+
+class SetupModels(System):
     entity_filters = {
         'model': and_filter([
             Model,
@@ -121,37 +167,12 @@ class LoadModels(System):
             ]),
         ]),
     }
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cardmaker = CardMaker("maker of cards")
-        # set frame so the bottom edge is centered on 0
-        self.cardmaker.set_frame(-0.5,0.5,0,1)
 
-    # TODO
-    # Only Model is needed for loading, which then could be done
-    # asynchronously.
     def init_entity(self, filter_name, entity):
-        # Load
         model = entity[Model]
-        if model.node is None:
-            model.node = NodePath(model.model_name)
-
-        if model.geometry is None:
-            if Sprite in entity:
-                model.geometry = NodePath(self.cardmaker.generate())
-            elif Actor in entity:
-                model.geometry = direct.actor.Actor.Actor(model.model_name)
-            else:
-                model.geometry = base.loader.load_model(model.model_name)
-
-        model.geometry.reparent_to(model.node)
-
-        # Load hook
-        self.post_load_hook(model.node, entity)
-
         # Attach to PhysicsBody or Scene; former takes precedence.
         if CollidableGeometry in entity:
-            model.node.set_collide_mask(entity[CollidableGeometry].collide_mask)
+            entity[Geometry].node.set_collide_mask(entity[CollidableGeometry].collide_mask)
         if FlattenStrong in entity:
             model.node.flatten_strong()
         if PhysicsBody in entity:
@@ -160,18 +181,6 @@ class LoadModels(System):
             parent = entity[Scene].node
         model.node.reparent_to(parent)
         model.node.set_pos(entity[Position].value)
-
-    # TODO
-    # Destroy node if and only if the Model is removed.
-    def destroy_entity(self, filter_name, entity, component):
-        # Remove from scene
-        if isinstance(component, Model):
-            component.node.destroy_node()
-        else:
-            entity.get_component(Model).node.destroy_node()
-
-    def post_load_hook(self, node, entity):
-        pass
 
 
 class UpdateSprites(System):
@@ -186,9 +195,10 @@ class UpdateSprites(System):
     def init_entity(self, filter_name, entity):
         sprite = entity[Sprite]
         model = entity[Model]
+        geometry = entity[Geometry]
         if sprite.texture is None:
             sprite.texture = loader.load_texture(sprite.image_name)
-            model.geometry.set_texture(sprite.texture)
+            geometry.node.set_texture(sprite.texture)
         # Set min and mag filter.
         texture = sprite.texture
         if sprite.pixelated:
@@ -197,7 +207,7 @@ class UpdateSprites(System):
         else:
             texture.setMagfilter(SamplerState.FT_linear)
             texture.setMinfilter(SamplerState.FT_linear)
-        model.geometry.set_transparency(True)
+        geometry.node.set_transparency(True)
 
     def animate(self, entity):
         sheet = entity[SpriteSheet]
@@ -216,6 +226,7 @@ class UpdateSprites(System):
 
     def set_frame(self, entity):
         model = entity[Model]
+        geometry = entity[Geometry]
         sprite = entity[Sprite]
         sheet = entity[SpriteSheet]
         # get transform for frame
@@ -226,9 +237,9 @@ class UpdateSprites(System):
         u = (sheet.frame%rows)*w
         v = 1-(((sheet.frame//collumns)*h)+h)
         # display it
-        stage = model.geometry.find_all_texture_stages()[0]
-        model.geometry.set_tex_scale(stage, w, h)
-        model.geometry.set_tex_offset(stage, (u, v))
+        stage = geometry.node.find_all_texture_stages()[0]
+        geometry.node.set_tex_scale(stage, w, h)
+        geometry.node.set_tex_offset(stage, (u, v))
         sheet.update = False
 
     def update(self, entities_by_filter):
@@ -320,10 +331,10 @@ class DoPhysics(System):
 class UpdateBillboards(System):
     entity_filters = {
         'sprite': and_filter([
-            Model,
+            Geometry,
             Billboard,
         ])
     }
 
     def init_entity(self, filter_name, entity):
-        entity[Model].geometry.setBillboardPointEye()
+        entity[Geometry].node.setBillboardPointEye()

@@ -11,7 +11,8 @@ from wecs.panda3d import aspects
 
 # Each frame, run these systems. This defines the game itself.
 system_types = [
-    panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
+    panda3d.LoadGeometry, # Loads geometry, sets up actors and sprites.
+    panda3d.SetupModels,  #  Makes them collibable.
     mechanics.DetermineTimestep,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
     panda3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
@@ -44,13 +45,14 @@ game_map = Aspect(
     [mechanics.Clock,
      panda3d.Position,
      panda3d.Model,
+     panda3d.Geometry,
      panda3d.Scene,
      panda3d.CollidableGeometry,
      panda3d.FlattenStrong,
     ],
     overrides={
         mechanics.Clock: dict(clock=panda3d.panda_clock),
-        panda3d.Model: dict(model_name='roadE.bam'),
+        panda3d.Geometry: dict(file='roadE.bam'),
         panda3d.Scene: dict(node=base.render),
     },
 )

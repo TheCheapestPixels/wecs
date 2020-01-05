@@ -16,6 +16,7 @@ from wecs.core import and_filter
 from wecs.core import or_filter
 
 from .model import Model
+from .model import Geometry
 from .model import Scene
 from .model import Clock
 
@@ -309,18 +310,18 @@ class FaceMovement(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            Model,
+            Geometry,
             Clock,
-            TurningGeometryMovement,
+            FacingMovement,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            model = entity[Model]
+            geometry = entity[Geometry]
             controller = entity[CharacterController]
             x,y,z = controller.last_translation_speed
-            model.geometry.look_at(x, y, 0)
+            geometry.node.look_at(x, y, 0)
 
 
 class Inertiing(System):

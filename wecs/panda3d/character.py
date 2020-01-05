@@ -86,6 +86,7 @@ class InertialMovement:
 @Component()
 class TurningBackToCameraMovement:
     view_axis_alignment: float = 1
+    threshold: float = 0.2
 
 
 @Component()
@@ -303,7 +304,7 @@ class TurningBackToCamera(System):
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
 
-            if not (character.move.x == 0 and character.move.y == 0):
+            if character.move.x ** 2 + character.move.y**2 > (turning.threshold * dt) ** 2:
                 # What's the angle to turn?
                 target_angle = camera.pivot.get_h() % 360
                 if target_angle > 180.0:

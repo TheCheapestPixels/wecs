@@ -108,7 +108,10 @@ npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
 npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
 
 
-first_person = Aspect([panda3d.Camera])
+first_person = Aspect([
+    panda3d.Camera,
+    panda3d.MountedCameraMode,
+])
 third_person = Aspect([
     panda3d.Camera,
     panda3d.ObjectCentricCameraMode,

@@ -23,6 +23,11 @@ class Camera:
 
 
 @Component()
+class MountedCameraMode:
+    anchor_name: str = None
+
+
+@Component()
 class ObjectCentricCameraMode:
     height: float = 2.0
     focus_height: float = 1.8
@@ -34,12 +39,25 @@ class ObjectCentricCameraMode:
     max_pitch: float = 45.0
 
 
+@Component()
+class CollisionZoom:
+    collision: CollisionNode = field(default_factory=lambda:CollisionNode("cam collisions"))
+    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser("cam traverser"))
+    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+    body_width: float = 0.5
+
+
 class PrepareCameras(System):
     entity_filters = {
         'camera': and_filter([
             Camera,
             Model,
         ]),
+        'mount': and_filter([
+            Camera,
+            MountedCameraMode,
+        ]),
+
         'center': and_filter([
             Camera,
             ObjectCentricCameraMode,
@@ -53,6 +71,12 @@ class PrepareCameras(System):
             model = entity[Model]
             camera.pivot.reparent_to(model.node)
             camera.camera.reparent_to(camera.pivot)
+        if filter_name == 'mount':
+            camera = entity[Camera]
+            camera.pivot.set_pos(0, 0, 0)
+            camera.pivot.set_hpr(0, 0, 0)
+            camera.camera.set_pos(0, 0, 0)
+            camera.camera.set_hpr(0, 0, 0)
 
     def destroy_entity(self, filter_name, entity, components_by_type):
         if Camera in components_by_type:
@@ -68,6 +92,18 @@ class PrepareCameras(System):
             center.heading = 0
             center.pitch = 0
             center.zoom = 0
+
+
+class ResetMountedCamera(System):
+    entity_filters = {
+        'camera': and_filter([
+            Camera,
+            MountedCameraMode,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        pass
 
 
 class ReorientObjectCentricCamera(System):
@@ -117,19 +153,6 @@ class ReorientObjectCentricCamera(System):
         center.heading += -context['rotation'].x
         center.pitch += context['rotation'].y
         center.distance *= 1 + context['zoom'] * 0.01  # FIXME: Respect actual time!
-
-
-@Component()
-class MountedCameraMode:
-    anchor_name: str = None
-
-
-@Component()
-class CollisionZoom:
-    collision: CollisionNode = field(default_factory=lambda:CollisionNode("cam collisions"))
-    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser("cam traverser"))
-    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
-    body_width: float = 0.5
 
 
 class CollideCamerasWithTerrain(System):

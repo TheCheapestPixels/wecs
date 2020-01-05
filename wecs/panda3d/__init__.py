@@ -1,4 +1,5 @@
 from .core import ECSShowBase
+from .clock import *
 from .model import *
 from .input import *
 from .camera import *

@@ -95,14 +95,29 @@ spectator = Aspect([character, panda3d.FloatingMovement, panda3d.BumpingMovement
 )
 
 
-pc_mind = Aspect([panda3d.Input])
+pc_mind = Aspect([panda3d.Input],
+                 overrides={
+                     panda3d.Input: dict(contexts=[
+                         'character_movement',
+                         'camera_movement',
+                         'clock_control',
+                     ]),
+                 },
+)
 npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
 npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
 
 
-first_person = Aspect([panda3d.FirstPersonCamera])
-third_person = Aspect([panda3d.TurntableCamera, panda3d.TurningBackToCameraMovement,
-                       panda3d.CollisionZoom, panda3d.ThirdPersonCamera])
+first_person = Aspect([
+    panda3d.Camera,
+    panda3d.MountedCameraMode,
+])
+third_person = Aspect([
+    panda3d.Camera,
+    panda3d.ObjectCentricCameraMode,
+    panda3d.TurningBackToCameraMovement,
+    panda3d.CollisionZoom,
+])
 
 
 player_character = Aspect([avatar, pc_mind, third_person])

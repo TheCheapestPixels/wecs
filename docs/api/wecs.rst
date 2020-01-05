@@ -11,6 +11,7 @@ wecs package
    wecs.mechanics
    wecs.panda3d
 
+
 .. toctree::
 
    wecs.aspects

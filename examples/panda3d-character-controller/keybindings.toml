@@ -29,7 +29,7 @@
   [character_movement.sprint]
   _type = "button"
   _device_order = ["gamepad", "keyboard"]
-  gamepad = "face_y"
+  gamepad = "ltrigger"
   keyboard = "e"
 
 [camera_movement]
@@ -39,6 +39,11 @@
   _device_order = ["gamepad", "keyboard"]
   gamepad = "right_x,right_y"
   keyboard = "j,l,k,i"
+
+  [camera_movement.zoom]
+  _type = "axis"
+  _device_order = ["keyboard"]
+  keyboard = "u,o"
 
 [clock_control]
 

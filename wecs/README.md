@@ -565,6 +565,7 @@ Two approaches offer themselves:
       the camera into the wall, allowing to see through it.
     * If the angle camera-wall and camera-character is small, the wall
       gets culled, probably due to the near plane being in the wall.
+    * Changes in camera distance after startup do not get respected.
 * Tests
   * Tests for `get_component_dependencies()` / `get_system_component_dependencies()`
   * Is there proper component cleanup when an entity is removed?

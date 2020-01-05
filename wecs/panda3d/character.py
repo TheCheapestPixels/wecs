@@ -14,14 +14,15 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 from wecs.core import or_filter
+from wecs.panda3d.input import Input
 
 from .model import Model
 from .model import Geometry
 from .model import Scene
 from .model import Clock
 
-from .camera import ThirdPersonCamera
-from .camera import TurntableCamera
+from .camera import Camera
+from .camera import ObjectCentricCameraMode
 
 
 @Component()
@@ -86,6 +87,7 @@ class InertialMovement:
 @Component()
 class TurningBackToCameraMovement:
     view_axis_alignment: float = 1
+    threshold: float = 0.2
 
 
 @Component()
@@ -133,9 +135,35 @@ class UpdateCharacter(System):
             Clock,
             Model,
         ]),
+        'input': and_filter([
+            CharacterController,
+            Input,
+        ]),
     }
+    input_context = 'character_movement'
 
     def update(self, entities_by_filter):
+        for entity in entities_by_filter['input']:
+            input = entity[Input]
+            if self.input_context in input.contexts:
+                context = base.device_listener.read_context(self.input_context)
+                character = entity[CharacterController]
+
+                character.move.x = context['direction'].x
+                character.move.y = context['direction'].y
+                character.heading = -context['rotation'].x
+                character.pitch = context['rotation'].y
+
+                # Special movement modes.
+                # By default, you run ("sprint"), unless you press e, in
+                # which case you walk. You can crouch by pressing q; this
+                # overrides walking and running. Jump by pressing space.
+                # This logic is implemented by the Walking system. Here,
+                # only intention is signalled.
+                character.jumps = context['jump']
+                character.sprints = context['sprint']
+                character.crouches = context['crouch']
+
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
             model = entity[Model]
@@ -259,8 +287,8 @@ class TurningBackToCamera(System):
             TurningBackToCameraMovement,
             CharacterController,
             Model,
-            ThirdPersonCamera,
-            TurntableCamera,
+            Camera,
+            ObjectCentricCameraMode,
             Clock,
             or_filter([
                 WalkingMovement,
@@ -273,37 +301,36 @@ class TurningBackToCamera(System):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
             model = entity[Model]
-            camera = entity[ThirdPersonCamera]
-            turntable = entity[TurntableCamera]
+            camera = entity[Camera]
+            center = entity[ObjectCentricCameraMode]
             turning = entity[TurningBackToCameraMovement]
             if WalkingMovement in entity:
                 movement = entity[WalkingMovement]
             else:
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
-            if not (character.move.x == 0 and character.move.y == 0):
+
+            if character.move.x ** 2 + character.move.y**2 > (turning.threshold * dt) ** 2:
                 # What's the angle to turn?
-                camera_heading = turntable.pivot.get_h() % 360
-                if camera_heading > 180.0:
-                    camera_heading = camera_heading - 360.0
-                # How fast do we have to turn to achieve that?
-                rotation_angle = movement.turning_speed * dt
-                turning_speed = camera_heading / rotation_angle
-                if abs(turning_speed) > 1.0:
-                    turning_speed /= abs(turning_speed)
-                # And how much does that really influence the behavior?
-                turning_speed *= turning.view_axis_alignment
-                old_heading = character.heading
-                character.heading += turning_speed
-                character.heading = max(min(character.heading, 1), -1)
+                target_angle = camera.pivot.get_h() % 360
+                if target_angle > 180.0:
+                    target_angle = target_angle - 360.0
+                # How far can we turn this frame? Clamp to that.
+                max_angle = movement.turning_speed * dt
+                if abs(target_angle) > max_angle:
+                    target_angle *= max_angle / abs(target_angle)
+                # How much of that do we *want* to turn?
+                target_angle *= turning.view_axis_alignment
+
+                # So let's turn, and clamp, in case we're already turning.
+                old_rotation = character.rotation.x
+                character.rotation.x += target_angle
+                character.rotation.x = min(character.rotation.x, movement.turning_speed * dt)
+                character.rotation.x = max(character.rotation.x, -movement.turning_speed * dt)
                 # Since the camera rotates with the character, we need
-                # to counteract that as well. So what angle did we
-                # correct turning by?
-                delta_heading = character.heading - old_heading
-                delta_heading_angle = delta_heading * movement.turning_speed * dt
-                # We don't clamp the result. Too fast cameras are not a
-                # problem, and this hopefully feels more consistent.
-                turntable.heading -= delta_heading_angle / turntable.turning_speed / dt
+                # to counteract that as well.
+                delta_rotation = character.rotation.x - old_rotation
+                camera.pivot.set_h(camera.pivot.get_h() - delta_rotation)
 
 
 class FaceMovement(System):
@@ -411,13 +438,13 @@ class Bumping(CollisionSystem):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             scene = entity[Scene]
-            controller = entity[CharacterController]
+            character = entity[CharacterController]
             movement = entity[BumpingMovement]
             bumper = movement.solids['bumper']
             node = bumper['node']
-            node.set_pos(controller.translation)
+            node.set_pos(character.translation)
             movement.traverser.traverse(scene.node)
-            controller.translation = node.get_pos()
+            character.translation = node.get_pos()
 
 
 class Falling(CollisionSystem):
@@ -533,23 +560,23 @@ class ExecuteMovement(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             model = entity[Model]
-            controller = entity[CharacterController]
+            character = entity[CharacterController]
             dt = entity[Clock].game_time
 
             # Translation: Simple self-relative movement for now.
-            model.node.set_pos(model.node, controller.translation)
-            controller.last_translation_speed = controller.translation / dt
+            model.node.set_pos(model.node, character.translation)
+            character.last_translation_speed = character.translation / dt
 
             # Rotation
-            if controller.clamp_pitch:
+            if character.clamp_pitch:
                 # Adjust intended pitch until it won't move you over a pole.
-                preclamp_pitch = model.node.get_p() + controller.rotation.y
+                preclamp_pitch = model.node.get_p() + character.rotation.y
                 clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
-                controller.rotation.y += clamped_pitch - preclamp_pitch
+                character.rotation.y += clamped_pitch - preclamp_pitch
 
 
-            model.node.set_hpr(model.node.get_hpr() + controller.rotation)
-            controller.last_rotation_speed = controller.rotation / dt
+            model.node.set_hpr(model.node.get_hpr() + character.rotation)
+            character.last_rotation_speed = character.rotation / dt
 
 
 ### Stamina

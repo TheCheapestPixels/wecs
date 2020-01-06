@@ -15,7 +15,7 @@
   keyboard = "arrow_left,arrow_right,arrow_down,arrow_up"
 
   [character_movement.jump]
-  _type = "button"
+  _type = "trigger"
   _device_order = ["gamepad", "keyboard"]
   gamepad = "face_x"
   keyboard = "space"
@@ -38,7 +38,7 @@
   _type = "axis2d"
   _device_order = ["gamepad", "keyboard"]
   gamepad = "right_x,right_y"
-  keyboard = "j,l,k,i"
+  keyboard = "mouse_x_delta,mouse_y_delta"
 
   [camera_movement.zoom]
   _type = "axis"

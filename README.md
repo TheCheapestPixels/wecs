@@ -9,17 +9,20 @@ time between imagining a game and getting to the point where you actually work
 on your specific game mechanics is a matter of a few minutes of setting up
 boilerplate code. In particular, a module for Panda3D is provided.
 
-## In WECS.
+## In WECS
 
-* A 'World' holds 'Entities' and 'Systems'.
-* 'Entities' are made up of 'Components'.
-* 'Components' contain an entity's data/variables.
-* 'Systems' then 'filter' all the world's entities by their components, iterates over them and applies logic to component data.
+* A `World` holds `Entities` and `Systems`.
+* `Entities` are made up of `Components`.
+* `Components` contain an entity's data/variables.
+* `Systems` then `filter` all the world's entities by their components, iterates over them and applies logic to component data.
 
-This keeps data and logic seperated, modular, readable and reusable.
+This keeps data and logic separated, modular, readable and reusable.
 
-Optionally there are 'Aspects',
-These are sets of components meant to be reinstanciated as new entities.
+Optionally there are `Aspects`,
+These are sets of components meant to be re-instanced as new entities.
+
+One doesn't use inheritance to build a tree of classes, each more specialized then the last, but rather make combinations of small classes.
+This also allows an entity to change its nature easily by adding, changing or removing components at runtime.
 
 ## Install
 ```
@@ -83,3 +86,5 @@ There are some game mechanics for panda3d that come out of the box:
 * Animation:
     * Blended animations
     * Basic character controller animation
+
+And a bunch more!

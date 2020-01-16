@@ -10,7 +10,9 @@ Welcome to WECS's documentation!
    :maxdepth: 8
    :caption: Contents:
 
+   manual/manual
    api/wecs
+
 
 Indices and tables
 ==================

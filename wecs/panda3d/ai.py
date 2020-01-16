@@ -12,6 +12,17 @@ from .character import CharacterController
 
 @Component()
 class ConstantCharacterAI:
+    '''
+    Keeps moving in the same direction.
+
+    :param Vec3 move: (0, 0, 0) - relative directional movement speed
+    :param float heading: 0.0 - heading
+    :param float pitch: 0.0 - pitch
+    :param bool sprints: False - is sprinting
+    :param bool crouches: False - is crouching
+    :param bool jumps: False - starts jumping
+    '''
+
     move: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     heading: float = 0.0
     pitch: float = 0.0
@@ -22,12 +33,23 @@ class ConstantCharacterAI:
 
 @Component()
 class BrownianWalkerAI:
+    '''
+    Moves randomly.
+
+    :param Vec3 move: (0, 0, 0) - relative directional movement speed
+    :param float heading: 0.0 - heading
+    :param float heading_jitter: 0.0 - amount heading is randomized each update
+    '''
     move: Vec3 = field(default_factory=lambda:Vec3(0, 1, 0))
     heading: float = 1.0
     heading_jitter = 0.1
 
 
 class Think(System):
+    '''
+    A System updating AI components.
+
+    '''
     entity_filters = {
         'constant': and_filter([
             CharacterController,

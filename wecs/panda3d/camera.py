@@ -150,8 +150,9 @@ class ReorientObjectCentricCamera(System):
     def process_input(self, entity, context):
         camera = entity[Camera]
         center = entity[ObjectCentricCameraMode]
-        center.heading += -context['rotation'].x
-        center.pitch += context['rotation'].y
+        if context['rotation'] is not None:
+            center.heading += -context['rotation'].x
+            center.pitch += context['rotation'].y
         center.distance *= 1 + context['zoom'] * 0.01  # FIXME: Respect actual time!
 
 

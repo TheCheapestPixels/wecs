@@ -8,6 +8,11 @@ import dataclasses
 # thanks to that dangling reference, the now invalid UID is still referenced.
 # Still, this smells.
 class UID:
+    '''
+    Object for referencing a
+    :class:`wecs.core.Entity`
+
+    '''
     pass
 
 
@@ -15,191 +20,14 @@ class NoSuchUID(Exception):
     pass
 
 
-class Entity:
-    def __init__(self, world, name=None):
-        self.world = world
-        self.components = set()
-        self._uid = UID()
-        self._new_components = {} # type: instance
-        self._dropped_components = {} # types
-
-        if name is None:
-            name = str(id(self))
-        self._uid.name = name
-
-    def add_component(self, component):
-        exists = any([isinstance(c, type(component))
-                      for c in self.components])
-        is_being_deleted = type(component) in self._dropped_components
-        is_being_added = type(component) in self._new_components
-        if exists and (not is_being_added or is_being_added):
-            raise KeyError("Component type already on entity.")
-        if is_being_added:
-            raise KeyError("Component type is already being added to entity.")
-
-        if not self._new_components and not self._dropped_components:
-            # First component update in current system run
-            self.world.register_entity_for_components_update(self)
-        self._new_components[type(component)] = component
-
-    def get_components(self):
-        all_components = set()
-        all_components.update(self.components)
-        all_components.update(set(self._new_components.values()))
-        return  all_components
-
-    def get_component(self, component_type):
-        all_components = set()
-        all_components.update(self.components)
-        all_components.update(set(self._new_components.values()))
-        component = list(
-            filter(
-                lambda c: isinstance(c, component_type),
-                all_components,
-            )
-        )
-        if not component:
-            raise KeyError
-        assert len(component) == 1
-        return component[0]
-
-    def has_component(self, component_type):
-        return any([type(c) is component_type for c in self.get_components()])
-
-
-    def remove_component(self, component_type):
-        if not self._new_components and not self._dropped_components:
-            # First component update in current system run
-            self.world.register_entity_for_components_update(self)
-        self._dropped_components[component_type] = self.get_component(component_type)
-
-    def update_components(self):
-        for component_type, component in self._dropped_components.items():
-            self.components.remove(component)
-        for component_type, component in self._new_components.items():
-            self.components.add(component)
-
-    def get_dropped_components_by_type(self):
-        return self._dropped_components
-
-    def drop_component_updates(self):
-        self._dropped_components = {}
-        self._new_components = {}
-
-    def destroy(self):
-        self.world.remove_entity(self)
-        # FIXME: Needs to be refactored when components are created
-        # indirectly, outside update()
-        for component in set(self.get_components()):
-            self.remove_component()
-
-
-    def __setitem__(self, component_type, component):
-        assert isinstance(component, component_type)
-        return self.add_component(component)
-
-
-    def __getitem__(self, component_type):
-        return self.get_component(component_type)
-
-
-    def __delitem__(self, component_type):
-        return self.remove_component(component_type)
-
-
-    def __contains__(self, component_type):
-        return self.has_component(component_type)
-
-
-    def __repr__(self):
-        names = [repr(c) for c in self.components]
-        return "<Entity ({})>".format(', '.join(names))
-
-
-class Component():
-    def __init__(self, unique=True):
-        self.unique = unique
-
-    def __call__(self, cls):
-        cls = dataclasses.dataclass(cls, eq=False)
-        return cls
-
-
-class Filter:
-    def get_component_dependencies(self):
-        dependencies = set()
-        for clause in self.types_and_filters:
-            if isinstance(clause, Filter):
-                dependencies.update(clause.get_component_dependencies())
-            else:
-                dependencies.add(clause)
-        return dependencies
-
-
-class AndFilter(Filter):
-    def __init__(self, types_and_filters):
-        self.types_and_filters = types_and_filters
-
-    def __call__(self, entity):
-        for clause in self.types_and_filters:
-            if isinstance(clause, Filter):
-                if not clause(entity):
-                    return False
-            elif not entity.has_component(clause):
-                return False
-        return True
-
-
-def and_filter(types_and_filters):
-    return AndFilter(types_and_filters)
-
-
-class OrFilter(Filter):
-    def __init__(self, types_and_filters):
-        self.types_and_filters = types_and_filters
-
-    def __call__(self, entity):
-        for clause in self.types_and_filters:
-            if isinstance(clause, Filter):
-                if clause(entity):
-                    return True
-            elif entity.has_component(clause):
-                return True
-        return False
-
-
-def or_filter(types_and_filters):
-    return OrFilter(types_and_filters)
-
-
-class System:
-    def __init__(self, throw_exc=False):
-        self.throw_exc = throw_exc
-        self.filter_names = {
-            filter_func: filter_name
-            for filter_name, filter_func in self.entity_filters.items()
-        }
-
-    def init_entity(self, filter_name, entity):
-        pass
-
-    def destroy_entity(self, filter_name, entity, components_by_type):
-        pass
-
-    def update(self, entities_by_filter):
-        pass
-
-    def get_component_dependencies(self):
-        dependencies = set()
-        for filter_func in self.entity_filters.values():
-            dependencies.update(filter_func.get_component_dependencies())
-        return dependencies
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-
 class World:
+    '''
+    Has a set of
+    :class:`wecs.core.Entity`
+
+    and a set of
+    :class:`wecs.core.System`
+    '''
     def __init__(self):
         # TODO: One of these (probably self.entities) is redundant,
         # and should be phased out.
@@ -211,6 +39,15 @@ class World:
         self.entities_that_update_components= [] # deferred operation
 
     def create_entity(self, *args, name=None):
+        '''
+        Parameters
+        -----------
+        *args
+            Initial Components.
+        name
+            Entity name string.
+        '''
+
         entity = Entity(self, name=name)
         self.entities.add(entity)
         self.entities_by_uid[entity._uid] = entity
@@ -220,6 +57,15 @@ class World:
         return entity
 
     def get_entity(self, uid):
+        '''
+        Parameters
+        -----------
+        uid
+            The
+            :core:'wecs.core.UID' of entity to return
+
+        :returns: 'wecs.core.Entity'
+        '''
         try:
             entity = self.entities_by_uid[uid]
         except KeyError:
@@ -249,6 +95,16 @@ class World:
         self.entities.remove(entity)
 
     def add_system(self, system, sort, add_duplicates=False):
+        '''
+        Parameters
+        -----------
+        system
+            System to add
+        sort
+            Order the system should run
+
+        :returns: Entity
+        '''
         if self.has_system(type(system)) and not add_duplicates:
             raise KeyError("System of that type already on world.")
         if sort in self.systems:
@@ -351,3 +207,224 @@ class World:
 
     def __delitem__(self, uid):
         return self.remove_entity(component_type)
+
+
+class Entity:
+    '''
+    Everything in a
+    :class:`wecs.core.World` is an Entity. They have a set of
+    :class:`wecs.core.Component` and are, with regard to how they are processed,
+    type- and stateless.
+
+    They are usually created with :func:`wecs.core.World.create_entity`
+    '''
+
+    def __init__(self, world, name=None):
+        self.world = world
+        self.components = set()
+        self._uid = UID()
+        self._new_components = {} # type: instance
+        self._dropped_components = {} # types
+
+        if name is None:
+            name = str(id(self))
+        self._uid.name = name
+
+    def add_component(self, component):
+        exists = any([isinstance(c, type(component))
+                      for c in self.components])
+        is_being_deleted = type(component) in self._dropped_components
+        is_being_added = type(component) in self._new_components
+        if exists and (not is_being_added or is_being_added):
+            raise KeyError("Component type already on entity.")
+        if is_being_added:
+            raise KeyError("Component type is already being added to entity.")
+
+        if not self._new_components and not self._dropped_components:
+            # First component update in current system run
+            self.world.register_entity_for_components_update(self)
+        self._new_components[type(component)] = component
+
+    def get_components(self):
+        all_components = set()
+        all_components.update(self.components)
+        all_components.update(set(self._new_components.values()))
+        return  all_components
+
+    def get_component(self, component_type):
+        all_components = set()
+        all_components.update(self.components)
+        all_components.update(set(self._new_components.values()))
+        component = list(
+            filter(
+                lambda c: isinstance(c, component_type),
+                all_components,
+            )
+        )
+        if not component:
+            raise KeyError
+        assert len(component) == 1
+        return component[0]
+
+    def has_component(self, component_type):
+        return any([type(c) is component_type for c in self.get_components()])
+
+
+    def remove_component(self, component_type):
+        if not self._new_components and not self._dropped_components:
+            # First component update in current system run
+            self.world.register_entity_for_components_update(self)
+        self._dropped_components[component_type] = self.get_component(component_type)
+
+    def update_components(self):
+        for component_type, component in self._dropped_components.items():
+            self.components.remove(component)
+        for component_type, component in self._new_components.items():
+            self.components.add(component)
+
+    def get_dropped_components_by_type(self):
+        return self._dropped_components
+
+    def drop_component_updates(self):
+        self._dropped_components = {}
+        self._new_components = {}
+
+    def destroy(self):
+        self.world.remove_entity(self)
+        # FIXME: Needs to be refactored when components are created
+        # indirectly, outside update()
+        for component in set(self.get_components()):
+            self.remove_component()
+
+
+    def __setitem__(self, component_type, component):
+        assert isinstance(component, component_type)
+        return self.add_component(component)
+
+
+    def __getitem__(self, component_type):
+        return self.get_component(component_type)
+
+
+    def __delitem__(self, component_type):
+        return self.remove_component(component_type)
+
+
+    def __contains__(self, component_type):
+        return self.has_component(component_type)
+
+
+    def __repr__(self):
+        names = [repr(c) for c in self.components]
+        return "<Entity ({})>".format(', '.join(names))
+
+
+class Component():
+    '''
+    New components should inherrit from this class like so::
+
+        @Component()
+        class SomeNewComponent:
+            some_variable: int = 0
+
+    '''
+    def __init__(self, unique=True):
+        self.unique = unique
+
+    def __call__(self, cls):
+        cls = dataclasses.dataclass(cls, eq=False)
+        return cls
+
+
+class System:
+    '''
+
+    Example of a system::
+
+        class Print(System):
+            # Filter all entities in the world described as Printer
+            entity_filters = {
+                'printers' : and_filter([Printer])
+            }
+
+            def update(self, entities_by_filter):
+                # Iterate over all filtered entities
+                for entity in entities_by_filter['printers']:
+                    # Print their message
+                    print(entity[Printer].message)
+
+    Then add it with :func:`wecs.core.World.add_system`
+
+    '''
+
+    def __init__(self, throw_exc=False):
+        self.throw_exc = throw_exc
+        self.filter_names = {
+            filter_func: filter_name
+            for filter_name, filter_func in self.entity_filters.items()
+        }
+
+    def init_entity(self, filter_name, entity):
+        pass
+
+    def destroy_entity(self, filter_name, entity, components_by_type):
+        pass
+
+    def update(self, entities_by_filter):
+        pass
+
+    def get_component_dependencies(self):
+        dependencies = set()
+        for filter_func in self.entity_filters.values():
+            dependencies.update(filter_func.get_component_dependencies())
+        return dependencies
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+
+class Filter:
+    def get_component_dependencies(self):
+        dependencies = set()
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
+                dependencies.update(clause.get_component_dependencies())
+            else:
+                dependencies.add(clause)
+        return dependencies
+
+
+class AndFilter(Filter):
+    def __init__(self, types_and_filters):
+        self.types_and_filters = types_and_filters
+
+    def __call__(self, entity):
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
+                if not clause(entity):
+                    return False
+            elif not entity.has_component(clause):
+                return False
+        return True
+
+
+def and_filter(types_and_filters):
+    return AndFilter(types_and_filters)
+
+
+class OrFilter(Filter):
+    def __init__(self, types_and_filters):
+        self.types_and_filters = types_and_filters
+
+    def __call__(self, entity):
+        for clause in self.types_and_filters:
+            if isinstance(clause, Filter):
+                if clause(entity):
+                    return True
+            elif entity.has_component(clause):
+                return True
+        return False
+
+
+def or_filter(types_and_filters):
+    return OrFilter(types_and_filters)

@@ -33,13 +33,14 @@ def entity(ecs_base):
         Geometry(),
         Sprite(),
     )
-    base.ecs_world.update()
     return entity
 
 
 def test_manage_geometry(entity):
+    base.ecs_world.update()
     assert entity[Geometry].node.get_parent() == entity[Model].node
     assert entity[Sprite].node.get_parent() == entity[Geometry].node
     entity[Geometry].nodes.remove(entity[Sprite].node)
     base.ecs_world.update()
     assert entity[Sprite].node.get_parent() != entity[Geometry].node
+    assert entity[Sprite].node.has_parent() == False

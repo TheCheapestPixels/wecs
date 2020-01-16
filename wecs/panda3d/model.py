@@ -27,7 +27,7 @@ class Model:
 
 @Component()
 class Geometry:
-    file: str = ""
+    file: str = ''
     node: NodePath = None
     nodes: set = field(default_factory=set)
     connected_nodes: set = field(default_factory=set)
@@ -126,18 +126,18 @@ class ManageGeometry(System):
     }
 
     def init_entity(self, filter_name, entity):
-        geometry = entity[Geometry]
-        if geometry.file:
-            geometry.node = base.loader.load_model(geometry.file)
-        else:
-            geometry.node = NodePath(entity._uid.name + "_geometry")
+        if filter_name == 'model':
+            geometry = entity[Geometry]
+            if geometry.file:
+                geometry.node = base.loader.load_model(geometry.file)
+            else:
+                geometry.node = NodePath(entity._uid.name + "_geometry")
 
-        if Actor in entity: # TODO: should be handled by animation system?
-            actor = entity[Actor]
-            actor.node = direct.actor.Actor.Actor(actor.file)
-            geometry.nodes.add(actor.node)
-
-        geometry.node.reparent_to(entity[Model].node)
+            if Actor in entity: # TODO: should be handled by animation system?
+                actor = entity[Actor]
+                actor.node = direct.actor.Actor.Actor(actor.file)
+                geometry.nodes.add(actor.node)
+            geometry.node.reparent_to(entity[Model].node)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter["model"]:
@@ -173,22 +173,23 @@ class SetupModels(System):
     }
 
     def init_entity(self, filter_name, entity):
-        model = entity[Model]
-        if model.node.name == "":
-            model.node.name = entity._uid.name
-        # Attach to PhysicsBody or Scene; former takes precedence.
-        if CollidableGeometry in entity:
-            entity[Geometry].node.set_collide_mask(entity[CollidableGeometry].collide_mask)
-        if FlattenStrong in entity:
-            model.node.flatten_strong()
-        if PhysicsBody in entity:
-            parent = entity[PhysicsBody].node
-        else:
-            parent = entity[Scene].node
-        model.node.reparent_to(parent)
-        model.node.set_pos(entity[Position].value)
-        # Load hook
-        self.post_load_hook(model.node, entity)
+        if filter_name == 'model':
+            model = entity[Model]
+            if model.node.name == "":
+                model.node.name = entity._uid.name
+            # Attach to PhysicsBody or Scene; former takes precedence.
+            if CollidableGeometry in entity:
+                entity[Geometry].node.set_collide_mask(entity[CollidableGeometry].collide_mask)
+            if FlattenStrong in entity:
+                model.node.flatten_strong()
+            if PhysicsBody in entity:
+                parent = entity[PhysicsBody].node
+            else:
+                parent = entity[Scene].node
+            model.node.reparent_to(parent)
+            model.node.set_pos(entity[Position].value)
+            # Load hook
+            self.post_load_hook(model.node, entity)
 
     def post_load_hook(self, node, entity):
         pass
@@ -205,28 +206,29 @@ class UpdateSprites(System):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cardmaker = CardMaker("maker of cards")
+        self.cardmaker = CardMaker("sprite")
         # set frame so the bottom edge is centered on 0
         self.cardmaker.set_frame(-0.5,0.5,0,1)
 
     def init_entity(self, filter_name, entity):
-        sprite = entity[Sprite]
-        geometry = entity[Geometry]
-        sprite.node = NodePath(self.cardmaker.generate())
-        if sprite.texture is None and sprite.image_name:
-            sprite.texture = loader.load_texture(sprite.image_name)
-        if sprite.texture:
-            sprite.node.set_texture(sprite.texture)
-            # Set min and mag filter.
-            texture = sprite.texture
-            if sprite.pixelated:
-                texture.setMagfilter(SamplerState.FT_nearest)
-                texture.setMinfilter(SamplerState.FT_nearest)
-            else:
-                texture.setMagfilter(SamplerState.FT_linear)
-                texture.setMinfilter(SamplerState.FT_linear)
-            sprite.node.set_transparency(True)
-        geometry.nodes.add(sprite.node)
+        if filter_name == 'sprite':
+            sprite = entity[Sprite]
+            geometry = entity[Geometry]
+            sprite.node = NodePath(self.cardmaker.generate())
+            if sprite.texture is None and sprite.image_name:
+                sprite.texture = loader.load_texture(sprite.image_name)
+            if sprite.texture:
+                sprite.node.set_texture(sprite.texture)
+                # Set min and mag filter.
+                texture = sprite.texture
+                if sprite.pixelated:
+                    texture.setMagfilter(SamplerState.FT_nearest)
+                    texture.setMinfilter(SamplerState.FT_nearest)
+                else:
+                    texture.setMagfilter(SamplerState.FT_linear)
+                    texture.setMinfilter(SamplerState.FT_linear)
+                sprite.node.set_transparency(True)
+            geometry.nodes.add(sprite.node)
 
     def animate(self, entity):
         sheet = entity[SpriteSheet]
@@ -354,4 +356,5 @@ class UpdateBillboards(System):
     }
 
     def init_entity(self, filter_name, entity):
-        entity[Geometry].node.setBillboardPointEye()
+        if filter_name == 'sprite':
+            entity[Geometry].node.setBillboardPointEye()

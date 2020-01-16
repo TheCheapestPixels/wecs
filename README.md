@@ -31,7 +31,7 @@ This also allows an entity to change its nature easily by adding, changing or re
 
 ## Documentation
 
-We're currently working on documentation. You can see it here: https://wecs.readthedocs.io/en/sphinx-start/
+We're currently working on documentation. You can see it here: https://wecs.readthedocs.io/en/latest/
 
 ## A Hello World
 

@@ -5,6 +5,15 @@ Specs
    :maxdepth: 4
 
 
+Warning
+~~~~~~~
+
+This document is part manual, part discussion of design choices that
+need to be made when writing an ECS framework and the justifications
+for the choices made in WECS, and part a TODO list. For an initial
+overview, please refer to WECS' README.md instead.
+
+
 What is an ECS?
 ~~~~~~~~~~~~~~~
 
@@ -22,6 +31,7 @@ per frame, in a predetermined order.”
 To distinguish state objects and logic, state objects are called
 ``Components``, while logic objects are called ``Systems``. ``Entities``
 are collections of ``Components``.
+
 
 WECS’ ECS definition
 ~~~~~~~~~~~~~~~~~~~~
@@ -85,6 +95,7 @@ Now when running the main loop, each ``System`` will now fetch all
 more of its filters, then update them. This may involve updating
 ``Component``\ s that aren’t on any of the ``System``\ ’s filters, and
 which may even be on any ``Entity`` in the ``World``.
+
 
 API
 ~~~
@@ -156,6 +167,7 @@ have to be given to ``entity.add_component(foo_component)``, since its
 type is known. It’s needed here merely because
 ``entity[] = foo_component`` isn’t syntactically valid Python.
 
+
 Deferred ``Component`` addition / removal
 -----------------------------------------
 
@@ -185,11 +197,13 @@ Splitting systems into “This can be done”, “This is being done”, and
 “Now we’re cleaning up weird states that could have come about” seems to
 be a workable pattern.
 
+
 Undocumented features
 ---------------------
 
 -  Aspects
 -  References to entities in component values
+
 
 Design questions and arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -258,6 +272,7 @@ have to be upfront about what Component types they process, leading to a
 clear and programmatically extractable understanding of System-Component
 dependencies.
 
+
 Components referencing each other
 ---------------------------------
 
@@ -290,6 +305,7 @@ Bob has the property of being in a room:
 
 
 And at “…” the problem starts.
+
 
 Observer pattern
 ~~~~~~~~~~~~~~~~
@@ -326,6 +342,7 @@ have broken the fundamental paradigm of ECS:
 -  System-System interaction should happen by manipulating data
 
 So, what can we do instead?
+
 
 Unique values
 ~~~~~~~~~~~~~
@@ -379,6 +396,7 @@ does that transition happen during a frame? On the other hand, since
 situation should deal predictably and fail-safe (mark and proceed with
 other entities) with it, this should be of preventable impact.
 
+
 Implementational detail: Size of GUIDs (TL;DR: 64 bit is the right answer)
 --------------------------------------------------------------------------
 
@@ -394,6 +412,7 @@ Entities in the game world. This is just above 2**32 numbers (4.29
 billion). 64 bit offers over 18 quintillion IDs, which should be enough
 for even the largest player base with a staggering amount of per-player
 content of the game world.
+
 
 Implementational detail: Systems threading
 ------------------------------------------
@@ -430,6 +449,7 @@ within Panda3D, the task manager can solve this. Long-running systems
 into separate task chains to run asynchronous, while “every frame” tasks
 are put into the default task chain.
 
+
 Note: Component Inheritance Considered Dangerous
 ------------------------------------------------
 
@@ -454,6 +474,7 @@ you’re doing hierarchical inheritance on the component types, you incur
 the penalties outlined above. If you’re doing compositional inheritance,
 you’re just replicating what ECS does anyway when you add a new
 component type to an entity.
+
 
 Composing templates for generic entities
 ----------------------------------------
@@ -568,11 +589,13 @@ possibly override, an aspect’s overrides.
    -  Does this actually reduce complexity?
    -  What kind of type-theoretical implications does it have?
 
+
 Sources
 -------
 
 -  http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/
 -  https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf
+
 
 TODO
 ====
@@ -604,6 +627,7 @@ Hot Topics
 
 -  Character animation
 
+
 Lukewarm
 ~~~~~~~~
 
@@ -623,6 +647,7 @@ Lukewarm
    -  A waste bin that destroys entities / components dragged onto it
    -  Adding / removing aspects
    -  There should also be a column set for system membership
+
 
 Icebox
 ------

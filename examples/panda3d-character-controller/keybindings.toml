@@ -4,26 +4,27 @@
   _type = "axis2d"
   _device_order = ["gamepad", "spatial_mouse", "keyboard"]
   gamepad = "left_x,left_y"
-  spatial_mouse = "x,y"
+  spatial_mouse = "x:scale=3,y:scale=3"
   keyboard = "a,d,s,w"
 
   [character_movement.rotation]
   _type = "axis2d"
-  _device_order = ["gamepad", "spatial_mouse", "keyboard"]
+  _device_order = ["gamepad", "keyboard"]
   gamepad = "dpad_left,dpad_right,dpad_down,dpad_up"
-  spatial_mouse = "yaw,pitch"
   keyboard = "arrow_left,arrow_right,arrow_down,arrow_up"
 
   [character_movement.jump]
-  _type = "button"
-  _device_order = ["gamepad", "keyboard"]
+  _type = "trigger"
+  _device_order = ["gamepad", "spatial_mouse", "keyboard"]
   gamepad = "face_x"
+  spatial_mouse = "z:button>=0.3"
   keyboard = "space"
 
   [character_movement.crouch]
   _type = "button"
-  _device_order = ["gamepad", "keyboard"]
+  _device_order = ["gamepad", "spatial_mouse", "keyboard"]
   gamepad = "face_b"
+  spatial_mouse = "z:button<=-0.3"
   keyboard = "c"
 
   [character_movement.sprint]
@@ -36,9 +37,10 @@
 
   [camera_movement.rotation]
   _type = "axis2d"
-  _device_order = ["gamepad", "keyboard"]
+  _device_order = ["gamepad", "spatial_mouse", "keyboard"]
   gamepad = "right_x,right_y"
-  keyboard = "j,l,k,i"
+  spatial_mouse = "yaw:flip:scale=2,pitch"
+  keyboard = "mouse_x_delta,mouse_y_delta"
 
   [camera_movement.zoom]
   _type = "axis"

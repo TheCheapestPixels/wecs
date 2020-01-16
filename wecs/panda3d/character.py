@@ -25,13 +25,20 @@ from .camera import ObjectCentricCameraMode
 
 
 @Component()
-class FloatingMovement:
-    speed: float = 200.0
-    turning_speed: float = 60.0
-
-
-@Component()
 class CharacterController:
+    '''
+    A moving entity.
+
+    :param Vec3 move: (0, 0, 0) - speed of relative movement
+    :param float heading: 0.0 - horizontal direction the character is headed
+    :param float pitch: 0.0 - vertical direction the character is headed
+    :param bool jumps: False - Triggers a jump
+    :param bool sprints: False - Is True when sprinting
+    :param bool crouches: False - Is True when crouching
+
+    Remaining variables are calculated by systems.
+    '''
+
     # Input or AI
     move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
     heading: float = 0.0
@@ -52,7 +59,26 @@ class CharacterController:
 
 
 @Component()
+class FloatingMovement:
+    '''
+    This character floats, moves with 6 degrees of freedom.
+
+    :param float speed: 200.0 - speed of relative forward movement
+    :param float turning_speed: 60.0 - rotation speed
+    '''
+    speed: float = 200.0
+    turning_speed: float = 60.0
+
+
+@Component()
 class WalkingMovement:
+    '''
+    This character walks, moves on the horizontal dimensions.
+
+    :param float speed: 10.0 - speed of relative forward movement
+    :param float backwards_multiplier: 0.5 - how much faster is backwards movement
+    :param float turning_speed: 60.0 - rotation speed
+    '''
     speed: float = 10.0
     backwards_multiplier: float = 0.5
     turning_speed: float = 60.0
@@ -60,23 +86,48 @@ class WalkingMovement:
 
 @Component()
 class SprintingMovement:
+    '''
+    This character can sprint.
+
+    :param float speed: 20.0 - speed of relative forward movement when sprinting
+    '''
     speed: float = 20.0
 
 
 @Component()
 class CrouchingMovement:
+    '''
+    This character can crouch.
+
+    :param float speed: 10.0 - speed of relative forward movement when crouching
+    :param float height: 0.4 - the height of the character when crouched
+    '''
     speed: float = 10.0
     height: float = 0.4
 
 
 @Component()
 class JumpingMovement:
+    '''
+    This character can jump.
+
+    :param Vec3 speed: (1, 1, 0) - speed of relative movement when jumping
+    :param float impulse: (0, 0, 5) - initial speed of jump
+    '''
     speed: Vec3 = field(default_factory=lambda:Vec3(1, 1, 0))
     impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
 
 
 @Component()
 class InertialMovement:
+    '''
+    This character can jump.
+
+    :param float acceleration: 30.0 - rate at which to accumulate speed
+    :param float rotated_inertia: 0.5 - how much rotation impacts inertia
+    :param NodePath node: NodePath("Inertia") - relative position based on inertia
+    :param bool ignore_z: True - ignore_z
+    '''
     acceleration: float = 30.0
     rotated_inertia: float = 0.5
     node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
@@ -85,12 +136,20 @@ class InertialMovement:
 
 @Component()
 class TurningBackToCameraMovement:
+    '''
+    This character has a tendency to face away from the camera.
+
+    :param float view_axis_alignment: 1 - rate at which to turn away
+    '''
     view_axis_alignment: float = 1
     threshold: float = 0.2
 
 
 @Component()
 class BumpingMovement:
+    '''
+    This character's horizontal movement is hindered by collisions.
+    '''
     tag_name: str = 'bumping'
     solids: dict = field(default_factory=lambda:dict())
     contacts: list = field(default_factory=list)
@@ -101,6 +160,9 @@ class BumpingMovement:
 
 @Component()
 class FallingMovement:
+    '''
+    This character falls unless on solid ground.
+    '''
     gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
     inertia: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     local_gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
@@ -123,6 +185,14 @@ class FallingMovement:
 
 
 class UpdateCharacter(System):
+    '''
+    Convert input to character movement.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.mode.Model`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -233,6 +303,11 @@ class CollisionSystem(System):
 
 
 class Floating(System):
+    '''
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.FloatingMovement`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -250,6 +325,11 @@ class Floating(System):
 
 
 class Walking(System):
+    '''
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.WalkingMovement`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -276,6 +356,17 @@ class Walking(System):
 
 
 class TurningBackToCamera(System):
+    '''
+        Turns character away from the camera.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.model.Model`
+            | :class:`wecs.panda3d.camera.ThirdPersonCamera`
+            | :class:`wecs.panda3d.camera.TurntableCamera`
+            | :class:`wecs.panda3d.model.Clock`
+    '''
     entity_filters = {
         'character': and_filter([
             TurningBackToCameraMovement,
@@ -328,6 +419,15 @@ class TurningBackToCamera(System):
 
 
 class Inertiing(System):
+    '''
+        Accelerate character, as opposed to an instantanious velocity.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.InertialMovement`
+            | :class:`wecs.panda3d.model.Model`
+            | :class:`wecs.model.clock`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -394,6 +494,16 @@ class Inertiing(System):
 
 
 class Bumping(CollisionSystem):
+    '''
+        Stop the character from moving through solid geometry.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.model.Scene`
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.BumpingMovement`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.model.Model`
+    '''
     entity_filters = {
         'character': and_filter([
             Scene,
@@ -424,6 +534,15 @@ class Bumping(CollisionSystem):
 
 
 class Falling(CollisionSystem):
+    '''
+        Stop the character from falling through solid geometry.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.FallingMovement`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.model.Model`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -501,6 +620,17 @@ class Falling(CollisionSystem):
 
 
 class Jumping(CollisionSystem):
+    '''
+        Make the character jump.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.JumpingMovement`
+            | :class:`wecs.panda3d.character.FallingMovement`
+            | :class:`wecs.panda3d.model.Scene`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.model.Model`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -525,6 +655,14 @@ class Jumping(CollisionSystem):
 # actual movement.
 
 class ExecuteMovement(System):
+    '''
+    Transcribe the final intended movement to the model, making it an actual movement.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.model.Model`
+            | :class:`wecs.panda3d.model.Clock`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,
@@ -559,6 +697,18 @@ class ExecuteMovement(System):
 
 @Component()
 class Stamina:
+    '''
+    This character's movement abilities are determined by stamina.
+
+    :param float current: 100 - stamina currently left
+    :param float maximum: 100 - maximum amount of stamina
+    :param float recovery: 100 - rate of recovery (at all times)
+    :param float crouch_drain: 10 - cost of crouching
+    :param float move_drain: 10 - cost of walking
+    :param float sprint_drain: 10 - cost of sprinting (on top of walking)
+    :param float jump_drain: 20 - cost of a single jump
+    '''
+
     current: float = 100.0
     maximum: float = 100.0
     recovery: float = 10
@@ -569,6 +719,14 @@ class Stamina:
 
 
 class UpdateStamina(System):
+    '''
+    Disable or allow character's movement abilities based on stamina.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.Stamina`
+            | :class:`wecs.panda3d.model.Clock`
+    '''
     entity_filters = {
         'character': and_filter([
             CharacterController,

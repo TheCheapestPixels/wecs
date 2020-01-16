@@ -26,7 +26,6 @@ class AnimateCharacter(System):
         'animated_character': and_filter([
             Actor,
             Animation,
-            Geometry,
             CharacterController
         ])
     }
@@ -35,7 +34,7 @@ class AnimateCharacter(System):
         for entity in entities_by_filter['animated_character']:
             controller = entity[CharacterController]
             animation = entity[Animation]
-            actor = entity[Geometry].node
+            actor = entity[Actor].node
 
             if FallingMovement in entity:
                 grounded = entity[FallingMovement].ground_contact
@@ -121,14 +120,13 @@ class Animate(System):
         'animation': and_filter([
             Actor,
             Animation,
-            Geometry,
         ])
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animation']:
             animation = entity[Animation]
-            actor = entity[Geometry].node
+            actor = entity[Actor].node
             if not animation.playing == animation.to_play:
                 if len(animation.to_play) > 0:
                     actor.enableBlend()

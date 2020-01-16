@@ -11,7 +11,7 @@ from wecs.panda3d import aspects
 
 # Each frame, run these systems. This defines the game itself.
 system_types = [
-    panda3d.LoadGeometry, # Loads geometry, sets up actors and sprites.
+    panda3d.ManageGeometry, # Manages a model's geometry and its nodepaths.
     panda3d.SetupModels,  #  Makes them collibable.
     panda3d.PrepareCameras,  # Attach / detach camera pivots to / from models.
     panda3d.UpdateClocks,  # How long is this frame? Update all clocks.

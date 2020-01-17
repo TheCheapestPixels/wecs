@@ -38,7 +38,7 @@
   [camera_movement.rotation]
   _type = "axis2d"
   _device_order = ["gamepad", "spatial_mouse", "keyboard"]
-  gamepad = "right_x,right_y"
+  gamepad = "right_x:exp=2,right_y:exp=2:scale=-1"
   spatial_mouse = "yaw:flip:scale=2,pitch"
   keyboard = "mouse_x_delta,mouse_y_delta"
 

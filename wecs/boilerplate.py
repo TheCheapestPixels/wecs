@@ -1,6 +1,3 @@
-import sys
-
-from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
 
 # We want the time of collision traversal to be added to systems that
@@ -10,7 +7,7 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 from wecs.panda3d import ECSShowBase as ShowBase
 
 
-def run_game(path, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False):
+def run_game(path, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False, debug_keys=False):
     # Application Basics
     ShowBase()
     base.win.setClearColor((0.5,0.7,0.9,1))
@@ -38,28 +35,32 @@ def run_game(path, simplepbr=False, simplepbr_kwargs=None, console=False, keybin
     # f10: frame rate meter
     # f11: pdb, during event loop
     # f12: pstats; connects to a running server
-    base.accept('escape', sys.exit)
 
     if console:
         from cefconsole import add_console
         from cefconsole import PythonSubconsole
-        add_console(subconsoles=[PythonSubconsole()])
+        if debug_keys:
+            add_console(subconsoles=[PythonSubconsole()], toggle="f9")
+        else:
+            add_console(subconsoles=[PythonSubconsole()])
 
-    base.frame_rame_meter_visible = False
-    base.set_frame_rate_meter(base.frame_rame_meter_visible)
-    def toggle_frame_rate_meter():
-        base.frame_rame_meter_visible = not base.frame_rame_meter_visible
+    if debug_keys:
+        base.accept('escape', sys.exit)
+        base.frame_rame_meter_visible = False
         base.set_frame_rate_meter(base.frame_rame_meter_visible)
-    base.accept('f10', toggle_frame_rate_meter)
+        def toggle_frame_rate_meter():
+            base.frame_rame_meter_visible = not base.frame_rame_meter_visible
+            base.set_frame_rate_meter(base.frame_rame_meter_visible)
+        base.accept('f10', toggle_frame_rate_meter)
 
-    def debug():
-        import pdb; pdb.set_trace()
-    base.accept('f11', debug)
+        def debug():
+            import pdb; pdb.set_trace()
+        base.accept('f11', debug)
 
-    def pstats():
-        base.pstats = True
-        PStatClient.connect()
-    base.accept('f12', pstats)
+        def pstats():
+            base.pstats = True
+            PStatClient.connect()
+        base.accept('f12', pstats)
 
     # Set up the world:
     import game

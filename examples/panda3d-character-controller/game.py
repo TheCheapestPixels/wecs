@@ -7,6 +7,7 @@ from wecs import panda3d
 from wecs import mechanics
 from wecs import cefconsole
 from wecs.panda3d import aspects
+from wecs.panda3d import debug
 
 
 # Each frame, run these systems. This defines the game itself.
@@ -36,6 +37,7 @@ system_types = [
     panda3d.CollideCamerasWithTerrain,
     cefconsole.UpdateWecsSubconsole,
     cefconsole.WatchEntitiesInSubconsole,
+    debug.DebugTools,
 ]
 
 

@@ -7,7 +7,7 @@ loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 from wecs.panda3d import ECSShowBase as ShowBase
 
 
-def run_game(path, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False, debug_keys=False):
+def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False, debug_keys=False):
     # Application Basics
     ShowBase()
     base.win.setClearColor((0.5,0.7,0.9,1))
@@ -17,9 +17,9 @@ def run_game(path, simplepbr=False, simplepbr_kwargs=None, console=False, keybin
         import os
         from keybindings.device_listener import add_device_listener
         from keybindings.device_listener import SinglePlayerAssigner
-        config_file = os.path.join(path, "keybindings.toml")
         add_device_listener(
-            config_file=config_file,
+            config_module=module_name,
+            config_file="keybindings.toml",
             debug=True,
             assigner=SinglePlayerAssigner(),
         )

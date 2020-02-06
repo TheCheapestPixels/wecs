@@ -1,3 +1,30 @@
+[debug]
+
+  [debug.quit]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "escape"
+
+  [debug.console]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "f9"
+
+  [debug.frame_rate_meter]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "f10"
+
+  [debug.pdb]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "f11"
+
+  [debug.pstats]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "f12"
+
 [character_movement]
 
   [character_movement.direction]

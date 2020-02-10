@@ -26,6 +26,8 @@ class WECSSubconsole(cefconsole.Subconsole):
         self.live_refresh = not self.live_refresh
 
     def update(self):
+        if not hasattr(base, 'console'):
+            return
         if self.refresh or self.live_refresh:
             entities = base.ecs_world.entities
             uids = {e._uid.name: e for e in entities}
@@ -58,11 +60,16 @@ class UpdateWecsSubconsole(System):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not hasattr(base, 'console'):
+            self.has_console = False
+            return
+        self.has_console = True
         self.subconsole = WECSSubconsole()
         base.console.add_subconsole(self.subconsole)
 
     def update(self, entities_by_filter):
-        self.subconsole.update()
+        if self.has_console:
+            self.subconsole.update()
 
 
 class EntityWatcherSubconsole(cefconsole.Subconsole):
@@ -74,6 +81,8 @@ class EntityWatcherSubconsole(cefconsole.Subconsole):
     }
 
     def update(self, entities):
+        if not hasattr(base, 'console'):
+            return
         entities = [
             {'obj': e}
             for e in sorted(
@@ -124,8 +133,13 @@ class WatchEntitiesInSubconsole(System):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not hasattr(base, 'console'):
+            self.has_console = False
+            return
+        self.has_console = True
         self.subconsole = EntityWatcherSubconsole()
         base.console.add_subconsole(self.subconsole)
 
     def update(self, entities_by_filter):
-        self.subconsole.update(entities_by_filter['watched'])
+        if self.has_console:
+            self.subconsole.update(entities_by_filter['watched'])

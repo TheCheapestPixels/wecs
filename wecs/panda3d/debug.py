@@ -28,6 +28,9 @@ class DebugTools(System):
             self.frame_rate_meter = not self.frame_rate_meter
             base.set_frame_rate_meter(self.frame_rate_meter)
         if context['console']:
+            if not hasattr(base, 'console'):
+                print("No console present.")
+                return
             self.console_open = not self.console_open
             if self.console_open:
                 base.console.node().show()

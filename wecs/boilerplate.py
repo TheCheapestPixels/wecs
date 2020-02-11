@@ -1,9 +1,12 @@
+import inspect
+
 from panda3d.core import loadPrcFileData
 
 # We want the time of collision traversal to be added to systems that
 # run them.
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 
+from wecs.core import System
 from wecs.panda3d import ECSShowBase as ShowBase
 
 
@@ -64,10 +67,76 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Set up the world:
     import game
-    for sort, system_type in enumerate(game.system_types):
-        base.add_system(system_type(), sort)
+    add_systems(game.system_types)
     if console:
         base.console.render_console()
 
     # And here we go...
     base.run()
+
+
+def add_systems(system_specs):
+    def is_bare_type(spec): return inspect.isclass(spec) and issubclass(spec, System)
+    def is_bare_system(spec): return isinstance(spec, System)
+    def is_spec_with_sort(spec):
+        if not isinstance(spec, (tuple, list)):
+            return False
+        if not len(spec) == 2:
+            return False
+        if not isinstance(spec[0], int):
+            return False
+        if not (is_bare_type(spec[1]) or is_bare_system(spec[1])):
+            return False
+        return True
+    def is_spec_with_both(spec):
+        if not isinstance(spec, (tuple, list)):
+            return False
+        if not len(spec) == 3:
+            return False
+        if not isinstance(spec[0], int):
+            return False
+        if not isinstance(spec[1], int):
+            return False
+        if not (is_bare_type(spec[2]) or is_bare_system(spec[2])):
+            return False
+        return True
+        
+    def task_sort(task_dict):
+        sorts = sorted(task_dict.keys(), key=lambda t: (t[0],-t[1]))
+        wecs_sorted = [
+            (wecs_sort, p3d_sort, p3d_priority, task_dict[(p3d_sort, p3d_priority)])
+            for wecs_sort, (p3d_sort, p3d_priority) in enumerate(sorts)
+        ]
+        return wecs_sorted
+
+    sort, priority = 0, 0
+    full_specs = {}  # (sort, priority): system_instance
+    # Figure out the full_specs
+    for spec in system_specs:
+        if is_bare_type(spec):
+            system = spec()
+        elif is_bare_system(spec):
+            system = spec
+        elif is_spec_with_sort(spec):
+            sort, system_spec = spec
+            if is_bare_type(system_spec):
+                system = system_spec()
+            else:
+                system = system_spec
+            priority = 0
+        elif is_spec_with_both(spec):
+            sort, priority, system_spec = spec
+            if is_bare_type(system_spec):
+                system = system_spec()
+            else:
+                system = system_spec
+        else:
+            # Can't interpret a system spec.
+            raise ValueError(spec)
+        assert (sort, priority) not in full_specs.keys()
+        full_specs[(sort, priority)] = system
+        priority -= 1
+
+    sort_spec = task_sort(full_specs)
+    for (wecs_sort, p3d_sort, p3d_priority, system) in sort_spec:
+        base.add_system(system, wecs_sort, p3d_sort, p3d_priority)

@@ -34,6 +34,7 @@ character = Aspect(
         panda3d.Scene,
         panda3d.CharacterController,
         panda3d.Model,
+        panda3d.Geometry,
     ],
     overrides = {
         mechanics.Clock: dict(clock=panda3d.panda_clock),
@@ -74,7 +75,7 @@ walking = Aspect(
 )
 animated = Aspect([panda3d.Actor, panda3d.Animation])
 avatar = Aspect([character, walking, animated],
-                overrides={panda3d.Model: dict(model_name='../../assets/rebecca.bam')})
+                overrides={panda3d.Actor: dict(file='../../assets/rebecca.bam')})
 
 
 def spectator_bumper():

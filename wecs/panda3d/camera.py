@@ -146,7 +146,7 @@ class ReorientObjectCentricCamera(System):
             new_pitch = max(new_pitch, center.min_pitch)
             new_pitch = min(new_pitch, center.max_pitch)
             camera.pivot.set_p(new_pitch)
-        
+
     def process_input(self, entity, context):
         camera = entity[Camera]
         center = entity[ObjectCentricCameraMode]

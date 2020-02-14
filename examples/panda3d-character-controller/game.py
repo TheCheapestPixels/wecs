@@ -12,7 +12,8 @@ from wecs.panda3d import debug
 
 # Each frame, run these systems. This defines the game itself.
 system_types = [
-    panda3d.LoadModels,  # Loads models, sets up actors, makes them collibable.
+    panda3d.ManageGeometry, # Manages a model's geometry and its nodepaths.
+    panda3d.SetupModels,  #  Makes them collibable.
     panda3d.PrepareCameras,  # Attach / detach camera pivots to / from models.
     panda3d.UpdateClocks,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
@@ -31,10 +32,12 @@ system_types = [
     panda3d.ExecuteMovement,  # Turn intention into actual movement.
     panda3d.AnimateCharacter,
     panda3d.Animate,
+    panda3d.UpdateSprites,
     # We're done with character movement, now update the cameras and console.
     panda3d.ResetMountedCamera,
     panda3d.ReorientObjectCentricCamera,
     panda3d.CollideCamerasWithTerrain,
+    panda3d.UpdateBillboards,
     cefconsole.UpdateWecsSubconsole,
     cefconsole.WatchEntitiesInSubconsole,
     debug.DebugTools,
@@ -46,13 +49,14 @@ game_map = Aspect(
     [mechanics.Clock,
      panda3d.Position,
      panda3d.Model,
+     panda3d.Geometry,
      panda3d.Scene,
      panda3d.CollidableGeometry,
      panda3d.FlattenStrong,
     ],
     overrides={
         mechanics.Clock: dict(clock=panda3d.panda_clock),
-        panda3d.Model: dict(model_name='roadE.bam'),
+        panda3d.Geometry: dict(file='roadE.bam'),
         panda3d.Scene: dict(node=base.render),
     },
 )
@@ -109,4 +113,36 @@ new_npc.add(
         panda3d.Position: dict(value=Point3(80, 290, 0)),
         mechanics.Clock: dict(parent=map_entity._uid),
     },
+)
+
+
+# Sprite
+sprite = Aspect(
+    [
+        aspects.character,
+        aspects.walking,
+        panda3d.ConstantCharacterAI,
+        panda3d.Sprite,
+        panda3d.SpriteSheet,
+        panda3d.SpriteAnimation,
+        panda3d.Billboard,
+        cefconsole.WatchedEntity,
+    ])
+sprite.add(
+    base.ecs_world.create_entity(name="mr. man"),
+    overrides = {
+        mechanics.Clock: dict(parent=map_entity._uid),
+        panda3d.Sprite: dict(image_name="../../assets/mrman.png"),
+        panda3d.SpriteAnimation: dict(
+            animations={
+                "walking" : [6, 7, 8, 9, 10, 11]
+            },
+            animation="walking",
+        ),
+        panda3d.ConstantCharacterAI: dict(
+            move=Vec3(0.0, 0.25, 0.0),
+            heading=-0.5,
+        ),
+        panda3d.Position: dict(value=Point3(52, 292, 0)),
+    }
 )

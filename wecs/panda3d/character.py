@@ -17,6 +17,7 @@ from wecs.core import or_filter
 from wecs.panda3d.input import Input
 
 from .model import Model
+from .model import Geometry
 from .model import Scene
 from .model import Clock
 
@@ -146,6 +147,11 @@ class TurningBackToCameraMovement:
 
 
 @Component()
+class FacingMovement:
+    pass
+
+
+@Component()
 class BumpingMovement:
     '''
     This character's horizontal movement is hindered by collisions.
@@ -205,7 +211,7 @@ class UpdateCharacter(System):
         ]),
     }
     input_context = 'character_movement'
-    
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter['input']:
             input = entity[Input]
@@ -250,8 +256,8 @@ class UpdateCharacter(System):
                 xy_scaling = 1.0 / xy_dist
             x = controller.move.x * xy_scaling
             y = controller.move.y * xy_scaling
-            controller.translation = Vec3(x * dt, y * dt, 0)
-
+            z = controller.move.z * xy_scaling
+            controller.translation = Vec3(x * dt, y * dt, z * dt)
 
 # Movement systems
 #
@@ -416,6 +422,24 @@ class TurningBackToCamera(System):
                 # to counteract that as well.
                 delta_rotation = character.rotation.x - old_rotation
                 camera.pivot.set_h(camera.pivot.get_h() - delta_rotation)
+
+
+class FaceMovement(System):
+    entity_filters = {
+        'character': and_filter([
+            CharacterController,
+            Geometry,
+            Clock,
+            FacingMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            geometry = entity[Geometry]
+            controller = entity[CharacterController]
+            x,y,z = controller.last_translation_speed
+            geometry.node.look_at(x, y, 0)
 
 
 class Inertiing(System):

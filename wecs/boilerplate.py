@@ -1,3 +1,4 @@
+import sys
 import inspect
 
 from panda3d.core import loadPrcFileData
@@ -67,7 +68,8 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Set up the world:
     import game
-    add_systems(game.system_types)
+    if hasattr(game, 'system_types'):
+        add_systems(game.system_types)
     if console:
         base.console.render_console()
 

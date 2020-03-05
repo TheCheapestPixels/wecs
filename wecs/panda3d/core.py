@@ -12,6 +12,7 @@ class ECSShowBase(ShowBase):
         super().__init__(self, *args, **kwargs)
         self.ecs_world = World()
         self.ecs_system_pstats = {}
+        self.task_to_wecs_sort = {}
 
     def add_system(self, system, wecs_sort, p3d_sort=None, p3d_priority=None):
         self.ecs_world.add_system(system, wecs_sort)
@@ -28,6 +29,7 @@ class ECSShowBase(ShowBase):
             priority=p3d_priority,
         )
         self.ecs_system_pstats[system] = PStatCollector('App:WECS:Systems:{}'.format(system))
+        self.task_to_wecs_sort[task] = wecs_sort
         return task
 
     def run_system(self, system):
@@ -35,3 +37,10 @@ class ECSShowBase(ShowBase):
         base.ecs_world.update_system(system)
         self.ecs_system_pstats[system].stop()
         return Task.cont
+
+    def remove_system(self, task):
+        self.task_mgr.remove(task)
+        wecs_sort = self.task_to_wecs_sort[task]
+        del self.task_to_wecs_sort[task]
+        self.ecs_world.remove_system(wecs_sort)
+        

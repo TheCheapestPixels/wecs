@@ -34,7 +34,7 @@ default values for them. When an `Aspect` is added to an `Entity`, those
 is removed, so are its `Component` types.
 
 
-## Install
+## Installation
 ```
   pip install wecs
 ```
@@ -45,7 +45,7 @@ is removed, so are its `Component` types.
 We're currently working on documentation. You can see it here: https://wecs.readthedocs.io/en/latest/
 
 
-## A Hello World
+## How to use: A Hello World
 
 ```
 from wecs.core import World, Component, System, and_filter
@@ -78,6 +78,11 @@ printer_entity = world.create_entity() # A new entity
 printer_entity.add_component(Printer(message="Hello World"))
 world.update() # Run all added systems
 ```
+
+
+## Boilerplate for Panda3D
+
+
 
 
 ## WECS for Panda3D

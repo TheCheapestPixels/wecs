@@ -85,14 +85,14 @@ class Foo:
 class Bar(System):
     entity_filters = {'filter': and_filter([Foo])}
 
-    def init_entity(filter_name, entity):
+    def init_entity(self, filter_name, entity):
         print("Initializing an entity newly in filter {}".format(filter_name))
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['filter']:
             print("Processing entity.")
 
-    def destroy_entity(filter_name, entity):
+    def destroy_entity(self, filter_name, entity):
         print("Tearing down entity for filter {filter_name} after components of types [{}] were removed".format(
 	    filter_name,
 	    ', '.join(components_by_type),

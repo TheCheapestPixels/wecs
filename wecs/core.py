@@ -2,24 +2,6 @@ import types
 import dataclasses
 
 
-# FIXME: We rely on the hash of these objects to be unique, which is...
-# iffy. If isn't *really* a problem that a UID gets destroyed and a new one is
-# created in its place so that a dangling reference is created, because
-# thanks to that dangling reference, the now invalid UID is still referenced.
-# Still, this smells.
-class UID:
-    '''
-    Object for referencing a
-    :class:`wecs.core.Entity`
-
-    '''
-    pass
-
-
-class NoSuchUID(Exception):
-    pass
-
-
 class World:
     '''
     Has a set of
@@ -29,14 +11,11 @@ class World:
     :class:`wecs.core.System`
     '''
     def __init__(self):
-        # TODO: One of these (probably self.entities) is redundant,
-        # and should be phased out.
-        self.entities = set()
-        self.entities_by_uid = {}
+        self.entities = {} # {UID: Entity}
         self.systems = {} # {sort: System}
-        self.entity_filters = {}  # {Filter: set([Entities]}
-        self.system_of_filter = {}
-        self.entities_that_update_components= [] # deferred operation
+        self._entities_to_flush = set() # Entities
+
+    # Entity CRUD
 
     def create_entity(self, *args, name=None):
         '''
@@ -49,10 +28,8 @@ class World:
         '''
 
         entity = Entity(self, name=name)
-        self.entities.add(entity)
-        self.entities_by_uid[entity._uid] = entity
+        self.entities[entity._uid] = entity
         for arg in args:
-            # assert isinstance(arg, Component)
             entity.add_component(arg)
         return entity
 
@@ -67,12 +44,24 @@ class World:
         :returns: 'wecs.core.Entity'
         '''
         try:
-            entity = self.entities_by_uid[uid]
+            entity = self.entities[uid]
         except KeyError:
             raise NoSuchUID
         return entity
 
+    def __getitem__(self, uid_or_entity):
+        return self.get_entity(uid_or_entity)
+
     def destroy_entity(self, uid_or_entity):
+        '''
+        Destroys the entity and its components, implicitly
+        removing it from all systems.
+
+        Parameters
+        -----------
+        uid_or_entity
+            A 'wecs.core.Entity' or :core:'wecs.core.UID'
+        '''
         if isinstance(uid_or_entity, Entity):
             entity = uid_or_entity
         elif isinstance(uid_or_entity, UID):
@@ -80,28 +69,30 @@ class World:
         else:
             raise ValueError("Entity or UID must be given")
         entity.destroy()
+        del self.entity_by_uid[entity._uid]
+        # FIXME: Make sure that it gets removed from systems as well.
 
-    def remove_entity(self, uid_or_entity):
-        if isinstance(uid_or_entity, Entity):
-            entity = uid_or_entity
-            uid = uid_or_entity._uid
-        elif isinstance(uid_or_entity, UID):
-            entity = entity_by_uid[uid_or_entity]
-            uid = uid_or_entity
-        else:
-            raise ValueError("Entity or UID must be given")
+    def __delitem__(self, uid_or_entity):
+        self.destroy_entity(uid_or_entity)
 
-        del self.entities_by_uid[uid]
-        self.entities.remove(entity)
+    # System CRUD
 
     def add_system(self, system, sort, add_duplicates=False):
         '''
+        Add a system to the world. During a 'world.update()',
+        systems will be processed in order of ascending 'sort'.
+
         Parameters
         -----------
         system
-            System to add
+            System to add.
         sort
-            Order the system should run
+            Order the system should run.
+        add_duplicates
+            If False (default), a KeyError will be raised when
+            the world already has a system of that type. If True,
+            do not use get_system() to retrieve systems with
+            multiple instances.
 
         :returns: Entity
         '''
@@ -112,18 +103,10 @@ class World:
         self.systems[sort] = system
         system.world = self
         system._sort = sort
-        # Prefilter for system
-        for filter_name, filter_func in system.entity_filters.items():
-            self.system_of_filter[filter_func] = system
-            self.entity_filters[filter_func] = set()
-            # It needs to scan the entities
-            for entity in self.entities:
-                if filter_func(entity):
-                    self.entity_filters[filter_func].add(entity)
-                    system.init_entity(filter_name, entity)
 
     def has_system(self, system_type):
-        return any([isinstance(s, system_type) for s in self.systems.values()])
+        return any([isinstance(s, system_type)
+                    for s in self.systems.values()])
 
     def get_systems(self):
         return self.systems
@@ -142,71 +125,64 @@ class World:
 
     def remove_system(self, system_type):
         system = self.get_system(system_type)
-        for filter_name, filter_func in system.entity_filters.items():
-            del self.system_of_filter[filter_func]
-            entities = self.entity_filters[filter_func]
-            for entity in entities:
-                system.destroy_entity(filter_name, entity)
-            del self.entity_filters[filter_func]
         del self.systems[system._sort]
 
-    def get_system_component_dependencies(self):
-        dependencies = {
-            system: system.get_component_dependencies()
-            for system in self.systems.values()
-        }
-        return dependencies
+    # update()-related functions
+        
+    def _register_entity_for_flush(self, entity):
+        self._entities_to_flush.add(entity)
 
-    def register_entity_for_components_update(self, entity):
-        self.entities_that_update_components.append(entity)
+    def _flush_component_updates(self):
+        raise Exception
 
-    def flush_component_updates(self):
-        for entity in self.entities_that_update_components:
-            entity.update_components()
-        self.update_entity_filters(self.entities_that_update_components)
-        for entity in self.entities_that_update_components:
-            entity.drop_component_updates()
+    def _update_system(self, system):
+        '''
+        Run a system. First, component updates are flushed,
+        then the system's 'update' is run.
 
-        self.entities_that_update_components = []
+        For internal use by 'update'.
 
-    def update_entity_filters(self, entities):
-        # Each filter now takes a look at each modified entity.
-        for filter_func, entities_in_filter in self.entity_filters.items():
-            for entity in entities:
-                is_in_filter = entity in entities_in_filter
-                should_be_in_filter = filter_func(entity)
-                # If one newly fits the filter, add it and init it.
-                if should_be_in_filter and not is_in_filter:
-                    entities_in_filter.add(entity)
-                    system = self.system_of_filter[filter_func]
-                    filter_name = system.filter_names[filter_func]
-                    system.init_entity(filter_name, entity)
-                # But if it has dropped out, remove it and destroy.
-                elif is_in_filter and not should_be_in_filter:
-                    entities_in_filter.remove(entity)
-                    system = self.system_of_filter[filter_func]
-                    filter_name = system.filter_names[filter_func]
-                    components = entity.get_dropped_components_by_type()
-                    system.destroy_entity(filter_name, entity, components)
+        Parameters
+        -----------
+        system
+            System to run
+        '''
+        self._flush_component_updates()
+        system._trigger_update()
 
     def update(self):
+        '''
+        Run all systems in ascending order of sort.
+        '''
         for sort in sorted(self.systems):
             system = self.systems[sort]
-            self.update_system(system)
+            self._update_system(system)
 
-    def update_system(self, system):
-            self.flush_component_updates()
-            entities_by_filter = {
-                filter_name: self.entity_filters[filter_func]
-                for filter_name, filter_func in system.entity_filters.items()
-            }
-            system.update(entities_by_filter)
 
-    def __getitem__(self, uid):
-        return self.get_entity(uid)
+#
+# Entities and components
+#
 
-    def __delitem__(self, uid):
-        return self.remove_entity(component_type)
+
+# FIXME: We rely on the hash of these objects to be unique, which is...
+# iffy. If isn't *really* a problem that a UID gets destroyed and a new one is
+# created in its place so that a dangling reference is created, because
+# thanks to that dangling reference, the now invalid UID is still referenced.
+# Still, this smells.
+class UID:
+    '''
+    Object for referencing a
+    :class:`wecs.core.Entity`
+
+    '''
+    def __init__(self, name=None):
+        if name is None:
+            name = str(id(self))
+        self.name = name
+
+
+class NoSuchUID(Exception):
+    pass
 
 
 class Entity:
@@ -221,39 +197,47 @@ class Entity:
 
     def __init__(self, world, name=None):
         self.world = world
-        self.components = set()
-        self._uid = UID()
+        self._uid = UID(name)
+        self.components = {} # type: instance
         self._new_components = {} # type: instance
-        self._dropped_components = {} # types
+        self._dropped_components = set() # types
 
-        if name is None:
-            name = str(id(self))
-        self._uid.name = name
+    # Component CRUD
 
     def add_component(self, component):
-        exists = any([isinstance(c, type(component))
-                      for c in self.components])
+        is_present = type(component) in self.components
         is_being_deleted = type(component) in self._dropped_components
         is_being_added = type(component) in self._new_components
-        if exists and (not is_being_added or is_being_added):
+        if is_present and not is_being_deleted:
             raise KeyError("Component type already on entity.")
         if is_being_added:
             raise KeyError("Component type is already being added to entity.")
 
         if not self._new_components and not self._dropped_components:
             # First component update in current system run
-            self.world.register_entity_for_components_update(self)
+            self.world._register_entity_for_flush(self)
         self._new_components[type(component)] = component
 
+    def __setitem__(self, component_type, component):
+        assert isinstance(component, component_type)
+        return self.add_component(component)
+
     def get_components(self):
+        return self.components.values()
+
+    def get_past_components(self):
         all_components = set()
-        all_components.update(self.components)
+        all_components.update(set(self.components.values()))
         all_components.update(set(self._new_components.values()))
-        return  all_components
+
+    def get_future_components(self):
+        all_components = set()
+        all_components.update(set(self.components.values()))
+        all_components.update(set(self._new_components.values()))
 
     def get_component(self, component_type):
         all_components = set()
-        all_components.update(self.components)
+        all_components.update(set(self.components.values()))
         all_components.update(set(self._new_components.values()))
         component = list(
             filter(
@@ -266,57 +250,36 @@ class Entity:
         assert len(component) == 1
         return component[0]
 
-    def has_component(self, component_type):
-        return any([type(c) is component_type for c in self.get_components()])
-
-
-    def remove_component(self, component_type):
-        if not self._new_components and not self._dropped_components:
-            # First component update in current system run
-            self.world.register_entity_for_components_update(self)
-        self._dropped_components[component_type] = self.get_component(component_type)
-
-    def update_components(self):
-        for component_type, component in self._dropped_components.items():
-            self.components.remove(component)
-        for component_type, component in self._new_components.items():
-            self.components.add(component)
-
-    def get_dropped_components_by_type(self):
-        return self._dropped_components
-
-    def drop_component_updates(self):
-        self._dropped_components = {}
-        self._new_components = {}
-
-    def destroy(self):
-        self.world.remove_entity(self)
-        # FIXME: Needs to be refactored when components are created
-        # indirectly, outside update()
-        for component in set(self.get_components()):
-            self.remove_component()
-
-
-    def __setitem__(self, component_type, component):
-        assert isinstance(component, component_type)
-        return self.add_component(component)
-
-
     def __getitem__(self, component_type):
         return self.get_component(component_type)
 
-
-    def __delitem__(self, component_type):
-        return self.remove_component(component_type)
-
+    def has_component(self, component_type):
+        return any([type(c) is component_type for c in self.get_components()])
 
     def __contains__(self, component_type):
         return self.has_component(component_type)
 
+    def remove_component(self, component_type):
+        if component_type not in self.components:
+            raise KeyError("Component type not present on Entity.")
+        if not self._new_components and not self._dropped_components:
+            # First component update in current system run
+            self.world.register_entity_for_components_update(self)
+        self._dropped_components.add(component_type)
+
+    def __delitem__(self, component_type):
+        return self.remove_component(component_type)
+
+    # Teardown
+
+    def destroy(self):
+        # FIXME: Needs to be refactored when components are created
+        # indirectly, outside update()
+        for component_type in set(self.components.keys()):
+            self.remove_component(component_type)
 
     def __repr__(self):
-        names = [repr(c) for c in self.components]
-        return "<Entity ({})>".format(', '.join(names))
+        return "<Entity {}>".format(self._uid.name)
 
 
 class Component():
@@ -334,6 +297,11 @@ class Component():
     def __call__(self, cls):
         cls = dataclasses.dataclass(cls, eq=False)
         return cls
+
+
+#
+# Systems and Filters
+#
 
 
 class System:
@@ -359,31 +327,42 @@ class System:
 
     def __init__(self, throw_exc=False):
         self.throw_exc = throw_exc
-        self.filter_names = {
-            filter_func: filter_name
-            for filter_name, filter_func in self.entity_filters.items()
+        self.filters = {
+            func: name
+            for name, func in self.entity_filters.items()
+        }
+        self.entities = {
+            name: set()
+            for name, _ in self.entity_filters.items()
         }
 
     def init_entity(self, filter_name, entity):
+        '''
+        Callback for when an entity begins satisfying a filter.
+        '''
         pass
 
-    def destroy_entity(self, filter_name, entity, components_by_type):
+    def destroy_entity(self, filter_name, entity):
         pass
 
     def update(self, entities_by_filter):
         pass
 
-    def get_component_dependencies(self):
-        dependencies = set()
-        for filter_func in self.entity_filters.values():
-            dependencies.update(filter_func.get_component_dependencies())
-        return dependencies
+    def _trigger_update(self):
+        entities_by_filter = {
+            name: self.entity_filters[func]
+            for name, func in self.entity_filters.items()
+        }
+        system.update(entities_by_filter)
 
     def __repr__(self):
         return self.__class__.__name__
 
 
 class Filter:
+    def __init__(self, types_and_filters):
+        self.types_and_filters = types_and_filters
+
     def get_component_dependencies(self):
         dependencies = set()
         for clause in self.types_and_filters:
@@ -395,9 +374,6 @@ class Filter:
 
 
 class AndFilter(Filter):
-    def __init__(self, types_and_filters):
-        self.types_and_filters = types_and_filters
-
     def __call__(self, entity):
         for clause in self.types_and_filters:
             if isinstance(clause, Filter):
@@ -408,14 +384,7 @@ class AndFilter(Filter):
         return True
 
 
-def and_filter(types_and_filters):
-    return AndFilter(types_and_filters)
-
-
 class OrFilter(Filter):
-    def __init__(self, types_and_filters):
-        self.types_and_filters = types_and_filters
-
     def __call__(self, entity):
         for clause in self.types_and_filters:
             if isinstance(clause, Filter):
@@ -424,6 +393,10 @@ class OrFilter(Filter):
             elif entity.has_component(clause):
                 return True
         return False
+
+
+def and_filter(types_and_filters):
+    return AndFilter(types_and_filters)
 
 
 def or_filter(types_and_filters):

@@ -171,8 +171,68 @@ type is known. It’s needed here merely because
 Deferred ``Component`` addition / removal
 -----------------------------------------
 
+### Motivation
+
+Imagine that you have a shooter game where two characters each have a
+gun that removes the gun that removes the gun of the target. At the
+same moment, those characters shoot at each other.
+
+For some reason that is realized by removing the target's ``Gun``
+component; Good software design is secondary here, I want to make a
+point about how to work with ``Components``. Then there is a
+``System`` ``Shoot`` that resolves the shots. Its ``Filter`` applies
+to all ``Entities`` with a ``Gun`` component.
+
+When ``Shoot``'s ``update()`` runs, it iterates over the first
+entity in its ``Filter``, then the second. The order can be
+considered random and should not matter.
+
+When it processes the first entity, it looks up its ``Gun``, sees the
+shot, finds the target (the second entity), removes its ``Gun``, and
+is done.
+
+When it processes the second entity, it looks up its ``Gun``, and an
+``Exception`` would be thrown at this point, since the entity does not
+have that component anymore. It should not even be in the filter
+anymore. But that's just bad semantics that shouldn't be fixed by
+hackin around the problem. The "true" semantics is that a ``System``
+is given a state of aspects of the world, and should transform that
+into its successor state, and do so in as small, compact, and easy to
+reason over units; It should not make the developer deal with
+intermediate states. It has turned out that simply iterating over all
+entities in a filter is *the* building block of ``update()``. During
+no iteration should the developer have to think about what happened in
+any other iteration. The entity should be presented to the code within
+the loop as it was at the beginning of the iteration in all aspects
+that are read from it.
+
+Luckily, there is a solution... -ish thing.
+
+
+### Deferring changes
+
+When we add or remove components, we do not process those changes
+while the system is running. Instead, we simply treat these actions as
+requests that we queue up an will process at a later time. A good time
+for that is "any time right before a system is updated", since it
+cleans up any dirty state, like the setup of a specific world's state
+in the beginning leaves. Another good time is right after a system,
+since a developer may choose to let code outside of ``System``s
+interact with the ``World``'s state, so it'd be helpful to leave a
+clean state. And since cleaning up a clean state is close to a null
+operation, there is no downside to doing both.
+
+When deferring component updates, it is necessary to define the
+semantics of getting and setting components well. FIXME: This is a
+proposal.
+* `c = entity[Component]`: 
+
+
+
+1234567890123456789012345678901234567890123456789012345678901234567890
+
 Do note that additions / removals of components are deferred, and only
-take effect once ``world.flush_component_updates()`` is called, which
+take effect once ``world._flush_component_updates()`` is called, which
 happens automatically when (before) a ``System`` is being run. Thus you
 can let a ``System`` process one entity, let that processing cause the
 removal of a component of another entity, then let the ``System`` go on
@@ -181,8 +241,8 @@ presence of the now “removed” component. That way, when processing each
 ``Entity``, the system is presented with the state (of component
 presence) from when the system is started.
 
-However, if you *add* components, on one hand, they won’t e added to any
-filter immediately, just like they won’t be removed by dropping a
+However, if you *add* components, on one hand, they won’t be added to
+any filter immediately, just like they won’t be removed by dropping a
 component (since those updates are deferred). But you *can* still access
 them through ``ComponentType in entity`` and ``entity[ComponentType]``,
 as those functions use the sets of both existing and newly added

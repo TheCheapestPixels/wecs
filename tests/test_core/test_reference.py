@@ -44,7 +44,7 @@ def test_resolving_reference(world):
     to_entity = world.create_entity()
     from_entity = world.create_entity()
     from_entity.add_component(Reference(uid=to_entity._uid))
-    world.flush_component_updates()
+    world._flush_component_updates()
     reference = world.get_entity(from_entity.get_component(Reference).uid)
     assert reference is to_entity
 
@@ -53,7 +53,7 @@ def test_resolving_dangling_reference(world):
     to_entity = world.create_entity()
     from_entity = world.create_entity()
     from_entity.add_component(Reference(uid=to_entity._uid))
-    to_entity.destroy()
-    world.flush_component_updates()
+    world.destroy_entity(to_entity)
+    world._flush_component_updates()
     with pytest.raises(NoSuchUID):
         world.get_entity(from_entity.get_component(Reference).uid)

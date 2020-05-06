@@ -4,50 +4,7 @@ from wecs.core import Entity, System, Component, World
 from wecs.core import and_filter
 
 
-@Component()
-class Counter:
-    count: int
-    inited: bool
-
-
-@Component()
-class Enabler:
-    pass
-
-
-class IncreaseCount(System):
-    entity_filters = {
-        'has_counter': and_filter([Counter]),
-        'init_enabled': and_filter([Counter, Enabler]),
-    }
-
-    def __init__(self):
-        System.__init__(self)
-        self.init_called = 0
-        self.init_done = 0
-        self.destroy_called = 0
-        self.destroy_done = 0
-
-    def init_entity(self, filter_name, entity):
-        self.init_called += 1
-        if filter_name == 'init_enabled':
-            entity.get_component(Counter).inited = True
-            self.init_done += 1
-
-    def destroy_entity(self, filter_name, entity, components_by_type):
-        self.destroy_called += 1
-        if filter_name == 'has_counter':
-            components_by_type[Counter].inited = False
-            self.destroy_done += 1
-        elif filter_name == 'init_enabled':
-            if entity.has_component(Counter):
-                entity.get_component(Counter).inited = False
-                self.destroy_done += 1
-
-    def update(self, filtered_entities):
-        for entity in filtered_entities['has_counter']:
-            entity.get_component(Counter).count += 1
-
+# Absolute basics
 
 @pytest.fixture
 def world():
@@ -59,16 +16,52 @@ def entity(world):
     return world.create_entity()
 
 
-@pytest.fixture
-def component():
-    return Counter(count=0, inited=False)
+# Null stuff
+
+@Component()
+class NullComponent:
+    pass
 
 
 @pytest.fixture
-def enabler():
-    return Enabler()
+def null_component():
+    return NullComponent()
 
 
 @pytest.fixture
-def system():
-    return IncreaseCount()
+def null_entity(world, null_component):
+    entity = world.create_entity(null_component)
+    world._flush_component_updates()
+    return entity
+
+
+class NullSystem(System):
+    entity_filters = {
+        "null": and_filter([NullComponent])
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entries = []
+        self.exits = []
+        self.updates = []
+    
+    def enter_filters(self, filters, entity):
+        self.entries.append((filters, entity))
+    
+    def exit_filters(self, filters, entity):
+        self.exits.append((filters, entity))
+
+    def update(self, entities_by_filter):
+        self.updates.append(entities_by_filter)
+
+
+@pytest.fixture
+def null_system():
+    return NullSystem()
+
+
+@pytest.fixture
+def null_system_world(world, null_system):
+    world.add_system(null_system, 0)
+    return world

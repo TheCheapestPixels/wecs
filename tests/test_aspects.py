@@ -125,13 +125,14 @@ def test_adding_aspect_to_entity(world):
     aspect = Aspect([Component_A])
     entity = world.create_entity()
     aspect.add(entity)
+    world._flush_component_updates()
     assert Component_A in entity
 
 
 def test_adding_clashing_aspect_to_entity(world):
     aspect = Aspect([Component_A])
     entity = world.create_entity(Component_A())
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         aspect.add(entity)
 
 
@@ -139,6 +140,7 @@ def test_aspect_in_entity(world):
     aspect = Aspect([Component_A])
     entity = world.create_entity()
     aspect.add(entity)
+    world._flush_component_updates()
     assert aspect.in_entity(entity)
 
 
@@ -151,10 +153,10 @@ def test_aspect_not_in_entity(world):
 def test_remove_aspect_from_entity(world):
     aspect = Aspect([Component_A])
     entity = world.create_entity(*aspect())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert aspect.in_entity(entity)
     components = aspect.remove(entity)
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert not aspect.in_entity(entity)
     assert Component_A not in entity
     assert len(components) == 1

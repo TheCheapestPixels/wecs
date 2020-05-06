@@ -1,5 +1,3 @@
-import dataclasses
-
 from wecs.core import Component
 from wecs.core import and_filter, or_filter
 
@@ -21,61 +19,107 @@ class ComponentC:
     pass
 
 
-def test_and_filter(world, entity):
+def test_and_filter_with_entity(world, entity):
     f = and_filter([ComponentA, ComponentB])
     assert not f(entity)
 
     entity.add_component(ComponentA())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert not f(entity)
 
     entity.add_component(ComponentB())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
     entity.remove_component(ComponentA)
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert not f(entity)
 
 
-def test_or_filter(world, entity):
+def test_and_filter_with_set():
+    f = and_filter([ComponentA, ComponentB])
+
+    s = set()
+    assert not f(s)
+
+    s = set([ComponentA])
+    assert not f(s)
+
+    s = set([ComponentB])
+    assert not f(s)
+
+    s = set([ComponentA, ComponentB])
+    assert f(s)
+
+
+def test_or_filter_with_entity(world, entity):
     f = or_filter([ComponentA, ComponentB])
     assert not f(entity)
 
     entity.add_component(ComponentA())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
     entity.add_component(ComponentB())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
     entity.remove_component(ComponentA)
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
     entity.remove_component(ComponentB)
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert not f(entity)
+
+
+def test_or_filter_with_set():
+    f = or_filter([ComponentA, ComponentB])
+
+    s = set()
+    assert not f(s)
+
+    s = set([ComponentA])
+    assert f(s)
+
+    s = set([ComponentB])
+    assert f(s)
+
+    s = set([ComponentA, ComponentB])
+    assert f(s)
 
 
 def test_compound_filter_1(world, entity):
     sub_filter_1 = and_filter([ComponentA])
     f = and_filter([sub_filter_1])
+
+    s = set()
+    assert not f(s)
+
     assert not f(entity)
 
+    s = set([ComponentA])
+    assert f(s)
+
     entity.add_component(ComponentA())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
 
 def test_compound_filter_2(world, entity):
     sub_filter_1 = or_filter([ComponentA])
     f = or_filter([sub_filter_1])
+
+    s = set()
+    assert not f(s)
+    
     assert not f(entity)
 
+    s = set([ComponentA])
+    assert f(s)
+
     entity.add_component(ComponentA())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
 
 
@@ -83,56 +127,86 @@ def test_compound_filter_3(world, entity):
     sub_filter_1 = and_filter([ComponentA])
     sub_filter_2 = or_filter([ComponentB, ComponentC])
     f = or_filter([sub_filter_1, sub_filter_2])
+
+    s = set()
+    assert not f(s)
+    
     assert not f(entity)
 
+    s = set([ComponentA])
+    assert f(s)
+
     entity.add_component(ComponentA())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
+
+    s = set([ComponentB])
+    assert f(s)
 
     entity.remove_component(ComponentA)
     entity.add_component(ComponentB())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
+
+    s = set([ComponentC])
+    assert f(s)
 
     entity.remove_component(ComponentB)
     entity.add_component(ComponentC())
-    world.flush_component_updates()
+    world._flush_component_updates()
     assert f(entity)
-
-    entity.remove_component(ComponentC)
-    world.flush_component_updates()
 
 
 def test_compound_filter_4(world, entity):
     sub_filter_1 = and_filter([ComponentA])
     sub_filter_2 = or_filter([ComponentB, ComponentC])
     f = and_filter([sub_filter_1, sub_filter_2]) # A and (B or C)
+
+    # Empty
+    s = set()
+    assert not f(s)
+
     assert not f(entity)
 
-    entity.add_component(ComponentA())
-    world.flush_component_updates()
     # A
+    s = set([ComponentA])
+    assert not f(s)
+
+    entity.add_component(ComponentA())
+    world._flush_component_updates()
     assert not f(entity)
     entity.remove_component(ComponentA)
-    world.flush_component_updates()
+    world._flush_component_updates()
+
+    # B
+    s = set([ComponentB])
+    assert not f(s)
 
     entity.add_component(ComponentB())
-    world.flush_component_updates()
-    # B
+    world._flush_component_updates()
     assert not f(entity)
 
-    entity.add_component(ComponentA())
-    world.flush_component_updates()
     # A, B
+    s = set([ComponentA, ComponentB])
+    assert f(s)
+
+    entity.add_component(ComponentA())
+    world._flush_component_updates()
     assert f(entity)
+
+    # A, C
+    s = set([ComponentA, ComponentC])
+    assert f(s)
 
     entity.remove_component(ComponentB)
     entity.add_component(ComponentC())
-    world.flush_component_updates()
-    # A, C
+    world._flush_component_updates()
     assert f(entity)
 
-    entity.remove_component(ComponentA)
-    world.flush_component_updates()
     # C
+    s = set([ComponentC])
+    assert not f(s)
+
+    entity.remove_component(ComponentA)
+    world._flush_component_updates()
     assert not f(entity)

@@ -64,25 +64,23 @@ class PrepareCameras(System):
         ]),
     }
 
-    def init_entity(self, filter_name, entity):
+    def enter_filter_camera(self, entity):
         model = entity[Model]
-        if filter_name == 'camera':
-            camera = entity[Camera]
-            model = entity[Model]
-            camera.pivot.reparent_to(model.node)
-            camera.camera.reparent_to(camera.pivot)
-        if filter_name == 'mount':
-            camera = entity[Camera]
-            camera.pivot.set_pos(0, 0, 0)
-            camera.pivot.set_hpr(0, 0, 0)
-            camera.camera.set_pos(0, 0, 0)
-            camera.camera.set_hpr(0, 0, 0)
+        camera = entity[Camera]
+        model = entity[Model]
+        camera.pivot.reparent_to(model.node)
+        camera.camera.reparent_to(camera.pivot)
 
-    def destroy_entity(self, filter_name, entity, components_by_type):
-        if Camera in components_by_type:
-            camera = components_by_type[Camera]
-        else:
-            camera = entity[Camera]
+    def enter_filter_mount(self, entity):
+        model = entity[Model]
+        camera = entity[Camera]
+        camera.pivot.set_pos(0, 0, 0)
+        camera.pivot.set_hpr(0, 0, 0)
+        camera.camera.set_pos(0, 0, 0)
+        camera.camera.set_hpr(0, 0, 0)
+
+    def exit_filter_camera(self, entity):
+        camera = entity[Camera]
         camera.pivot.detach_node()
         camera.camera.detach_node()
 
@@ -165,7 +163,7 @@ class CollideCamerasWithTerrain(System):
         ])
     }
 
-    def init_entity(self, filter_name, entity):
+    def enter_filter_camera(self, entity):
         camera = entity[Camera]
         center = entity[ObjectCentricCameraMode]
         zoom = entity[CollisionZoom]

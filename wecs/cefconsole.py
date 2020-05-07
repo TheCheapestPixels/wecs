@@ -29,7 +29,7 @@ class WECSSubconsole(cefconsole.Subconsole):
         if not hasattr(base, 'console'):
             return
         if self.refresh or self.live_refresh:
-            entities = base.ecs_world.entities
+            entities = base.ecs_world.get_entities()
             uids = {e._uid.name: e for e in entities}
             uid_list = sorted(uids.keys())
             component_types = set()

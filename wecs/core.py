@@ -53,6 +53,9 @@ class World:
     def __getitem__(self, uid_or_entity):
         return self.get_entity(uid_or_entity)
 
+    def get_entities(self):
+        return self.entities.values()
+
     def destroy_entity(self, uid_or_entity):
         '''
         Destroys the entity and its components, implicitly
@@ -105,6 +108,7 @@ class World:
         system.world = self
         system._sort = sort
 
+        self._flush_component_updates()
         for entity in self.entities.values():
             system._propose_addition(entity)
 
@@ -357,7 +361,7 @@ class System:
         }
         self.entities = {
             name: set()
-            for name, _ in self.entity_filters.items()
+            for name in self.entity_filters.keys()
         }
 
     def update_entity(self, entity):
@@ -370,15 +374,6 @@ class System:
                 pass
             # TODO: Run enter_filters / exit_filters
             pass
-
-    def init_entity(self, filter_name, entity):
-        '''
-        Callback for when an entity begins satisfying a filter.
-        '''
-        raise Exception("Use enter_filters() instead.")
-
-    def destroy_entity(self, filter_name, entity):
-        raise Exception("Use exit_filters() instead.")
 
     def enter_filters(self, filters, entity):
         for filter in filters:

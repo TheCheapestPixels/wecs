@@ -3,3 +3,5 @@ cefpanda
 jinja2
 graphviz
 crayons
+sphinx-autoapi
+sphinx_rtd_theme

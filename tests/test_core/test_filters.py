@@ -210,3 +210,33 @@ def test_compound_filter_4(world, entity):
     entity.remove_component(ComponentA)
     world._flush_component_updates()
     assert not f(entity)
+
+
+# Test new args syntax
+
+def test_multiarg_creation():
+    f = and_filter(ComponentA, or_filter(ComponentB, ComponentC))
+
+    s = set()
+    assert not f(s)
+    
+    s = set([ComponentA])
+    assert not f(s)
+
+    s = set([ComponentB])
+    assert not f(s)
+
+    s = set([ComponentC])
+    assert not f(s)
+
+    s = set([ComponentA, ComponentB])
+    assert f(s)
+
+    s = set([ComponentA, ComponentC])
+    assert f(s)
+
+    s = set([ComponentB, ComponentC])
+    assert not f(s)
+
+    s = set([ComponentA, ComponentB, ComponentC])
+    assert f(s)

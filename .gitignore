@@ -10,3 +10,4 @@ dist/
 .coverage
 htmlcov/
 error.log
+docs/manual/readme.md

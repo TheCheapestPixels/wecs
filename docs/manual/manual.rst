@@ -7,5 +7,6 @@ Manual
    readme
    tutorial
    prefab
+   boilerplate
    design
    todo

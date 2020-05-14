@@ -121,7 +121,19 @@ such a use case, a "Why not just make those `Systems`?" may be in order.
 References
 ----------
 
-FIXME: UID
+When keeping references to `Entities` in `Components` (or anywhere in
+your software, for that matter), a situation may occur where the
+referenced `Entity` may be unexpectedly deleted. While that would remove
+it from the `World`, it could code-wise still be interacted with as if
+nothing had happened. In many cases, you might consider that "premature"
+deletion of the `Entity` to be a bug; That `Entity` should not have been
+deleted without involving the `Component` that references it.
+
+In other cases, e.g. a role-playing game where any game world object may
+magically be removed from existence at any time, dangling references can
+be embraced as a self-healing mechanism. To do so, keep a reference to
+`Entity._uid`, and use that to `World.get_entity(uid)`. If the `Entity`
+has been deleted, a `wecs.core.NoSuchUID` will be raised.
 
 
 Systems
@@ -155,14 +167,58 @@ class MySystem(System):
 
     def update(self, entities_by_filter):
         # We'll get something like:
-	# {'just_a': set(entity_1, entity_2),
-	#  'complex': set(entity_1),
+	# {'just_a': set([entity_1, entity_2]),
+	#  'complex': set([entity_1]),
 	# }
 	pass
 ```
 
-FIXME: Explanation
-FIXME: Details on deferred flushes
+`Systems` process all `Entities` to which they are relevant (as defined
+by their `Filters`).
+
+When the `World` runs a flush (for example directly before running a
+`System`, adding `Components` to `Entities` and removing them, these
+`Entities` will be tested against all `Filters` of all `Systems` to see
+whether they enter or exit the set of `Entities` that a given `Filter`
+tests for. If an `Entity` newly matches a `Filter`, the `System`'s
+`enter_filter_<filter_name>(self, entity)` will be called with that
+`Entity` as argument. If it conversely no longer matches,
+`exit_filter_<filter_name>(self, entity)` will be called instead.
+
+When the `World` runs the actual update, the `System`'s
+`update(self, entities_by_filter)` function gets called, receiving a
+dictionary of all entities in each filter.
+
+Let's deep-dive into the flush for a moment. The `World` has an
+`addition_pool` and a `removal_pool` to track which `Entities` have
+pending additions or removals of `Components`. When flushing, the
+`World` flushes the `removal_pool` repeatedly until it is empty, then
+the `addition_pool` once. This is repeated in a loop until both pools
+are empty; This way, additions and removals occurring during the flushes
+are also flushed. Removals happen until the `Entities` have reached a
+minimalistic state, then aditions happen.
+
+In a removal flush, the post-removal state of each `Entity` in the
+removal pool is determined, and tested by each `System`. The `System`
+determines which `Filters` the `Entity` drops out of (it previously
+matched, but no longer does so), then calls the corresponding
+`exit_filter_<filter_name>` functions in the *reverse* of the order that
+the `Filters` are specified in in `System.entity_filters`. At this time,
+the `Components` to be removed are still present, so that they can be
+torn down easily. Only once all exits on all `Entities` have been
+processed are the `Components` actually removed.
+
+The addition flush does the same in reverse. First, all deferred
+`Component` additions are performed. Then the same `Filter` testing
+happens, this time calling `exit_filter_<filter_name>` in the order
+that the filters were specified in.
+
+Should your requirements for the order of calls to entry and exit
+functions be even more complex, there's still a way. "Call all
+`enter`/`exit` functions in forward/reverse order" is just the default
+behavior implemented by `System.enter_filters(self, filters, entity)`
+and `System.exit_filters(self, filters, entity)`, so you can override
+it. `filters` is the list of names of `Filters` to be entered/exited.
 
 
 Summary: WECS core
@@ -212,11 +268,46 @@ the `World`.
 Aspects
 -------
 
-FIXME: Code
+While not part of the core, `Aspects` also deserve a mention here, since
+they simplify creating and modifying the `Component` sets of `Etities`.
 
-`Aspects` simplify adding and removing groups of `Components` to and
-from `Entities` to and from `Entities`. An Aspect is a set of
-`Component` types, and the default values for them. When an `Aspect` is
-added to an `Entity`, those `Component`s are created and added to that
-`Entity`, and when the `Aspect` is removed, so are its `Component`
-types.
+```python
+from wecs.core import Aspect
+from wecs.core import factory
+
+base_aspect = Aspect(BaseComponent)
+derived_aspect_a = Aspect(base_aspect, ComponentA)
+derived_aspect_b = Aspect(
+    base_aspect,
+    overrides={
+        base_aspect: dict(
+	    a_field=5,
+	    another_field=factory(SomeFactoryClassOfFunction),
+	)
+    },
+)
+
+
+entity = world.create_entity()
+world.create_entity(derived_aspect_a())
+base_aspect in entity  # True
+derived_aspect_a.remove(entity)
+```
+
+An `Aspect` is a set of `Component` types, and the default values for
+them (which may differ from the component's usual default values). When
+creating an `Aspect`, both `Component` and `Aspects` are pooled to form
+the new `Aspect`. Should any component be present multiple times, the
+creation will fail.
+
+Calling an `Aspect` returns a set of `Component` instances, so that they
+can be added during `Entity` creation.
+
+`overrides` can be added to `Aspects`, and also be passed as an argument when creating `Component` instances:
+```python
+my_aspect.add(entity, overrides=dict(...))
+components = my_aspect(overrides=dict(...))
+```
+`Overrides` passed when creating `Component` instances override those
+given during the creation of the `Aspect`, which in turn override those
+given to any `Aspect` that this one is building on.

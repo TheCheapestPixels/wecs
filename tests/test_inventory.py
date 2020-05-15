@@ -46,7 +46,7 @@ def test_is_in_inventory(world, room):
         RoomPresence(room=room._uid),
         Inventory(contents=[item._uid]),
     )
-    world.flush_component_updates()
+    world._flush_component_updates()
 
     assert is_in_inventory(item, actor)
 
@@ -56,7 +56,7 @@ def test_is_not_in_inventory(world, room, item):
         RoomPresence(room=room._uid),
         Inventory(),
     )
-    world.flush_component_updates()
+    world._flush_component_updates()
 
     assert not is_in_inventory(item, actor)
 

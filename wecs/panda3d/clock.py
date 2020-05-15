@@ -8,13 +8,13 @@ class UpdateClocks(DetermineTimestep):
     input_context = 'clock_control'
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.entity_filters.update({
             'input': and_filter([
                 Clock,
                 Input,
             ]),
         })
+        super().__init__(*args, **kwargs)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['input']:

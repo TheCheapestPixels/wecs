@@ -461,13 +461,13 @@ class Inertiing(System):
         ]),
     }
 
-    def init_entity(self, filter_name, entity):
+    def enter_filter_character(self, entity):
         movement = entity[InertialMovement]
         model = entity[Model]
         movement.node.reparent_to(model.node)
         movement.node.set_hpr(0, 0, 0)
 
-    def destroy_entity(self, filter_name, entity, components_by_type):
+    def exit_filter_character(self, entity):
     # detach InertialMovement.node
         import pdb; pdb.set_trace()
 
@@ -538,7 +538,7 @@ class Bumping(CollisionSystem):
         ]),
     }
 
-    def init_entity(self, filter_name, entity):
+    def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
         self.init_sensors(entity, movement)
         bumper = movement.solids['bumper']
@@ -577,7 +577,7 @@ class Falling(CollisionSystem):
         ]),
     }
 
-    def init_entity(self, filter_name, entity):
+    def enter_filter_character(self, entity):
         self.init_sensors(entity, entity[FallingMovement])
 
     def update(self, entities_by_filter):

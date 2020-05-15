@@ -1,7 +1,12 @@
-manual
-====
+Manual
+======
 
 .. toctree::
    :maxdepth: 4
 
-   specs
+   readme
+   tutorial
+   prefab
+   boilerplate
+   design
+   todo

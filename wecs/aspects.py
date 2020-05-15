@@ -11,8 +11,8 @@ class Aspect:
     '''
     An aspect is a set of
     :class:`wecs.core.Component` types (and values diverging from the
-    defaults) and parent aspects. When you create an entity from a set of
-    aspects, all component types get pooled.
+    defaults) and parent aspects. When you create an entity from a set
+    of aspects, all component types get pooled.
     '''
 
     def __init__(self, aspects_or_components, overrides=None, name=None):

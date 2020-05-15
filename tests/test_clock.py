@@ -12,6 +12,8 @@ def test_basic_clock(world):
     dt = 0.01
     clock = SettableClock(dt)
     entity = world.create_entity(Clock(clock=clock))
+    world._flush_component_updates()
+    
     assert dt < entity[Clock].max_timestep
 
     world.update()
@@ -23,6 +25,7 @@ def clock(world, entity):
     dt = 0.01
     clock = SettableClock(dt)
     entity[Clock] = Clock(clock=clock)
+    world._flush_component_updates()
     assert dt < entity[Clock].max_timestep
     return clock
 

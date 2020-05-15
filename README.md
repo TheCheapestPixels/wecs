@@ -1,108 +1,104 @@
-# WECS
+What is WECS?
+-------------
 
-WECS stands for World, Entities, Components, Systems, and is an implementation
-of an ECS system. Its goal is to put usability first, and not let performance
+*WECS* stands for World, Entities, Components, Systems. It implements
+the architecture pattern known as [ECS, EC, Component system (and
+probably by several other names as well)]
+(https://en.wikipedia.org/wiki/Entity_component_system), which is
+popular in game development.
+
+WECS aims at putting usability first, and to not let performance
 optimizations compromise it.
 
-Beyond the core, WECS' goal is to accumulate enough game mechanics so that the
-time between imagining a game and getting to the point where you actually work
-on your specific game mechanics is a matter of a few minutes of setting up
-boilerplate code. In particular, a module for Panda3D is provided.
+Beyond the core which implements the ECS, the goal of WECS is to
+accumulate enough game mechanics and boilerplate code so that the time
+between imagining a game and getting to the point where you actually
+work on your specific game mechanics is down to a few minutes.
+
+In particular, systems and components to work with the
+[Panda3D engine](https://www.panda3d.org/) are provided.
 
 
-## WECS Fundamentals
+Installation, etc.
+------------------
 
-* A `World` holds `Entities` and `Systems`.
-* `Entities` are made up of `Components`.
-* `Components` contain an `Entity`'s data / variables / state.
-* `Systems` then `filter` all the world's `Entities` by their `Components`,
-  iterate over them, and apply logic to `Component` data.
+Installation: `pip install wecs`
 
-This has certain advantages over classic object-oriented programming:
-* Data and logic separated, modular, readable and reusable.
-* Compositional inheritance becomes the norm. One doesn't use inheritance
-  to build a tree of classes, each more specialized then the last, but
-  rather make combinations of small classes.
-* Logic is applied only to entities that have the sets of `Components` that
-  the logic works on. Thus they can be added and removed during an `Entity`'s
-  life time, without tripping up the code workin on them.
+Documentation: [readthedocs.io](https://wecs.readthedocs.io/en/latest/)
 
-There are also `Aspects`, which simplify adding and removing functionality
-to and from `Entities`. An Aspect is a set of `Component` types, and the
-default values for them. When an `Aspect` is added to an `Entity`, those
-`Component`s are created and added to that `Entity`, and when the `Aspect`
-is removed, so are its `Component` types.
+Source code: [GitHub repository](https://github.com/TheCheapestPixels/wecs)
 
 
-## Installation
-```
-  pip install wecs
+Hello World
+-----------
+
+```python
+from wecs.core import *
+
+world = World()
 ```
 
+A world contains `Entities`; Also `Systems`, more about those later.
 
-## Documentation
+    entity = world.create_entity()
 
-We're currently working on documentation. You can see it here: https://wecs.readthedocs.io/en/latest/
+`Entities` themselves contain `Components`; They are also nothing more
+than a container for components. They are a general form of
+"game object", and can be turned into more specific objects by adding
+`Components` to them.
 
+`Components` are data structures with no inherent functionality (i.e.
+they have no functions). Their presence on an entity describes the state
+of an aspect of that entity. For example, a certain game object could be
+the player's car, having a `Geometry` component with its graphical
+model, a `Car` component describing things like motor power and fuel in
+the tank, a `PhysicsBody` keeping track of the car's representation in
+the physics simulation, and many more. Or it could be something as
+simple as "An entity with this component can count", or "It can print
+its count (if it has one)":
 
-## How to use: A Hello World
+    @Component()
+    class Counter:
+        count: int = 0
 
-```
-from wecs.core import World, Component, System, and_filter
+    @Component()
+    class Printer:
+        name: str = "Bob"
 
+    entity.add_component(Counter())
+    entity.add_component(Printer())
 
-# Component that describes an entity that prints something
-@Component()
-class Printer:
-    message: str
+During each `world.update()`, the `World` will go through its list of
+`Systems`, and run each in turn. Each `System` has a list of `Filters`
+which test whether `System` should process an entity, and in what kind
+of role.
 
+    class CountAndPrint(System):
+        entity_filters = {
+            'count': Counter,
+            'print': and_filter(Counter, Printer),
+        }
 
-class Print(System):
-    # Filter all entities in the world described as Printer
-    entity_filters = {
-        'printers' : and_filter([Printer])
-    }
+        def update(self, entities_by_filter):
+	    for entity in entities_by_filter['count']:
+	        entity[Counter].count += 1
+	    for entity in entities_by_filter['print']:
+	        msg = "{} has counted to {}.".format(
+		    entity[Printer].name,
+		    entity[Counter].count,
+		)
+		print(msg)
 
-    def update(self, entities_by_filter):
-        # Iterate over all filtered entities
-        for entity in entities_by_filter['printers']:
-            # Print their message
-            print(entity[Printer].message)
+    world.add_system(CountAndPrint(), 0)
 
+The `0` in `world.add_system(CountAndPrint(), 0)` is the `sort` of the
+system. Systems are run in ascending order of sort. As an aside, it'd be
+a good idea to break this into two systems; Who knows what else other
+people want to happen between counting and printing?
 
-world = World() # Make a world
-world.add_system(Print(), 0) # Add to it the print system
+Now we can step time forward in this little universe:
 
-printer_entity = world.create_entity() # A new entity
-# Make it a Printer, and set it's message.
-printer_entity.add_component(Printer(message="Hello World"))
-world.update() # Run all added systems
-```
+    world.update()
+    Bob has counted to 1.
 
-
-## Boilerplate for Panda3D
-
-
-
-
-## WECS for Panda3D
-
-There are some game mechanics for panda3d that come out of the box:
-
-* Camera modes:
-    * First-person
-    * Third-person
-    * Turntable
-
-* Character controller:
-    * Flying/Floating
-    * Crouching, Walking, Running, Sprinting and Strafing
-    * Bumping, Falling and Jumping
-    * Basic NPC movement
-    * Stamina
-
-* Animation:
-    * Blended animations
-    * Basic character controller animation
-
-And a bunch more!
+This concludes the Hello World example.

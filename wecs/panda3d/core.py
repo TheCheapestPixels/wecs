@@ -34,7 +34,7 @@ class ECSShowBase(ShowBase):
 
     def run_system(self, system):
         self.ecs_system_pstats[system].start()
-        base.ecs_world.update_system(system)
+        base.ecs_world._update_system(system)
         self.ecs_system_pstats[system].stop()
         return Task.cont
 

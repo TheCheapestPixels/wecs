@@ -30,10 +30,6 @@ author = 'TheCheapestPixels'
 extensions = [
     'sphinx.ext.autodoc',
 ]
-source_parsers = {
-   '.md': 'recommonmark.parser.CommonMarkParser',
-}
-source_suffix = ['.rst', '.md']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,15 +63,5 @@ def setup(app):
     # Register a sphinx.ext.autodoc.between listener to ignore everything
     # between lines that contain the word IGNORE
     app.connect('autodoc-process-docstring', between('^.*IGNORE.*$', exclude=True))
-
-    # Set up AutoStructify for better Markdown support
-    # https://recommonmark.readthedocs.io/en/latest/auto_structify.html
-    github_doc_root = 'https://github.com/rtfd/recommonmark/tree/master/doc/'
-    app.add_config_value('recommonmark_config', {
-            'url_resolver': lambda url: github_doc_root + url,
-            'auto_toc_tree_section': 'Contents',
-            }, True)
-    from recommonmark.transform import AutoStructify
-    app.add_transform(AutoStructify)
 
     return app

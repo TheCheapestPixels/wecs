@@ -15,7 +15,7 @@ that...
 * logic is applied in a round-robin fashion; In the context of games
   that likely means "each piece of logic is applied once per frame, in a
   predetermined order",
-* logic processes those objects to which it is applicable, determined by
+* logic is applied to objects where it is applicable, as determined by
   their current type,
 * different parts of logic communicate with each other via the state
   changes that they cause.

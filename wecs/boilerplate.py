@@ -8,12 +8,12 @@ from panda3d.core import loadPrcFileData
 loadPrcFileData('', 'pstats-active-app-collisions-ctrav false')
 
 from wecs.core import System
-from wecs.panda3d import ECSShowBase as ShowBase
+from wecs.panda3d import ECSShowBase
 
 
 def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False, debug_keys=False):
     # Application Basics
-    ShowBase()
+    ECSShowBase()
     base.win.setClearColor((0.5,0.7,0.9,1))
     base.disable_mouse()
 
@@ -68,6 +68,7 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Set up the world:
     import game
+    # system_types is deprecated, because badly named. Do not use.
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
     if console:

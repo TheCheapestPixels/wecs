@@ -521,7 +521,7 @@ class System:
         self.enter_filters(entered_filters, entity)
 
     def _destroy(self):
-        all_entities = set.union(*self.entities.values())
+        all_entities = set.union(set(), *self.entities.values())
         for entity in all_entities:
             filters = [
                 f_name for f_name, f_ent in self.entities.items()

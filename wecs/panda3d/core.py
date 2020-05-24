@@ -1,10 +1,12 @@
 from panda3d.core import PStatClient
 from panda3d.core import PStatCollector
+from panda3d.core import PythonTask
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 
 from wecs.core import World
+from wecs.core import System
 
 
 class ECSShowBase(ShowBase):
@@ -12,24 +14,39 @@ class ECSShowBase(ShowBase):
         super().__init__(self, *args, **kwargs)
         self.ecs_world = World()
         self.ecs_system_pstats = {}
-        self.task_to_wecs_sort = {}
+        self.task_to_data = {}
+        self.system_to_data = {}
 
-    def add_system(self, system, wecs_sort, p3d_sort=None, p3d_priority=None):
+    def add_system(self, system, sort, priority=None):
+        """
+        system
+            Instance of a :class:`wecs.core.System`
+        sort
+            `sort` parameter for the task running the system
+        priority
+            Optional `priority` parameter for the task running the system
+
+        :returns:
+            Panda3D PythonTask
+        """
+        if priority is None:
+            priority = 0            
+        wecs_sort = (sort, -priority)
+            
         self.ecs_world.add_system(system, wecs_sort)
-        if p3d_sort is None and p3d_priority is None:
-            p3d_sort = wecs_sort
-            p3d_priority = 0
-        elif p3d_priority is None:
-            p3d_priority = 0            
         task = base.task_mgr.add(
             self.run_system,
             repr(system),
             extraArgs=[system],
-            sort=p3d_sort,
-            priority=p3d_priority,
+            sort=sort,
+            priority=priority,
         )
         self.ecs_system_pstats[system] = PStatCollector('App:WECS:Systems:{}'.format(system))
-        self.task_to_wecs_sort[task] = wecs_sort
+
+        system_type = type(system)
+        data = (system_type, task, wecs_sort)
+        self.task_to_data[task] = data
+        self.system_to_data[system_type] = data
         return task
 
     def run_system(self, system):
@@ -38,9 +55,16 @@ class ECSShowBase(ShowBase):
         self.ecs_system_pstats[system].stop()
         return Task.cont
 
-    def remove_system(self, task):
+    def remove_system(self, task_or_system):
+        if isinstance(task_or_system, PythonTask):
+            data = self.task_to_data[task_or_system]
+        elif issubclass(task_or_system, System):
+            data = self.system_to_data[task_or_system]
+        else:
+            raise ValueError(task_or_system, type(task_or_system))
+        system_type, task, wecs_sort = data
+
         self.task_mgr.remove(task)
-        wecs_sort = self.task_to_wecs_sort[task]
-        del self.task_to_wecs_sort[task]
-        self.ecs_world.remove_system(wecs_sort)
-        
+        self.ecs_world.remove_system(system_type)
+        del self.task_to_data[task]
+        del self.system_to_data[system_type]

@@ -78,7 +78,7 @@ world.update()
 entity.remove_component(Counter)
 world.update()
 # ...and if there is no other entity?
-world.remove_entity(entity)
+world.destroy_entity(entity)
 world.update()
 # ...and if we unset the printee reference?
 other_entity.get_component(Printer).printee = None

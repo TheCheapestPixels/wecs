@@ -95,7 +95,7 @@ del entity[Component]              # Remove component
 The actions of adding and removing `Components` to and from `Entities`
 is deferred; That is, it is not being executed at the time that it is
 commanded. While rarely relevant, it should be kept in mind. Details on
-it can be found below under `Systems` (FIXME: Link to section). The only
+it can be found [below under `Systems`](#systems). The only
 thing necessary to keep in mind for now: Component additions and
 removals do not happen immediately.
 

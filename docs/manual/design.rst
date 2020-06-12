@@ -41,9 +41,9 @@ Deferred Component addition / removal
 Motivation
 ~~~~~~~~~~
 
-Imagine that you have a shooter game where two characters each have a
-gun that removes the gun that removes the gun of the target. At the same
-moment, those characters shoot at each other.
+Imagine that you have a shooter game where two characters, each have a
+gun that removes the gun of the target. At the same
+moment, both characters shoot at each other.
 
 For some reason that is realized by removing the target’s ``Gun``
 component; Good software design is secondary here, I want to make a
@@ -80,10 +80,10 @@ Deferring changes
 
 When we add or remove components, we do not process those changes while
 the system is running. Instead, we simply treat these actions as
-requests that we queue up an will process at a later time. A good time
+requests that we queue up and will process at a later time. A good time
 for that is “any time right before a system is updated”, since it cleans
 up any dirty state, like the setup of a specific world’s state in the
-beginning leaves. Another good time is right after a system, since a
+beginning leaves. Another good time is right after a system update, since a
 developer may choose to let code outside of ``System``\ s interact with
 the ``World``\ ’s state, so it’d be helpful to leave a clean state. And
 since cleaning up a clean state is close to a null operation, there is

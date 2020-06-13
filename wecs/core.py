@@ -1,4 +1,3 @@
-import types
 import dataclasses
 
 
@@ -373,7 +372,7 @@ class Entity:
         return "<Entity {}>".format(self._uid.name)
 
 
-class Component():
+class Component:
     """
     New components are declared like dataclasses::
 

@@ -1,17 +1,19 @@
 from wecs.core import World, Component, System, and_filter, UID, NoSuchUID
 
-
 # There is a world with an entity in it.
 world = World()
 entity = world.create_entity()
+
 
 # Entities can be counters.
 @Component()
 class Counter:
     value: int
 
+
 # The entity in the world is a counter.
 entity.add_component(Counter(value=0))
+
 
 # It is possible that in a world, all counters increase their count by
 # one each frame.
@@ -22,12 +24,14 @@ class Count(System):
         for entity in entities_by_filter['counts']:
             entity.get_component(Counter).value += 1
 
+
 # In this world, that is the case, and happens at time index 0 of the
 # frame.
 world.add_system(Count(), 0)
 
 # Let's make some time pass in the world.
 world.update()
+
 
 # Whoops, no output? Typically we'd add a component to the entity to
 # also make it a printer, but I want to show you entity references,

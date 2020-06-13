@@ -84,7 +84,6 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
 def add_systems(system_specs):
     sort, priority = 1, 1
-    full_specs = {}  # (sort, priority): system_instance
 
     for spec in system_specs:
         # Figure out the full_specs

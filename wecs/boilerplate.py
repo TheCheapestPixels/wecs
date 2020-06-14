@@ -1,3 +1,8 @@
+"""
+A panda3D boilerplate.
+
+TODO rename to panda3D_boilerplate
+"""
 import sys
 
 from panda3d.core import loadPrcFileData
@@ -12,6 +17,17 @@ from wecs.panda3d import ECSShowBase
 
 def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False,
              debug_keys=False):
+    """
+    Runs the game by using the panda3D's main run loop.
+
+    :param module_name:
+    :param simplepbr:
+    :param simplepbr_kwargs:
+    :param console:
+    :param keybindings:
+    :param debug_keys:
+
+    """
     # Application Basics
     ECSShowBase()
     base.win.setClearColor((0.5, 0.7, 0.9, 1))

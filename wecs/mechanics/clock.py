@@ -1,3 +1,4 @@
+""" TODO add description of what mechanics.clock does"""
 from types import FunctionType
 from collections import defaultdict
 
@@ -22,7 +23,7 @@ class SettableClock:
 class Clock:
     clock: FunctionType = None
     timestep: float = 0.0  # Deprecated
-    max_timestep: float = 1.0/30
+    max_timestep: float = 1.0 / 30
     scaling_factor: float = 1.0
     parent: UID = None
     wall_time: float = 0.0

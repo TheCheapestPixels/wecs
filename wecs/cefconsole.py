@@ -37,11 +37,13 @@ class WECSSubconsole(cefconsole.Subconsole):
                 for component in entity.components:
                     component_types.add(type(component))
             component_types = sorted(component_types, key=lambda ct: repr(ct))
+
             def crepr(e, ct):
                 if ct in e:
                     return e[ct]
                 else:
                     return None
+
             matrix = [
                 (uid, [crepr(uids[uid], ct) for ct in component_types])
                 for uid in uid_list
@@ -86,8 +88,8 @@ class EntityWatcherSubconsole(cefconsole.Subconsole):
         entities = [
             {'obj': e}
             for e in sorted(
-                    list(entities),
-                    key=lambda e:repr(e._uid),
+                list(entities),
+                key=lambda e: repr(e._uid),
             )
         ]
 
@@ -112,7 +114,6 @@ class EntityWatcherSubconsole(cefconsole.Subconsole):
                     }
                     for f in component['fields']
                 ]
-
 
         template = base.console.env.get_template('{}/watcher.html'.format(self.name))
         content = template.render(

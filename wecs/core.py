@@ -10,11 +10,12 @@ class World:
     `update` and `add_system` will cause deferred component
     updates to entities to be flushed.
     """
+
     def __init__(self):
-        self.entities = {} # {UID: Entity}
-        self.systems = {} # {sort: System}
-        self._addition_pool = set() # Entities
-        self._removal_pool = set() # Entities
+        self.entities = {}  # {UID: Entity}
+        self.systems = {}  # {sort: System}
+        self._addition_pool = set()  # Entities
+        self._removal_pool = set()  # Entities
 
     # Entity CRUD
 
@@ -160,7 +161,7 @@ class World:
         del self.systems[system._sort]
 
     # Flush entity component updates
-        
+
     def _register_entity_for_add_flush(self, entity):
         self._addition_pool.add(entity)
 
@@ -225,6 +226,7 @@ class UID:
     """
     Object for referencing a :class:`wecs.core.Entity`.
     """
+
     def __init__(self, name=None):
         if name is None:
             name = str(id(self))
@@ -253,9 +255,9 @@ class Entity:
     def __init__(self, world, name=None):
         self.world = world
         self._uid = UID(name)
-        self.components = {} # type: instance
-        self._added_components = {} # type: instance
-        self._dropped_components = set() # types
+        self.components = {}  # type: instance
+        self._added_components = {}  # type: instance
+        self._dropped_components = set()  # types
 
     # Component CRUD
 
@@ -344,14 +346,14 @@ class Entity:
         return self.remove_component(component_type)
 
     # Deferred component updates
-    
+
     def _get_post_removal_component_types(self):
         current_types = self.components.keys()
         return set(current_types).difference(self._dropped_components)
 
     def _get_post_addition_component_types(self):
         current_types = self.components.keys()
-        return set(current_types).union(self._added_components) 
+        return set(current_types).union(self._added_components)
 
     def _flush_removals(self):
         for c_type in self._dropped_components:
@@ -381,6 +383,7 @@ class Component:
             my_variable: int = 0
 
     """
+
     def __init__(self, unique=True):
         self.unique = unique
 
@@ -539,6 +542,7 @@ class Filter:
     The base class for filters. Please don't use it directly. Instead,
     use :func:`wecs.core.and_filter` and :func:`wecs.core.or_filter`.
     """
+
     def __init__(self, *types_and_filters):
         old_style = len(types_and_filters) == 1 and isinstance(types_and_filters[0], list)
         if old_style:
@@ -585,6 +589,7 @@ class AndFilter(Filter):
     Class for and-filters. Please use :func:`wecs.core.and_filter`
     instead.
     """
+
     def _evaluate(self, types):
         for clause in self.types_and_filters:
             if isinstance(clause, Filter):
@@ -600,6 +605,7 @@ class OrFilter(Filter):
     Class for or-filters. Please use :func:`wecs.core.or_filter`
     instead.
     """
+
     def _evaluate(self, types):
         for clause in self.types_and_filters:
             if isinstance(clause, Filter):

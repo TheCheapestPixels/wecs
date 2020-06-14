@@ -7,7 +7,6 @@ from wecs import mechanics
 from wecs.aspects import Aspect
 from wecs.aspects import factory
 
-
 # An ontology of aspects:
 # * Controllable beings on the map
 #   `character`s are controllable entities with a "physical" presence (a Model)
@@ -36,7 +35,7 @@ character = Aspect(
         panda3d.Model,
         panda3d.Geometry,
     ],
-    overrides = {
+    overrides={
         mechanics.Clock: dict(clock=panda3d.panda_clock),
     },
 )
@@ -50,6 +49,8 @@ def rebecca_bumper():
             radius=0.7,
         ),
     }
+
+
 def rebecca_lifter():
     return {
         'lifter': dict(
@@ -58,6 +59,8 @@ def rebecca_lifter():
             radius=0.5,
         ),
     }
+
+
 walking = Aspect(
     [
         panda3d.WalkingMovement,
@@ -68,7 +71,7 @@ walking = Aspect(
         panda3d.FallingMovement,
         panda3d.JumpingMovement,
     ],
-    overrides = {
+    overrides={
         panda3d.BumpingMovement: dict(solids=factory(rebecca_bumper)),
         panda3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
     },
@@ -88,13 +91,14 @@ def spectator_bumper():
             ),
         },
     )
+
+
 spectator = Aspect([character, panda3d.FloatingMovement, panda3d.BumpingMovement],
                    overrides={
-                       panda3d.Model: dict(node=factory(lambda:NodePath('spectator'))),
+                       panda3d.Model: dict(node=factory(lambda: NodePath('spectator'))),
                        panda3d.BumpingMovement: dict(solids=factory(spectator_bumper)),
                    },
-)
-
+                   )
 
 pc_mind = Aspect([panda3d.Input],
                  overrides={
@@ -104,10 +108,9 @@ pc_mind = Aspect([panda3d.Input],
                          'clock_control',
                      ]),
                  },
-)
+                 )
 npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
 npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
-
 
 first_person = Aspect([
     panda3d.Camera,
@@ -119,7 +122,6 @@ third_person = Aspect([
     panda3d.TurningBackToCameraMovement,
     panda3d.CollisionZoom,
 ])
-
 
 player_character = Aspect([avatar, pc_mind, third_person])
 non_player_character = Aspect([avatar, npc_mind_constant])

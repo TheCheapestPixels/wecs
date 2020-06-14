@@ -25,9 +25,17 @@ class DropAction:
 
 
 class ItemNotInRoom(Exception): pass
+
+
 class ItemNotInInventory(Exception): pass
+
+
 class ActorHasNoInventory(Exception): pass
+
+
 class ActorNotInRoom(Exception): pass
+
+
 class NotTakeable(Exception): pass
 
 

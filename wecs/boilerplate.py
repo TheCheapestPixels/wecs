@@ -50,9 +50,9 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Handy Helpers:
     # esc: quit
-    # f 9: console
-    # f10: frame rate meter
-    # f11: pdb, during event loop
+    # f 9: open console
+    # f10: show/hide frame rate meter
+    # f11: debug using pdb, during event loop
     # f12: pstats; connects to a running server
 
     if console:

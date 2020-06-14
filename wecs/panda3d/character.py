@@ -27,7 +27,7 @@ from .camera import ObjectCentricCameraMode
 
 @Component()
 class CharacterController:
-    '''
+    """
     A moving entity.
 
     :param Vec3 move: (0, 0, 0) - speed of relative movement
@@ -38,10 +38,10 @@ class CharacterController:
     :param bool crouches: False - Is True when crouching
 
     Remaining variables are calculated by systems.
-    '''
+    """
 
     # Input or AI
-    move: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
+    move: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
     heading: float = 0.0
     pitch: float = 0.0
     jumps: bool = False
@@ -51,12 +51,12 @@ class CharacterController:
     max_heading: float = 90.0
     max_pitch: float = 90.0
     # Intention of movement
-    translation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    rotation: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    translation: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
+    rotation: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
     clamp_pitch: bool = True
     # Speed bookkeeping
-    last_translation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    last_rotation_speed: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
+    last_translation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
+    last_rotation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
 
 
 @Component()
@@ -115,8 +115,8 @@ class JumpingMovement:
     :param Vec3 speed: (1, 1, 0) - speed of relative movement when jumping
     :param float impulse: (0, 0, 5) - initial speed of jump
     '''
-    speed: Vec3 = field(default_factory=lambda:Vec3(1, 1, 0))
-    impulse: bool = field(default_factory=lambda:Vec3(0, 0, 5))
+    speed: Vec3 = field(default_factory=lambda: Vec3(1, 1, 0))
+    impulse: bool = field(default_factory=lambda: Vec3(0, 0, 5))
 
 
 @Component()
@@ -131,7 +131,7 @@ class InertialMovement:
     '''
     acceleration: float = 30.0
     rotated_inertia: float = 0.5
-    node: NodePath = field(default_factory=lambda:NodePath("Inertia"))
+    node: NodePath = field(default_factory=lambda: NodePath("Inertia"))
     ignore_z: bool = True
 
 
@@ -157,7 +157,7 @@ class BumpingMovement:
     This character's horizontal movement is hindered by collisions.
     '''
     tag_name: str = 'bumping'
-    solids: dict = field(default_factory=lambda:dict())
+    solids: dict = field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
@@ -169,12 +169,12 @@ class FallingMovement:
     '''
     This character falls unless on solid ground.
     '''
-    gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
-    inertia: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
-    local_gravity: Vec3 = field(default_factory=lambda:Vec3(0, 0, -9.81))
+    gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -9.81))
+    inertia: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
+    local_gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -9.81))
     ground_contact: bool = False
     tag_name: str = 'falling'
-    solids: dict = field(default_factory=lambda:dict())
+    solids: dict = field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
@@ -250,7 +250,7 @@ class UpdateCharacter(System):
             # Controllers gamepad etc.) fill a whole rectangle of input
             # space, but characters are limited to a circle. If you're
             # strafing diagonally, you still don't get sqrt(2) speed.
-            xy_dist = sqrt(controller.move.x**2 + controller.move.y**2)
+            xy_dist = sqrt(controller.move.x ** 2 + controller.move.y ** 2)
             xy_scaling = 1.0
             if xy_dist > 1:
                 xy_scaling = 1.0 / xy_dist
@@ -258,6 +258,7 @@ class UpdateCharacter(System):
             y = controller.move.y * xy_scaling
             z = controller.move.z * xy_scaling
             controller.translation = Vec3(x * dt, y * dt, z * dt)
+
 
 # Movement systems
 #
@@ -401,7 +402,7 @@ class TurningBackToCamera(System):
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
 
-            if character.move.x ** 2 + character.move.y**2 > (turning.threshold * dt) ** 2:
+            if character.move.x ** 2 + character.move.y ** 2 > (turning.threshold * dt) ** 2:
                 # What's the angle to turn?
                 target_angle = camera.pivot.get_h() % 360
                 if target_angle > 180.0:
@@ -438,7 +439,7 @@ class FaceMovement(System):
         for entity in entities_by_filter['character']:
             geometry = entity[Geometry]
             controller = entity[CharacterController]
-            x,y,z = controller.last_translation_speed
+            x, y, z = controller.last_translation_speed
             geometry.node.look_at(x, y, 0)
 
 
@@ -468,8 +469,9 @@ class Inertiing(System):
         movement.node.set_hpr(0, 0, 0)
 
     def exit_filter_character(self, entity):
-    # detach InertialMovement.node
-        import pdb; pdb.set_trace()
+        # detach InertialMovement.node
+        import pdb;
+        pdb.set_trace()
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
@@ -631,7 +633,7 @@ class Falling(CollisionSystem):
                     y = contact_point.get_y()
                     # x**2 + y**2 + z**2 = radius**2
                     # z**2 = radius**2 - (x**2 + y**2)
-                    expected_z = -sqrt(radius**2 - (x**2 + y**2))
+                    expected_z = -sqrt(radius ** 2 - (x ** 2 + y ** 2))
                     actual_z = contact_point.get_z()
                     height_corrections.append(actual_z - expected_z)
             if height_corrections:
@@ -712,7 +714,6 @@ class ExecuteMovement(System):
                 clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
                 character.rotation.y += clamped_pitch - preclamp_pitch
 
-
             model.node.set_hpr(model.node.get_hpr() + character.rotation)
             character.last_rotation_speed = character.rotation / dt
 
@@ -764,7 +765,7 @@ class UpdateStamina(System):
             character = entity[CharacterController]
             stamina = entity[Stamina]
             dt = entity[Clock].timestep
-            av = abs(character.move.x)+abs(character.move.y)
+            av = abs(character.move.x) + abs(character.move.y)
             drain = 0
             if character.move.x or character.move.y:
                 drain = stamina.move_drain * av

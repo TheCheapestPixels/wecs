@@ -1,9 +1,10 @@
-import types
+"""Aspects"""
 
 
 def factory(factory_function):
     def func():
         return factory_function()
+
     return func
 
 
@@ -19,7 +20,7 @@ class Aspect:
         self.name = name
         self.components = {}
         for aoc in aspects_or_components:
-            if isinstance(aoc, (Aspect)):
+            if isinstance(aoc, Aspect):
                 if any(key in aoc.components for key in self.components.keys()):
                     raise ValueError("Aspect {} has clashing components".format(aoc))
                 self.components.update(aoc.components)
@@ -52,6 +53,7 @@ class Aspect:
         return components
 
     def __call__(self, overrides=None):
+        """ TODO explain why someone would like to call the class"""
         components = []
         if overrides is None:
             overrides = {}

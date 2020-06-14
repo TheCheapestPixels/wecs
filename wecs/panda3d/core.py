@@ -19,15 +19,15 @@ class ECSShowBase(ShowBase):
 
     def add_system(self, system, sort, priority=None):
         """
-        system
-            Instance of a :class:`wecs.core.System`
-        sort
-            `sort` parameter for the task running the system
-        priority
-            Optional `priority` parameter for the task running the system
+        Registers an additional system in the world.
+        The world will use the standard panda3D taskManager to ensure the system
+        is run on every tick.
 
-        :returns:
-            Panda3D PythonTask
+        :param system: Instance of a :class:`wecs.core.System`
+        :param sort: `sort` parameter for the task running the system
+        :param priority: Optional `priority` parameter for the task running the system
+        :return: Panda3D PythonTask
+
         """
         if priority is None:
             priority = 0            

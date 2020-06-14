@@ -50,7 +50,7 @@ class AnimateCharacter(System):
             elif controller.crouches:
                 initial = "crouch"
             animation.to_play = [initial, "walk_forward", "run_forward"]
-            #TODO: bad constant, 1.4? Should be fixed in animation
+            # TODO: bad constant, 1.4? Should be fixed in animation
             # when the right value is found in lab.
             forward_speed = abs(controller.translation.y*1.4)
             idle = max(0, (1 - forward_speed))
@@ -58,7 +58,7 @@ class AnimateCharacter(System):
             run = max(0, forward_speed * 2 - 1)
             blends = [idle, walk, run]
             # sideways movement
-            #TODO: same here, another constant. Fix in animation after lab.
+            # TODO: same here, another constant. Fix in animation after lab.
             strafe_speed = (controller.translation.x*1.4)
             if not strafe_speed == 0:
                 blends.append(abs(strafe_speed))
@@ -136,13 +136,13 @@ class Animate(System):
                 # TODO: Don't stop and swap different animations instantly
                 # but ease in (and bounce?) between them.
 
-                #Stop animations not in to_play.
+                # Stop animations not in to_play.
                 for name in animation.playing:
-                    if not name in animation.to_play:
+                    if name not in animation.to_play:
                         actor.stop(name)
                         actor.setControlEffect(name, 0)
 
-                #Play newly added animations.
+                # Play newly added animations.
                 for n, name in enumerate(animation.to_play):
                     if name not in animation.playing:
                         actor.loop(name)

@@ -22,7 +22,7 @@ from wecs.mechanics.clock import Clock
 
 @Component()
 class Model:
-    node: NodePath = field(default_factory=lambda:NodePath(""))
+    node: NodePath = field(default_factory=lambda: NodePath(""))
 
 
 @Component()
@@ -36,12 +36,12 @@ class Geometry:
 @Component()
 class Actor:
     file: str = ''
-    node: NodePath = field(default_factory=lambda:NodePath(""))
+    node: NodePath = field(default_factory=lambda: NodePath(""))
 
 
 @Component()
 class CollidableGeometry:
-    collide_mask: int = 1<<0 # bit 0 set
+    collide_mask: int = 1 << 0  # bit 0 set
 
 
 @Component()
@@ -53,26 +53,26 @@ class FlattenStrong:
 
 @Component()
 class Scene:
-    node: NodePath = field(default_factory=lambda:base.render)
+    node: NodePath = field(default_factory=lambda: base.render)
 
 
 # This should vanish... It means "Initial position"... I hope.
 @Component()
 class Position:
-    value: Vec3 = field(default_factory=lambda:Vec3(0,0,0))
+    value: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
 
 
 # 2d models (aka sprites)
 
 @Component()
-class Sprite: # Displayes an image on a card
+class Sprite:  # Displayes an image on a card
     node: NodePath = None
     image_name: str = ""
     texture: Texture = None
     pixelated: bool = True
 
 
-@Component() # Displays part of an image
+@Component()  # Displays part of an image
 class SpriteSheet:
     sprite_width: int = 16
     sprite_height: int = 16
@@ -80,19 +80,19 @@ class SpriteSheet:
     update: bool = True
 
 
-@Component() # Display parts of an image in sequence
+@Component()  # Display parts of an image in sequence
 class SpriteAnimation:
     animations: dict = field(default_factory=lambda: {
-        "idle" : [0,1],
+        "idle": [0, 1],
     })
     animation: str = None
     loop: bool = True
-    framerate: int = 15 #frames-per-second
-    timer: int = 0 # accumulated delta-time
-    frame: int = 0 # current frame in the animation
+    framerate: int = 15  # frames-per-second
+    timer: int = 0  # accumulated delta-time
+    frame: int = 0  # current frame in the animation
 
 
-@Component() # Geometry always faces the camera
+@Component()  # Geometry always faces the camera
 class Billboard:
     pass
 
@@ -132,7 +132,7 @@ class ManageGeometry(System):
         else:
             geometry.node = NodePath(entity._uid.name + "_geometry")
 
-        if Actor in entity: # TODO: should be handled by animation system?
+        if Actor in entity:  # TODO: should be handled by animation system?
             actor = entity[Actor]
             actor.node = direct.actor.Actor.Actor(actor.file)
             geometry.nodes.add(actor.node)
@@ -145,7 +145,7 @@ class ManageGeometry(System):
                 to_add = geometry.nodes.difference(geometry.connected_nodes)
                 to_remove = geometry.connected_nodes.difference(geometry.nodes)
                 for node in to_remove:
-                    node.detach_node() # TODO: destruction handled by owner
+                    node.detach_node()  # TODO: destruction handled by owner
                 for node in to_add:
                     node.reparent_to(geometry.node)
                 geometry.connected_nodes = geometry.nodes.copy()
@@ -201,7 +201,7 @@ class UpdateSprites(System):
         super().__init__(*args, **kwargs)
         self.cardmaker = CardMaker("sprite")
         # set frame so the bottom edge is centered on 0
-        self.cardmaker.set_frame(-0.5,0.5,0,1)
+        self.cardmaker.set_frame(-0.5, 0.5, 0, 1)
 
     def enter_filter_sprite(self, entity):
         sprite = entity[Sprite]
@@ -229,10 +229,10 @@ class UpdateSprites(System):
         animation = sprite_animation.animations[sprite_animation.animation]
         sprite_animation.frame += 1
         # Manage end of animation
-        if sprite_animation.frame > len(animation)-1:
-            if sprite_animation.loop: # Start from beginning
+        if sprite_animation.frame > len(animation) - 1:
+            if sprite_animation.loop:  # Start from beginning
                 sprite_animation.frame = 0
-            else: # Reshow last frame
+            else:  # Reshow last frame
                 sprite_animation.frame -= 1
         sheet.frame = animation[sprite_animation.frame]
         sheet.update = True
@@ -241,12 +241,12 @@ class UpdateSprites(System):
         sprite = entity[Sprite]
         sheet = entity[SpriteSheet]
         # get UV transform for current frame
-        w = sheet.sprite_width/sprite.texture.get_orig_file_x_size()
-        h = sheet.sprite_height/sprite.texture.get_orig_file_y_size()
-        rows = 1/w
-        collumns = 1/h
-        u = (sheet.frame%rows)*w
-        v = 1-(((sheet.frame//collumns)*h)+h)
+        w = sheet.sprite_width / sprite.texture.get_orig_file_x_size()
+        h = sheet.sprite_height / sprite.texture.get_orig_file_y_size()
+        rows = 1 / w
+        collumns = 1 / h
+        u = (sheet.frame % rows) * w
+        v = 1 - (((sheet.frame // collumns) * h) + h)
         # display it
         stage = sprite.node.find_all_texture_stages()[0]
         sprite.node.set_tex_scale(stage, w, h)
@@ -264,8 +264,8 @@ class UpdateSprites(System):
                         animation = sprite.animations[sprite.animation]
                         # Increment frame
                         sprite.timer += clock.game_time
-                        if sprite.timer >= 1/sprite.framerate:
-                            sprite.timer -= 1/sprite.framerate
+                        if sprite.timer >= 1 / sprite.framerate:
+                            sprite.timer -= 1 / sprite.framerate
                             self.animate(entity)
                 if sheet.update:
                     self.set_frame(entity)

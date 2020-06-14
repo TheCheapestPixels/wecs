@@ -27,11 +27,15 @@ class RoomPresence:
 
 @Component()
 class ChangeRoomAction:
-    room: UID # Room to change to
+    room: UID  # Room to change to
 
 
 class EntityNotInARoom(Exception): pass
+
+
 class ItemNotInARoom(Exception): pass
+
+
 class RoomsNotAdjacent(Exception): pass
 
 
@@ -80,7 +84,7 @@ class PerceiveRoom(System):
             for presence in room.presences:
                 if presence not in room.continued:
                     room.gone.append(presence)
-        # Rebuilding the presencce lists
+        # Rebuilding the presence lists
         for entity in filtered_entities['room']:
             room = entity.get_component(Room)
             room.presences = room.arrived + room.continued

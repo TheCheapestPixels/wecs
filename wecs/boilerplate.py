@@ -19,6 +19,12 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
              debug_keys=False):
     """
     Runs the game by using the panda3D's main run loop.
+    It also sets up several handy keyboard shortcuts to use while deveoping:
+    esc: quit
+    F9 : show/hide console
+    F10: show/hide frame rate meter
+    F11: debug using pdb, during event loop
+    F12: pstats; connects to a running server
 
     :param module_name:
     :param simplepbr:
@@ -30,7 +36,8 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
     """
     # Application Basics
     ECSShowBase()
-    base.win.setClearColor((0.5, 0.7, 0.9, 1))
+    sky_color = (0.3, 0.5, 0.95, 1)
+    base.win.setClearColor(sky_color)
     base.disable_mouse()
 
     if keybindings:
@@ -48,17 +55,13 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
             simplepbr_kwargs = {}  # i.e. dict(max_lights=1)
         simplepbr.init(**simplepbr_kwargs)
 
-    # Handy Helpers:
-    # esc: quit
-    # f 9: open console
-    # f10: show/hide frame rate meter
-    # f11: debug using pdb, during event loop
-    # f12: pstats; connects to a running server
-
     if console:
         from cefconsole import add_console
         from cefconsole import PythonSubconsole
+        # FIXME next check looks redundant. cefconsole uses F9 as default,
+        # FIXME and it's activated even if debug_keys false
         if debug_keys:
+
             add_console(subconsoles=[PythonSubconsole()], toggle="f9")
         else:
             add_console(subconsoles=[PythonSubconsole()])
@@ -89,6 +92,7 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
     # Set up the world:
     import game  # fixme this assumes that module game exists. That's a strong undocumented requirement.
     # system_types is deprecated, because badly named. Do not use.
+    # fixme if above comment is true, than it should be fixed. Too early for keeping "backward compatibility" stuff(?)
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
     if console:
@@ -99,6 +103,13 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
 
 def add_systems(system_specs):
+    """
+    Register additional systems to the world.
+    Registered systems will be activated in every update.
+
+    :param system_specs:
+    :return:
+    """
     sort, priority = 1, 1
 
     for spec in system_specs:

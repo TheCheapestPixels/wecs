@@ -10,6 +10,7 @@ from wecs.panda3d import Scene
 from wecs.panda3d import Position
 
 from movement import Movement
+from movement import Players
 from paddles import Paddle
 
 
@@ -36,16 +37,18 @@ class BallTouchesBoundary(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['ball']:
-            np = entity.get_component(Model).node
-            z = np.get_z()
+            model = entity[Model]
+            movement = entity[Movement]
+
+            # The ball's size is assumed to be 0.1, and if it moved over
+            # the upper or lower boundary (1 / -1), we reflect it.
+            z = model.node.get_z()
             if z > 0.9:
-                np.set_z(0.9 - (z - 0.9))
-                movement = entity.get_component(Movement).value
-                movement.z = -movement.z
+                model.node.set_z(0.9 - (z - 0.9))
+                movement.value.z = -movement.value.z
             if z < -0.9:
-                np.set_z(-0.9 - (z + 0.9))
-                movement = entity.get_component(Movement).value
-                movement.z = -movement.z
+                model.node.set_z(-0.9 - (z + 0.9))
+                movement.value.z = -movement.value.z
 
 
 class BallTouchesPaddleLine(System):
@@ -66,44 +69,44 @@ class BallTouchesPaddleLine(System):
     }
 
     def update(self, entities_by_filter):
-        paddle_entities = sorted(
-            entities_by_filter['paddles'],
-            key=lambda e: e.get_component(Paddle).player,
-        )
+        paddles = {
+            p[Paddle].player: p
+            for p in entities_by_filter['paddles']
+        }
+
         for entity in set(entities_by_filter['ball']):
-            pos = entity.get_component(Position)
-            if pos.value.x < -1:
-                paddle = paddle_entities[0]
-                paddle_z = paddle.get_component(Position).value.z
-                paddle_size = paddle.get_component(Paddle).size
-                if abs(paddle_z - pos.value.z) > paddle_size:
-                    print("SCORE RIGHT!")
-                    entity.remove_component(Movement)
-                    entity.add_component(Resting())
-                    entity.get_component(Position).value = Point3(0, 0, 0)
-                else:
-                    entity.get_component(Movement).value.x *= -1
-                    dist_to_center = paddle_z - pos.value.z
-                    normalized_dist = dist_to_center / (paddle_size)
-                    movement = entity.get_component(Movement).value
-                    speed = abs(movement.x)
-                    movement.z -= normalized_dist * speed
-            if pos.value.x > 1:
-                paddle = paddle_entities[1]
-                paddle_z = paddle.get_component(Position).value.z
-                paddle_size = paddle.get_component(Paddle).size
-                if abs(paddle_z - pos.value.z) > paddle_size:
-                    print("SCORE LEFT!")
-                    entity.remove_component(Movement)
-                    entity.add_component(Resting())
-                    entity.get_component(Position).value = Point3(0, 0, 0)
-                else:
-                    entity.get_component(Movement).value.x *= -1
-                    dist_to_center = paddle_z - pos.value.z
-                    normalized_dist = dist_to_center / paddle_size
-                    movement = entity.get_component(Movement).value
-                    speed = abs(movement.x)
-                    movement.z -= normalized_dist * speed
+            position = entity[Position]
+            movement = entity[Movement]
+
+            # Whose line are we behind, if any?
+            if position.value.x < -1:
+                player = Players.LEFT
+            elif position.value.x > 1:
+                player = Players.RIGHT
+            else:
+                continue
+
+            paddle = paddles[player]
+            paddle_position = paddle[Position]
+            paddle_paddle = paddle[Paddle]
+
+            paddle_z = paddle_position.value.z
+            paddle_size = paddle_paddle.size
+
+            if abs(paddle_z - position.value.z) > paddle_size:
+                # The paddle is too far away, a point is scored.
+                print("SCORE!")
+                del entity[Movement]
+                entity[Resting] = Resting()
+                position.value = Point3(0, 0, 0)
+            else:
+                # Reverse left-right direction
+                movement.value.x *= -1
+                # Adjust up-down speed based on where the paddle was hit
+                dist_to_center = paddle_z - position.value.z
+                normalized_dist = dist_to_center / (paddle_size)
+                speed = abs(movement.value.x)
+                movement.value.z -= normalized_dist * speed
 
 
 class StartBallMotion(System):
@@ -118,10 +121,11 @@ class StartBallMotion(System):
     }
 
     def update(self, entities_by_filter):
-        start_balls = base.mouseWatcherNode.is_button_down(
-            KeyboardButton.space(),
-        )
+        # Should resting balls be started?
+        start_key = KeyboardButton.space()
+        start_balls = base.mouseWatcherNode.is_button_down(start_key)
+
         if start_balls:
             for entity in set(entities_by_filter['ball']):
-                entity.remove_component(Resting)
-                entity.add_component(Movement(value=Vec3(-1, 0, 0)))
+                del entity[Resting]
+                entity[Movement] = Movement(value=Vec3(-1, 0, 0))

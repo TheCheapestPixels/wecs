@@ -45,10 +45,10 @@ class BallTouchesBoundary(System):
             z = model.node.get_z()
             if z > 0.9:
                 model.node.set_z(0.9 - (z - 0.9))
-                movement.value.z = -movement.value.z
+                movement.direction.z = -movement.direction.z
             if z < -0.9:
                 model.node.set_z(-0.9 - (z + 0.9))
-                movement.value.z = -movement.value.z
+                movement.direction.z = -movement.direction.z
 
 
 class BallTouchesPaddleLine(System):
@@ -101,12 +101,12 @@ class BallTouchesPaddleLine(System):
                 position.value = Point3(0, 0, 0)
             else:
                 # Reverse left-right direction
-                movement.value.x *= -1
+                movement.direction.x *= -1
                 # Adjust up-down speed based on where the paddle was hit
                 dist_to_center = paddle_z - position.value.z
                 normalized_dist = dist_to_center / (paddle_size)
-                speed = abs(movement.value.x)
-                movement.value.z -= normalized_dist * speed
+                speed = abs(movement.direction.x)
+                movement.direction.z -= normalized_dist * speed
 
 
 class StartBallMotion(System):
@@ -128,4 +128,4 @@ class StartBallMotion(System):
         if start_balls:
             for entity in set(entities_by_filter['ball']):
                 del entity[Resting]
-                entity[Movement] = Movement(value=Vec3(-1, 0, 0))
+                entity[Movement] = Movement(direction=Vec3(-1, 0, 0))

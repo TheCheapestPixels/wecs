@@ -1,3 +1,12 @@
+"""
+Simple movement System and component.
+
+The Component holds a 3D vector which represents the direction of the
+Entity which uses it.
+
+The System makes sure that on every update() the position of the Entity is
+updated according to the direction.
+"""
 from enum import Enum
 
 from panda3d.core import Vec3
@@ -17,24 +26,45 @@ class Players(Enum):
 
 @Component()
 class Movement:
-    value: Vec3
+    """
+    The Component holds a 3D vector which represents the direction of the
+    Entity which uses it.
+    The direction is the 3D change that should happen in one second.
+    """
+    direction: Vec3
 
 
 class MoveObject(System):
+    """
+    This System update the position of the Entity is according to it's
+    movement direction.
+    """
     entity_filters = {
         'move': and_filter([
             Model,
-            Scene,
+            Scene,  # fixme is Scene really necessary?
             Position,
             Movement,
         ]),
     }
 
     def update(self, entities_by_filter):
+        """
+        On update, iterate all 'move' entities. For each:
+            - Get i'ts position
+            - Get it's movement(direction)
+             - Get it's model
+             - finally, update it's model according to position and direction
+
+        Note the position is update by the direction multiplied by dt, which is
+        the deltaTime since the previous update, as the update function is called several times per second.
+
+        :param entities_by_filter:
+        """
         for entity in entities_by_filter['move']:
             position = entity[Position]
             movement = entity[Movement]
             model = entity[Model]
 
-            position.value += movement.value * globalClock.dt
+            position.value += movement.direction * globalClock.dt
             model.node.set_pos(position.value)

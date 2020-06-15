@@ -8,13 +8,14 @@ from wecs.panda3d import Scene
 from wecs.panda3d import Position
 
 from movement import Movement
+from movement import Players
 
 
 @Component()
 class Paddle:
     player: int
-    size: float
-    speed: float
+    size: float = 0.3
+    speed: float = 0.2
 
 
 class ResizePaddles(System):
@@ -27,9 +28,9 @@ class ResizePaddles(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['paddle']:
-            model = entity.get_component(Model).node
-            size = entity.get_component(Paddle).size
-            model.set_scale(size)
+            model = entity[Model]
+            paddle = entity[Paddle]
+            model.node.set_scale(paddle.size)
 
 
 class GivePaddlesMoveCommands(System):
@@ -44,23 +45,27 @@ class GivePaddlesMoveCommands(System):
     }
 
     def update(self, entities_by_filter):
-        left = 0
-        if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key(b'w')):
-            left += 1
-        if base.mouseWatcherNode.is_button_down(KeyboardButton.ascii_key(b's')):
-            left -= 1
-
-        right = 0
-        if base.mouseWatcherNode.is_button_down(KeyboardButton.up()):
-            right += 1
-        if base.mouseWatcherNode.is_button_down(KeyboardButton.down()):
-            right -= 1
-
         for entity in entities_by_filter['paddle']:
-            if entity.get_component(Paddle).player == 0:
-                entity.get_component(Movement).value.z = left
-            elif entity.get_component(Paddle).player == 1:
-                entity.get_component(Movement).value.z = right
+            paddle = entity[Paddle]
+            movement = entity[Movement]
+
+            # What keys does the player use?
+            if paddle.player == Players.LEFT:
+                up_key = KeyboardButton.ascii_key(b'w')
+                down_key = KeyboardButton.ascii_key(b's')
+            elif paddle.player == Players.RIGHT:
+                up_key = KeyboardButton.up()
+                down_key = KeyboardButton.down()
+
+            # Read player input
+            delta = 0
+            if base.mouseWatcherNode.is_button_down(up_key):
+                delta += 1
+            if base.mouseWatcherNode.is_button_down(down_key):
+                delta -= 1
+
+            # Store movement
+            movement.value.z = delta
 
 
 class PaddleTouchesBoundary(System):
@@ -75,13 +80,15 @@ class PaddleTouchesBoundary(System):
 
     def update(self, entities_by_filter):
         for entity in set(entities_by_filter['paddles']):
-            pos = entity.get_component(Position).value
-            size = entity.get_component(Paddle).size
-            if pos.z + size  > 1:
-                pos.z = 1 - size
-                np = entity.get_component(Model).node
-                np.set_z(pos.z)
-            if (pos.z - size) < -1:
-                pos.z = -1 + size
-                np = entity.get_component(Model).node
-                np.set_z(pos.z)
+            model = entity[Model]
+            position = entity[Position]
+            paddle = entity[Paddle]
+
+            z = position.value.z
+            size = paddle.size
+
+            if z + size  > 1:
+                position.value.z = 1 - size
+            elif (z - size) < -1:
+                position.value.z = -1 + size
+            model.node.set_z(position.value.z)

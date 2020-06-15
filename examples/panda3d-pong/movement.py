@@ -1,11 +1,11 @@
 """
 Simple movement System and component.
 
-The Component holds a 3D vector which represents the direction of the
-Entity which uses it.
+The Component holds a 3D vector which represents the direction and speed
+of the Entity which uses it.
 
-The System makes sure that on every update() the position of the Entity is
-updated according to the direction.
+The System makes sure that on every update() the position of the Entity
+(actually, it's model) is updated according to the vector.
 """
 from enum import Enum
 
@@ -27,17 +27,17 @@ class Players(Enum):
 @Component()
 class Movement:
     """
-    The Component holds a 3D vector which represents the direction of the
+    The Component holds a 3D vector which represents the vector of the
     Entity which uses it.
-    The direction is the 3D change that should happen in one second.
+    The vector represents is the 3D change that should happen during one second.
     """
-    direction: Vec3
+    vector: Vec3
 
 
 class MoveObject(System):
     """
-    This System update the position of the Entity is according to it's
-    movement direction.
+    This System update the position of the Entity's :class:Model according to it's
+    movement vector.
     """
     entity_filters = {
         'move': and_filter([
@@ -51,13 +51,14 @@ class MoveObject(System):
     def update(self, entities_by_filter):
         """
         On update, iterate all 'move' entities. For each:
-            - Get i'ts position
-            - Get it's movement(direction)
-             - Get it's model
-             - finally, update it's model according to position and direction
+            - Get its position
+            - Get its movement(vector)
+            - Get its model
+            - finally, update its model according to position and vector
 
-        Note the position is update by the direction multiplied by dt, which is
-        the deltaTime since the previous update, as the update function is called several times per second.
+        Note the position is update by the vector multiplied by dt, which is
+        the deltaTime since the previous update, as the update function is called
+         several times per second.
 
         :param entities_by_filter:
         """
@@ -66,5 +67,5 @@ class MoveObject(System):
             movement = entity[Movement]
             model = entity[Model]
 
-            position.value += movement.direction * globalClock.dt
+            position.value += movement.vector * globalClock.dt
             model.node.set_pos(position.value)

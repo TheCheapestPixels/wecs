@@ -26,9 +26,12 @@ class NoSuchUID(Exception):
 
 class World:
     """
-    A world contains a set of :class:`wecs.core.Entity`, a
-    set of :class:`wecs.core.System`, and runs the systems
-    when `update()` is called.
+    The World object is the root object of ECS.
+    A world contains a set of :class:`wecs.core.Entity`, and
+    a set of :class:`wecs.core.System`. The World's update() method
+    ensures that all the systems' update() are called.
+    When a system's update is called it takes care of all the entities
+    that are registered as being part of the system.
 
     `update` and `add_system` will cause deferred component
     updates to entities to be flushed.

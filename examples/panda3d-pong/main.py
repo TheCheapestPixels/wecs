@@ -66,7 +66,7 @@ if __name__ == '__main__':
         panda3d.Geometry(file='paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Vec3(-1.1, 0, 0)),
-        movement.Movement(direction=Vec3(0, 0, 0)),
+        movement.Movement(vector=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.LEFT),
     )
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         panda3d.Geometry(file='paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Point3(1.1, 0, 0)),
-        movement.Movement(direction=Vec3(0, 0, 0)),
+        movement.Movement(vector=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.RIGHT),
     )
 

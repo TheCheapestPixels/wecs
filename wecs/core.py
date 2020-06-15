@@ -1,6 +1,29 @@
 import dataclasses
 
 
+# FIXME: We rely on the hash of these objects to be unique, which is...
+# iffy. If isn't *really* a problem that a UID gets destroyed and a new one is
+# created in its place so that a dangling reference is created, because
+# thanks to that dangling reference, the now invalid UID is still referenced.
+# Still, this smells.
+class UID:
+    """
+    Object for referencing a :class:`wecs.core.Entity`.
+    """
+
+    def __init__(self, name=None):
+        if name is None:
+            name = str(id(self))
+        self.name = name
+
+
+class NoSuchUID(Exception):
+    """
+    Raised by :func:`wecs.core.World.get_entity` if the entity
+    referenced by the UID has been removed.
+    """
+
+
 class World:
     """
     A world contains a set of :class:`wecs.core.Entity`, a
@@ -21,14 +44,12 @@ class World:
 
     def create_entity(self, *components, name=None):
         """
-        components
-            The entity's initial component instances.
-        name
-            An optional name for debug purposes.
+        Creates an entity with the provided components.
 
-        :returns: :class:`wecs.core.Entity`
+        :param components: The entity's initial component instances
+        :param name: An optional name for debug purposes
+        :return: :class:`wecs.core.Entity`
         """
-
         entity = Entity(self, name=name)
         self.entities[entity._uid] = entity
         for component in components:
@@ -37,16 +58,15 @@ class World:
 
     def get_entity(self, uid):
         """
-        uid
-            The
-            :class:`wecs.core.UID` of entity to return
+        Returns a world entity by uid.
 
-        :returns: :class:`wecs.core.Entity`
+        :param uid: :class:`wecs.core.UID` of entity to return
+        :return: :class:`wecs.core.Entity`
         """
         try:
             entity = self.entities[uid]
         except KeyError:
-            raise NoSuchUID
+            raise NoSuchUID(f"entity with UID:{uid} was not found")
         return entity
 
     def __getitem__(self, uid_or_entity):
@@ -54,9 +74,7 @@ class World:
 
     def get_entities(self):
         """
-        :returns:
-            An iterable of all :class:`wecs.core.Entity`
-            in the world.
+        :return: An iterable of all :class:`wecs.core.Entity` in the world.
         """
         return self.entities.values()
 
@@ -65,8 +83,7 @@ class World:
         Destroys the entity, removing its components, implicitly
         removing it from all systems during the next flush.
 
-        uid_or_entity
-            A :class:`wecs.core.Entity` or :class:`wecs.core.UID`
+        :param uid_or_entity: A :class:`wecs.core.Entity` or :class:`wecs.core.UID`
         """
         if isinstance(uid_or_entity, Entity):
             entity = uid_or_entity
@@ -92,25 +109,20 @@ class World:
 
         Adding a system will implicitly cause a flush of
         deferred component updates to instances of
-        :class:`wecs.core.Entity`.
-
-        system
-            System to add.
-        sort
-            Order the system should run.
-        add_duplicates
-            If False (default), a KeyError will be raised when
-            the world already has a system of that type. If True,
-            do not `use get_system()` to retrieve systems with
-            multiple instances.
+        :param system: System to add
+        :param sort: Order the system should run
+        :param add_duplicates: If False (default), a KeyError will be raised when
+                    the world already has a system of that type. If True,
+                    do not `use get_system()` to retrieve systems with
+                    multiple instances.
         """
         if self.has_system(type(system)) and not add_duplicates:
-            raise KeyError("System of that type already on world.")
+            raise KeyError(f"System of type {system} was already added to the  world.")
         if sort in self.systems:
-            raise KeyError("sort already in use.")
+            raise KeyError(f"sort {sort} already in use.")
         self.systems[sort] = system
-        system.world = self
         system._sort = sort
+        system.world = self
 
         self._flush_component_updates()
         for entity in self.entities.values():
@@ -118,27 +130,24 @@ class World:
 
     def has_system(self, system_type):
         """
-        system_type
-            The type of :class:`wecs.core.System` to check for.
 
-        :returns: :bool:
+        :param system_type: The type of :class:`wecs.core.System` to check for
+        :return: :bool:
         """
         return any([isinstance(s, system_type)
                     for s in self.systems.values()])
 
     def get_systems(self):
         """
-        :returns:
-            A dictionary of `sort`: :class:`wecs.core.System`
+        :return: A dictionary of `sort`: :class:`wecs.core.System`
         """
         return self.systems
 
     def get_system(self, system_type):
         """
-        system_type
-            The type of :class:`wecs.core.System` to return.
 
-        :returns: :class:`wecs.core.System`
+        :param system_type: The type of :class:`wecs.core.System` to return.
+        :return: :class:`wecs.core.System`
         """
         system = list(
             filter(
@@ -147,14 +156,13 @@ class World:
             )
         )
         if not system:
-            raise KeyError
+            raise KeyError(f"system {system_type} was not found")
         assert len(system) == 1
         return system[0]
 
     def remove_system(self, system_type):
         """
-        system_type
-            The type of :class:`wecs.core.System` to remove.
+        :param system_type: The type of :class:`wecs.core.System` to remove
         """
         system = self.get_system(system_type)
         system._destroy()
@@ -212,35 +220,6 @@ class World:
             self._update_system(system)
 
 
-#
-# Entities and components
-#
-
-
-# FIXME: We rely on the hash of these objects to be unique, which is...
-# iffy. If isn't *really* a problem that a UID gets destroyed and a new one is
-# created in its place so that a dangling reference is created, because
-# thanks to that dangling reference, the now invalid UID is still referenced.
-# Still, this smells.
-class UID:
-    """
-    Object for referencing a :class:`wecs.core.Entity`.
-    """
-
-    def __init__(self, name=None):
-        if name is None:
-            name = str(id(self))
-        self.name = name
-
-
-class NoSuchUID(Exception):
-    """
-    Raised by :func:`wecs.core.World.get_entity` if the entity
-    referenced by the UID has been removed.
-    """
-    pass
-
-
 class Entity:
     """
     Everything in a :class:`wecs.core.World` is an Entity. They are a 
@@ -266,8 +245,7 @@ class Entity:
         Add a component to an entity. The addition is deferred until the
         next flush.
 
-        component
-            The component instance to add.
+        :param component: The component instance to add.
         """
         is_present = type(component) in self.components
         is_being_deleted = type(component) in self._dropped_components
@@ -283,45 +261,62 @@ class Entity:
         self._added_components[type(component)] = component
 
     def __setitem__(self, component_type, component):
+        """
+        TODO I think this is a helper function to use instead of add_component.
+        Can you add (or point to) a usage example - and I'll document it? and
+        please look at the __getitem__ docstring.
+
+        :param component_type:
+        :param component:
+        :return:
+        """
         assert isinstance(component, component_type)
         return self.add_component(component)
 
     def get_components(self):
         """
-        :returns:
-            An iterable of the current :class:`wecs.core.Component`
-            instances in the entity.
+        Get all component of an Entity.
+
+        :returns: An iterable of the current :class:`wecs.core.Component` instances in the entity.
         """
         return self.components.values()
 
     def get_component_types(self):
         """
-        :returns:
-            An iterable of the types of the current
-            :class:`wecs.core.Component` instances in the entity.
+        Get all component types of an Entity.
+
+        :return: An iterable of the types of the current :class:`wecs.core.Component` instances in the entity.
         """
         return self.components.keys()
 
     def get_component(self, component_type):
         """
-        component_type
-            The type of :class:`wecs.core.Component` to get.
+        Get an Entity's component based on a component_type.
 
-        :returns:
-            The :class:`wecs.core.Component` instance.
+        :param component_type: The type of :class:`wecs.core.Component` to get.
+        :return: The :class:`wecs.core.Component` instance.
         """
         return self.components[component_type]
 
     def __getitem__(self, component_type):
+        """
+        Helper function to use instead of :func:`get_component`.
+        So instead of
+            comp = entity.get_component(some_component_type)
+        you can write
+        comp = entity[some_component_type]
+
+        :param component_type:
+        :return: :The :class:`wecs.core.Component` instance.
+        """
         return self.get_component(component_type)
 
     def has_component(self, component_type):
         """
         component_type
-            The type of :class:`wecs.core.Component` to check for.
 
-        :returns:
-            :bool:
+        :param component_type: The type of :class:`wecs.core.Component` to check for.
+        :return: :bool:
         """
         return component_type in self.components
 
@@ -430,8 +425,8 @@ class System:
             def exit_filter_printers(self, entity):
                 print("Entity has exited the filter")
 
-    When a `Printer` component is added to an entity and a flush
-    happens, `enter_filter_printers` will be called (with the entity as
+    When a `Printer` component is added to an entity a flush
+    happens, and `enter_filter_printers` will be called (with the entity as
     argument). Conversely, when the component is removed, 
     `exit_filter_printers` will be called. As long as it has the
     component during an update, it will be present in the
@@ -460,10 +455,8 @@ class System:
         that. The order of those calls is the same in which the filters
         are specified.
 
-        filters
-            A list of filter names
-        entity
-            The entity that has entered the filter(s).
+        :param filters: A list of filter names
+        :param entity: The entity that has entered the filter(s).
         """
         for filter in filters:
             if hasattr(self, 'enter_filter_' + filter):
@@ -478,10 +471,8 @@ class System:
         that. The order of those calls is the *reverse* of that in 
         which the filters are specified.
 
-        filters
-            A list of filter names
-        entity
-            The entity that has exited the filter(s).
+        :param filters: A list of filter names
+        :param entity: The entity that has entered the filter(s).
         """
         for filter in reversed(filters):
             if hasattr(self, 'exit_filter_' + filter):
@@ -491,9 +482,9 @@ class System:
         """
         The system's functionality that is run during an update.
 
-        entity_by_filters
-            A dictionary mapping filter names to sets of
+        :param entities_by_filter:  A dictionary mapping filter names to sets of
             :class:`wecs.core.entity`.
+
         """
         pass
 
@@ -552,7 +543,7 @@ class Filter:
 
     def _get_component_dependencies(self):
         """
-        Not used anymore; A leftover from an optimization.
+        FIXME: Not used anymore; A leftover from an optimization. (delete)
 
         When an entity's component set is changed, it only needs to be
         tested against filters where the changed component's type is
@@ -564,8 +555,7 @@ class Filter:
         noticeable time if there's lots and lots of systems, and
         component changes happen many times per update.
 
-        :returns:
-            :set: of all component types matched against by this filter
+        :return: a set of all component types matched against by this filter
             and its sub-filters
         """
         dependencies = set()
@@ -584,7 +574,7 @@ class Filter:
         return self._evaluate(present_types)
 
 
-class AndFilter(Filter):
+class AndFilter(Filter):  # fixme should this be a private or at least protected class?
     """
     Class for and-filters. Please use :func:`wecs.core.and_filter`
     instead.
@@ -600,7 +590,7 @@ class AndFilter(Filter):
         return True
 
 
-class OrFilter(Filter):
+class OrFilter(Filter):  # fixme should this be a private or at least protected class?
     """
     Class for or-filters. Please use :func:`wecs.core.or_filter`
     instead.
@@ -629,12 +619,10 @@ def and_filter(*types_and_filters):
         and_filter(Foo, or_filter(Bar, Qux))  # ...a Foo component, and
             # a Bar and/or Qux component
     
-    types_and_filters
-        The :class:`wecs.core.Component` types and sub-filters that this
+    :param types_and_filters: The :class:`wecs.core.Component` types and sub-filters that this
         (sub-)filter matches against.
+    :return: The filter object
 
-    :returns:
-        The filter object
     """
     return AndFilter(*types_and_filters)
 
@@ -652,11 +640,8 @@ def or_filter(*types_and_filters):
         or_filter(Foo, and_filter(Bar, Qux))  # a Foo component, and/or
             # both a Bar and a Qux component.
     
-    types_and_filters
-        The :class:`wecs.core.Component` types and sub-filters that this
+    :param types_and_filters: The :class:`wecs.core.Component` types and sub-filters that this
         (sub-)filter matches against.
-
-    :returns:
-        The filter object
+    :return: The filter object
     """
     return OrFilter(*types_and_filters)

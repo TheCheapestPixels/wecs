@@ -1,3 +1,8 @@
+"""
+The Paddle Component and System
+
+Each Paddle has information about it's player, size and speed.
+"""
 from panda3d.core import KeyboardButton
 
 from wecs.core import Component
@@ -13,9 +18,14 @@ from movement import Players
 
 @Component()
 class Paddle:
+    """
+    The Paddle Component holds: an int representing the player controling it,
+    a its size and speed.
+        """
+
     player: int
     size: float = 0.3
-    speed: float = 0.2
+    speed: float = 0.2  # FIXME changing this has no visible effect(?)
 
 
 class ResizePaddles(System):

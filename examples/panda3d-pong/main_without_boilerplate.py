@@ -4,11 +4,7 @@ import sys
 
 from panda3d.core import Vec3
 from panda3d.core import Point3
-from panda3d.core import VBase3
 
-from wecs.core import World
-from wecs.core import Component
-from wecs.core import System
 from wecs.panda3d import ECSShowBase
 from wecs import panda3d
 
@@ -63,7 +59,7 @@ if __name__ == '__main__':
 
     paddle_left = base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='paddle.bam'),
+        panda3d.Geometry(file='resources/paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Vec3(-1.1, 0, 0)),
         movement.Movement(vector=Vec3(0, 0, 0)),
@@ -72,7 +68,7 @@ if __name__ == '__main__':
 
     paddle_right = base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='paddle.bam'),
+        panda3d.Geometry(file='resources/paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Point3(1.1, 0, 0)),
         movement.Movement(vector=Vec3(0, 0, 0)),
@@ -82,7 +78,7 @@ if __name__ == '__main__':
     ball = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
         panda3d.Model(),
-        panda3d.Geometry(file='ball.bam'),
+        panda3d.Geometry(file='resources/ball.bam'),
         panda3d.Scene(node=base.aspect2d),
         ball.Ball(),
         ball.Resting(),

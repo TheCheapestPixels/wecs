@@ -1,15 +1,15 @@
 from dataclasses import field
 
-import direct.actor.Actor
 from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import ClockObject
 from panda3d.core import CardMaker
 from panda3d.core import SamplerState
 from panda3d.core import Texture
-
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletRigidBodyNode
+
+from direct.actor.Actor import Actor as DirectActor
 
 from wecs.core import Component
 from wecs.core import System
@@ -123,6 +123,11 @@ class ManageGeometry(System):
             Geometry,
             Model,
         ]),
+        'actor': and_filter([
+            Geometry,
+            Model,
+            Actor,
+        ]),
     }
 
     def enter_filter_model(self, entity):
@@ -131,12 +136,13 @@ class ManageGeometry(System):
             geometry.node = base.loader.load_model(geometry.file)
         else:
             geometry.node = NodePath(entity._uid.name + "_geometry")
-
-        if Actor in entity: # TODO: should be handled by animation system?
-            actor = entity[Actor]
-            actor.node = direct.actor.Actor.Actor(actor.file)
-            geometry.nodes.add(actor.node)
         geometry.node.reparent_to(entity[Model].node)
+
+    def enter_filter_actor(self, entity):
+        geometry = entity[Geometry]
+        actor = entity[Actor]
+        actor.node = DirectActor(actor.file)
+        geometry.nodes.add(actor.node)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter["model"]:
@@ -150,8 +156,16 @@ class ManageGeometry(System):
                     node.reparent_to(geometry.node)
                 geometry.connected_nodes = geometry.nodes.copy()
 
+    def exit_filter_actor(self, entity):
+        geometry = entity[Geometry]
+        actor = entity[Actor]
+        geometry.nodes.remove(actor.node)
+        actor.node.cleanup()
+
     def exit_filter_model(self, entity):
-        entity[Geometry].node.destroy_node()
+        geometry = entity[Geometry]
+        entity[Geometry].node.remove_node()
+        # FIXME: Clean up the geometry nodes?
 
 
 class SetupModels(System):
@@ -306,7 +320,7 @@ class SetUpPhysics(System):
 
 class DeterminePhysicsTimestep(System):
     entity_filters = {
-        # FIXME: PhysicsWorld.clockshould be an entity._uid
+        # FIXME: PhysicsWorld.clock should be an entity._uid
         # (or None if the same)
         'world': and_filter([PhysicsWorld, Clock]),
         'body': and_filter([PhysicsBody]),

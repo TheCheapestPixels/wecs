@@ -84,7 +84,7 @@ class GivePaddlesMoveCommands(System):
                 delta -= 1
 
             # Store movement
-            movement.vector.z = delta
+            movement.direction.z = delta
 
 
 class PaddleTouchesBoundary(System):

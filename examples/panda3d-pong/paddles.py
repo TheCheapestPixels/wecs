@@ -25,7 +25,6 @@ class Paddle:
 
     player: int
     size: float = 0.3
-    speed: float = 0.2  # FIXME changing this has no visible effect(?)
 
 
 class ResizePaddles(System):
@@ -84,7 +83,7 @@ class GivePaddlesMoveCommands(System):
                 delta -= 1
 
             # Store movement
-            movement.vector.z = delta
+            movement.direction.z = delta
 
 
 class PaddleTouchesBoundary(System):

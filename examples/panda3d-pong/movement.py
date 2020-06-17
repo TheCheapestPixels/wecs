@@ -1,11 +1,11 @@
 """
 Simple movement System and component.
 
-The Component holds a 3D vector which represents the direction and speed
+The Component holds a 3D direction which represents the direction and speed
 of the Entity which uses it.
 
 The System makes sure that on every update() the position of the Entity
-(actually, it's model) is updated according to the vector.
+(actually, it's model) is updated according to the direction.
 """
 from enum import Enum
 
@@ -27,17 +27,17 @@ class Players(Enum):
 @Component()
 class Movement:
     """
-    The Component holds a 3D vector which represents the vector of the
+    The Component holds a 3D direction which represents the direction of the
     Entity which uses it.
-    The vector represents is the 3D change that should happen during one second.
+    The direction represents is the 3D change that should happen during one second.
     """
-    vector: Vec3
+    direction: Vec3
 
 
 class MoveObject(System):
     """
     This System update the position of the Entity's :class:Model according to it's
-    movement vector.
+    movement direction.
     """
     entity_filters = {
         'move': and_filter([
@@ -52,11 +52,11 @@ class MoveObject(System):
         """
         On update, iterate all 'move' entities. For each:
             - Get its position
-            - Get its movement(vector)
+            - Get its movement(direction)
             - Get its model
-            - finally, update its model according to position and vector
+            - finally, update its model according to position and direction
 
-        Note the position is update by the vector multiplied by dt, which is
+        Note the position is update by the direction multiplied by dt, which is
         the deltaTime since the previous update, as the update function is called
          several times per second.
 
@@ -67,5 +67,5 @@ class MoveObject(System):
             movement = entity[Movement]
             model = entity[Model]
 
-            position.value += movement.vector * globalClock.dt
+            position.value += movement.direction * globalClock.dt
             model.node.set_pos(position.value)

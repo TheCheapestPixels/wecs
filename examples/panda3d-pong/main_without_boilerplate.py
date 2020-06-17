@@ -61,26 +61,26 @@ if __name__ == '__main__':
 
     paddle_left = base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='resources/paddle.bam'),
+        panda3d.Geometry(file='paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Vec3(-1.1, 0, 0)),
-        movement.Movement(vector=Vec3(0, 0, 0)),
+        movement.Movement(direction=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.LEFT),
     )
 
     paddle_right = base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='resources/paddle.bam'),
+        panda3d.Geometry(file='paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Point3(1.1, 0, 0)),
-        movement.Movement(vector=Vec3(0, 0, 0)),
+        movement.Movement(direction=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.RIGHT),
     )
 
     ball = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
         panda3d.Model(),
-        panda3d.Geometry(file='resources/ball.bam'),
+        panda3d.Geometry(file='ball.bam'),
         panda3d.Scene(node=base.aspect2d),
         ball.Ball(),
         ball.Resting(),

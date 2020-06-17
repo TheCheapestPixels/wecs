@@ -65,7 +65,7 @@ class Position:
 # 2d models (aka sprites)
 
 @Component()
-class Sprite:  # Displayes an image on a card
+class Sprite:  # Displays an image on a card
     node: NodePath = None
     image_name: str = ""
     texture: Texture = None

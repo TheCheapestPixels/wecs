@@ -42,7 +42,7 @@ class MoveObject(System):
     entity_filters = {
         'move': and_filter([
             Model,
-            Scene,  # fixme is Scene really necessary?
+            Scene,
             Position,
             Movement,
         ]),

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import logging
 
 from panda3d.core import Vec3
 from panda3d.core import Point3
@@ -16,7 +15,6 @@ import movement
 import paddles
 import ball
 
-logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     ECSShowBase()  # ShowBase + base.ecs_world + base.add_system()

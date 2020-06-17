@@ -19,9 +19,9 @@ from movement import Players
 @Component()
 class Paddle:
     """
-    The Paddle Component holds: an int representing the player controling it,
-    a its size and speed.
-        """
+    The Paddle Component holds: an int representing the player controlling it,
+    a its speed.
+    """
 
     player: int
     size: float = 0.3
@@ -29,6 +29,12 @@ class Paddle:
 
 
 class ResizePaddles(System):
+    """
+    This system ensures that the paddel's size stays updated.
+    The idea is that other systems may influence the size by changing
+    the paddles size state, and this system will make the acual change
+    to the Model.
+    """
     entity_filters = {
         'paddle': and_filter([
             Model,
@@ -37,6 +43,9 @@ class ResizePaddles(System):
     }
 
     def update(self, entities_by_filter):
+        """
+        Update the paddle size by setting the scale of the paddle's Model.
+        """
         for entity in entities_by_filter['paddle']:
             model = entity[Model]
             paddle = entity[Paddle]
@@ -97,7 +106,7 @@ class PaddleTouchesBoundary(System):
             z = position.value.z
             size = paddle.size
 
-            if z + size  > 1:
+            if z + size > 1:
                 position.value.z = 1 - size
             elif (z - size) < -1:
                 position.value.z = -1 + size

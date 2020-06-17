@@ -1,10 +1,13 @@
 cefpanda
 crayons
-jinja2
 graphviz
+jinja2
 panda3d
 panda3d-cefconsole
 panda3d-keybindings
 recommonmark
+setuptools
+sphinx
 sphinx-autoapi
 sphinx_rtd_theme
+wecs

@@ -2,7 +2,6 @@ from dataclasses import field
 
 from panda3d.core import Vec3
 from panda3d.core import NodePath
-from panda3d.core import ClockObject
 from panda3d.core import CardMaker
 from panda3d.core import SamplerState
 from panda3d.core import Texture

@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
     system_types = [
         panda3d.SetUpPhysics,
-        panda3d.LoadModels,
+        panda3d.SetupModels,
+        panda3d.ManageGeometry,
         panda3d.DetermineTimestep,
         panda3d.DoPhysics,
     ]
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     world = base.ecs_world.create_entity(
         panda3d.PhysicsWorld(
             world=bullet_world,
-            clock=globalClock,
+
         ),
         panda3d.Scene(node=base.render),
     )
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     bullet_body.set_mass(1.0)
     ball = base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
-        panda3d.Model(model_name='ball.bam'),
+        panda3d.Geometry(file='ball.bam'),
         panda3d.PhysicsBody(
             body=bullet_body,
             world=world._uid,

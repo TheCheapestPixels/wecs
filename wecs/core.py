@@ -6,6 +6,9 @@ import dataclasses
 # created in its place so that a dangling reference is created, because
 # thanks to that dangling reference, the now invalid UID is still referenced.
 # Still, this smells.
+import logging
+
+
 class UID:
     """
     Object for referencing a :class:`wecs.core.Entity`.
@@ -119,6 +122,7 @@ class World:
                     do not `use get_system()` to retrieve systems with
                     multiple instances.
         """
+        logging.info(f"in {__name__} got {system, sort, add_duplicates}")
         if self.has_system(type(system)) and not add_duplicates:
             raise KeyError(f"System of type {system} was already added to the  world.")
         if sort in self.systems:

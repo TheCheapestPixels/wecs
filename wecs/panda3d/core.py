@@ -1,4 +1,5 @@
-from panda3d.core import PStatClient
+import logging
+
 from panda3d.core import PStatCollector
 from panda3d.core import PythonTask
 
@@ -7,6 +8,8 @@ from direct.task import Task
 
 from wecs.core import World
 from wecs.core import System
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 class ECSShowBase(ShowBase):
@@ -29,6 +32,7 @@ class ECSShowBase(ShowBase):
         :return: Panda3D PythonTask
 
         """
+        logging.info(f"in {__name__} got {system}, {sort}, {priority}")
         if priority is None:
             priority = 0            
         wecs_sort = (sort, -priority)

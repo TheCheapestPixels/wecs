@@ -5,7 +5,7 @@ TODO rename to panda3D_boilerplate
 """
 import sys
 
-from panda3d.core import loadPrcFileData
+from panda3d.core import loadPrcFileData, PStatClient
 
 # We want the time of collision traversal to be added to systems that
 # run them.

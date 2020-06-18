@@ -25,14 +25,13 @@ class Paddle:
 
     player: int
     size: float = 0.3
-    speed: float = 0.2  # FIXME changing this has no visible effect(?)
 
 
 class ResizePaddles(System):
     """
-    This system ensures that the paddel's size stays updated.
+    ResizePaddles ensures that the paddel's size stays updated.
     The idea is that other systems may influence the size by changing
-    the paddles size state, and this system will make the acual change
+    the paddle's Component state. ResizePaddles will make the actual change
     to the Model.
     """
     entity_filters = {

@@ -31,6 +31,12 @@ class Movement:
     Entity which uses it. It's the 3D change that should happen during one second.
     """
     direction: Vec3
+    """
+    The Component holds a 3D direction which represents the direction of the
+    Entity which uses it.
+    The direction represents is the 3D change that should happen during one second.
+    """
+    direction: Vec3
 
 
 class MoveObject(System):

@@ -25,6 +25,10 @@ class Resting:
 
 
 class BallTouchesBoundary(System):
+    """
+    BallTouchesBoundary ensures the balls is bounced of the top and bottom
+    of the court.
+    """
     entity_filters = {
         'ball': and_filter([
             Model,
@@ -52,6 +56,13 @@ class BallTouchesBoundary(System):
 
 
 class BallTouchesPaddleLine(System):
+    """
+    BallTouchesPaddleLine takes care what happens when the ball
+    reaches the line of one of the paddles:
+    Either the paddle is in reach, and the ball reflects off it,
+    or the other player has scored, and the game is reset to its
+    starting state.
+    """
     entity_filters = {
         'ball': and_filter([
             Model,
@@ -69,9 +80,19 @@ class BallTouchesPaddleLine(System):
     }
 
     def update(self, entities_by_filter):
+        """
+        The Update goes over all the relevant Entities (which should be only the ball)
+        and check whether it reached each paddle's line. A ball always has a Position component
+        so it has so we can check it's x position. Same goes for the paddles.
+        If x is touching the paddle's line , we check whether the ball hit the paddle or not.
+        If it hit the paddle it would bounce back.
+        If it misses the paddle, it would print "SCORE" and stop the balls movement.
+        Note that to stop the ball's movement the update deletes the Movement component from the
+        ball's Entity. It also adds the Resting component to ensure that the StartBallMotion
+        System will return the ball to a moving state when the game restarts.
+        """
         paddles = {
-            p[Paddle].player: p
-            for p in entities_by_filter['paddles']
+            p[Paddle].player: p for p in entities_by_filter['paddles']
         }
 
         for entity in set(entities_by_filter['ball']):
@@ -110,6 +131,9 @@ class BallTouchesPaddleLine(System):
 
 
 class StartBallMotion(System):
+    """
+    StartBallMotion ensures that the game restarts after the start key is pressed.
+    """
     entity_filters = {
         'ball': and_filter([
             Model,
@@ -119,13 +143,19 @@ class StartBallMotion(System):
             Ball,
         ]),
     }
+    start_key = KeyboardButton.space()
 
     def update(self, entities_by_filter):
-        # Should resting balls be started?
-        start_key = KeyboardButton.space()
-        start_balls = base.mouseWatcherNode.is_button_down(start_key)
+        """
+        Check whether the resting ball should be started?
+        Note that restarting the ball's movement means removing the Entity's
+        Resting Component, and adding it's Movement component with the desired
+        direction.
+        """
 
-        if start_balls:
+        start_key_is_pressed = base.mouseWatcherNode.is_button_down(StartBallMotion.start_key)
+
+        if start_key_is_pressed:
             for entity in set(entities_by_filter['ball']):
                 del entity[Resting]
                 entity[Movement] = Movement(direction=Vec3(-1, 0, 0))

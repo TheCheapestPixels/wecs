@@ -38,8 +38,8 @@ system_types = [
     ball.StartBallMotion,
 ]
 
-
-paddle_left = base.ecs_world.create_entity(
+# left paddle
+base.ecs_world.create_entity(
     panda3d.Model(),
     panda3d.Geometry(file='resources/paddle.bam'),
     panda3d.Scene(node=base.aspect2d),
@@ -48,7 +48,8 @@ paddle_left = base.ecs_world.create_entity(
     paddles.Paddle(player=paddles.Players.LEFT),
 )
 
-paddle_right = base.ecs_world.create_entity(
+# right paddle
+base.ecs_world.create_entity(
     panda3d.Model(),
     panda3d.Geometry(file='resources/paddle.bam'),
     panda3d.Scene(node=base.aspect2d),
@@ -57,7 +58,8 @@ paddle_right = base.ecs_world.create_entity(
     paddles.Paddle(player=paddles.Players.RIGHT),
 )
 
-ball = base.ecs_world.create_entity(
+# ball
+base.ecs_world.create_entity(
     panda3d.Position(value=Point3(0, 0, 0)),
     panda3d.Model(),
     panda3d.Geometry(file='resources/ball.bam'),
@@ -65,3 +67,13 @@ ball = base.ecs_world.create_entity(
     ball.Ball(),
     ball.Resting(),
 )
+
+# another ball - uncomment to enjoy the HARD mode
+# base.ecs_world.create_entity(
+#     panda3d.Position(value=Point3(0.5, 0, 0.1)),
+#     panda3d.Model(),
+#     panda3d.Geometry(file='resources/ball.bam'),
+#     panda3d.Scene(node=base.aspect2d),
+#     ball.Ball(),
+#     ball.Resting(),
+# )

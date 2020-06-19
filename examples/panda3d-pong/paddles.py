@@ -29,7 +29,7 @@ class Paddle:
 
 class ResizePaddles(System):
     """
-    ResizePaddles ensures that the paddel's size stays updated.
+    ResizePaddles ensures that the paddle's size stays updated.
     The idea is that other systems may influence the size by changing
     the paddle's Component state. ResizePaddles will make the actual change
     to the Model.

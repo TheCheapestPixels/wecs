@@ -1,3 +1,5 @@
+from random import randrange
+
 from panda3d.core import KeyboardButton
 from panda3d.core import Vec3
 from panda3d.core import Point3
@@ -125,7 +127,7 @@ class BallTouchesPaddleLine(System):
                 movement.direction.x *= -1
                 # Adjust up-down speed based on where the paddle was hit
                 dist_to_center = paddle_z - position.value.z
-                normalized_dist = dist_to_center / (paddle_size)
+                normalized_dist = dist_to_center / paddle_size
                 speed = abs(movement.direction.x)
                 movement.direction.z -= normalized_dist * speed
 
@@ -158,4 +160,4 @@ class StartBallMotion(System):
         if start_key_is_pressed:
             for entity in set(entities_by_filter['ball']):
                 del entity[Resting]
-                entity[Movement] = Movement(direction=Vec3(-1, 0, 0))
+                entity[Movement] = Movement(direction=Vec3(-0.1*randrange(5, 10), 0, 0))

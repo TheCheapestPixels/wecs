@@ -27,22 +27,22 @@ class Players(Enum):
 @Component()
 class Movement:
     """
-    Movement holds a 3D direction which represents the direction of the
-    Entity which uses it.
-    The direction represents is the 3D change that should happen during one second.
+    The Movement Component holds a 3D vector which represents the direction of the
+    Entity which uses it. It's the 3D change that should happen during one second,
+    so it serves as a speed element as well.
     """
     direction: Vec3
 
 
 class MoveObject(System):
     """
-    This System update the position of the Entity's :class:Model according to it's
+    MoveObject update the position of the Entity's :class:Model according to it's
     movement direction.
     """
     entity_filters = {
         'move': and_filter([
             Model,
-            Scene,  # fixme is Scene really necessary?
+            Scene,
             Position,
             Movement,
         ]),

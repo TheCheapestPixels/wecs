@@ -118,9 +118,9 @@ class World:
         :param system: System to add
         :param sort: Order the system should run
         :param add_duplicates: If False (default), a KeyError will be raised when
-                    the world already has a system of that type. If True,
-                    do not `use get_system()` to retrieve systems with
-                    multiple instances.
+            the world already has a system of that type. If True,
+            do not `use get_system()` to retrieve systems with
+            multiple instances.
         """
         logging.info(f"in {__name__} got {system, sort, add_duplicates}")
         if self.has_system(type(system)) and not add_duplicates:

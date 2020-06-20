@@ -8,5 +8,6 @@ Manual
    tutorial
    prefab
    boilerplate
+   contribute
    design
    todo

@@ -1,5 +1,6 @@
 from wecs.core import World, Component, System, and_filter, UID, NoSuchUID
 
+
 # There is a world with an entity in it.
 world = World()
 entity = world.create_entity()

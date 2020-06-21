@@ -269,9 +269,8 @@ class Entity:
 
     def __setitem__(self, component_type, component):
         """
-        TODO I think this is a helper function to use instead of add_component.
-        Can you add (or point to) a usage example - and I'll document it? and
-        please look at the __getitem__ docstring.
+         Helper function that lets you write `entity[ComponentType] = ComponentType()`
+         instead of `entity.add_component(ComponentType())`.
 
         :param component_type:
         :param component:

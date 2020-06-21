@@ -4,8 +4,8 @@ Simple movement System and component.
 The Component holds a 3D direction which represents the direction and speed
 of the Entity which uses it.
 
-The System makes sure that on every update() the position of the Entity
-(actually, it's model) is updated according to the direction.
+The System makes sure that on every update() the position of the component
+is updated according to its direction.
 """
 from enum import Enum
 
@@ -28,8 +28,9 @@ class Players(Enum):
 class Movement:
     """
     The Movement Component holds a 3D vector which represents the direction of the
-    Entity which uses it. It's the 3D change that should happen during one second,
-    so it serves as a speed element as well.
+    component which uses it, for example, the model of the ball, or the paddles.
+    It's the 3D change that should happen during one second,so it serves as a "speed"
+    element as well.
     """
     direction: Vec3
 
@@ -40,9 +41,8 @@ class MoveObject(System):
     movement direction.
     """
     entity_filters = {
-        'move': and_filter([
+        'movable': and_filter([
             Model,
-            Scene,
             Position,
             Movement,
         ]),
@@ -50,7 +50,7 @@ class MoveObject(System):
 
     def update(self, entities_by_filter):
         """
-        On update, iterate all 'move' entities. For each:
+        On update, iterate all 'movable' entities. For each:
             - Get its position
             - Get its movement(direction)
             - Get its model
@@ -62,7 +62,7 @@ class MoveObject(System):
 
         :param entities_by_filter:
         """
-        for entity in entities_by_filter['move']:
+        for entity in entities_by_filter['movable']:
             position = entity[Position]
             movement = entity[Movement]
             model = entity[Model]

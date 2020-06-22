@@ -1,11 +1,10 @@
 """
 A panda3D boilerplate.
-
-TODO rename to panda3D_boilerplate
 """
 import sys
 
-from panda3d.core import loadPrcFileData, PStatClient
+from panda3d.core import PStatClient
+from panda3d.core import loadPrcFileData
 
 # We want the time of collision traversal to be added to systems that
 # run them.
@@ -90,9 +89,8 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
         base.accept('f12', pstats)
 
     # Set up the world:
-    import game  # fixme this assumes that module game exists. That's a strong undocumented requirement.
+    import game  
     # system_types is deprecated, because badly named. Do not use.
-    # fixme if above comment is true, than it should be fixed. Too early for keeping "backward compatibility" stuff(?)
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
     if console:

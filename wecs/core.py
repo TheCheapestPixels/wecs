@@ -64,7 +64,7 @@ class World:
 
     def get_entity(self, uid):
         """
-        Returns a world entity by uid.
+        Returns an entity by uid.
 
         :param uid: :class:`wecs.core.UID` of entity to return
         :return: :class:`wecs.core.Entity`
@@ -114,13 +114,13 @@ class World:
         systems will be processed in order of ascending 'sort'.
 
         Adding a system will implicitly cause a flush of
-        deferred component updates to instances of
+        deferred component updates.
+
         :param system: System to add
         :param sort: Order the system should run
-        :param add_duplicates: If False (default), a KeyError will be raised when
-            the world already has a system of that type. If True,
-            do not `use get_system()` to retrieve systems with
-            multiple instances.
+        :param add_duplicates: If False (default), a KeyError will be raised when the world
+            already has a system of that type.
+            If True, do not `use get_system()` to retrieve systems with  multiple instances.
         """
         logging.info(f"in {__name__} got {system, sort, add_duplicates}")
         if self.has_system(type(system)) and not add_duplicates:
@@ -596,7 +596,7 @@ class AndFilter(Filter):  # fixme should this be a private or at least protected
         return True
 
 
-class OrFilter(Filter):  # fixme should this be a private or at least protected class?
+class OrFilter(Filter):  # fixme maybe rename to _OrFilter
     """
     Class for or-filters. Please use :func:`wecs.core.or_filter`
     instead.

@@ -53,7 +53,6 @@ class Aspect:
         return components
 
     def __call__(self, overrides=None):
-        """ TODO explain why someone would like to call the class"""
         components = []
         if overrides is None:
             overrides = {}

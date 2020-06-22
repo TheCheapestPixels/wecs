@@ -9,13 +9,13 @@ from wecs.panda3d import aspects
 from wecs.panda3d import debug
 
 # Each frame, run these systems. This defines the game itself.
-system_types = [  # fixme boilerplate states that system_types are deprecated.
+system_types = [
     wp3d.ManageGeometry,  # Manages a model's geometry and its nodepaths.
     wp3d.SetupModels,  # Makes them collibable.
     wp3d.PrepareCameras,  # Attach / detach camera pivots to / from models.
     wp3d.UpdateClocks,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
-    # wp3dAcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
+    # wp3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     wp3d.Think,  # Input from AIs, the same
     wp3d.UpdateStamina,  # A game mechanic that cancels move modes if the character is exhausted, "unintending" them
     wp3d.UpdateCharacter,  # Scale inputs by frame time, making them "Intended movement in this frame."

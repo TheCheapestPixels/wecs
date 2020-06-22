@@ -1,4 +1,3 @@
-""" TODO add description of what mechanics.clock does"""
 from types import FunctionType
 from collections import defaultdict
 

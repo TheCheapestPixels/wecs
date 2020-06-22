@@ -121,7 +121,9 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Set up the world:
     import game  
-    # system_types is deprecated, because badly named. Do not use.
+    # FIXME: system_types is a bad name, since the allowed specs are now
+    # more complicated (see add_systems' code). system_specs would be
+    # better.
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
     if console:
@@ -133,11 +135,30 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
 def add_systems(system_specs):
     """
-    Register additional systems to the world.
+    Registers additional systems to the world. Each system specification
+    must be in one of these formats:
+
+    .. code-block:: python
+    
+       system_types = [
+          SystemType,
+          system_instance,
+          (sort, priority, SystemType),
+          (sort, priority, system_instance),
+       ]
+    
+    Each ``SystemType`` is instantiated with no arguments.
+    
+    ``sort`` and ``priority`` refer to the same parameter's in
+    Panda3D's task manager. If they are not provided, a best effort
+    guess is made: Starting at sort 1 and priority 0, priority is
+    counted down. If the values are provided, then the next system
+    for which they are *not* specified will continue counting down
+    from the last provided values.
+
     Registered systems will be activated in every update.
 
-    :param system_specs:
-    :return:
+    :param system_specs: An iterable containing system specifications.
     """
     sort, priority = 1, 1
 

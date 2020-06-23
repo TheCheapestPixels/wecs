@@ -1,6 +1,28 @@
 """
-A panda3D boilerplate.
+Boilerplate code to run a WECS-based game. A game's typical ``main.py``
+looks like this:
+
+.. code-block:: python
+
+   #!/usr/bin/env python
+   
+   import os
+   
+   from wecs import boilerplate
+   
+   
+   if __name__ == '__main__':
+       boilerplate.run_game(
+           console=True,
+           keybindings=True,
+           module_name=os.path.dirname(__file__),
+       )
+
+To write your game, implement the module ``game`` (either in a 
+``game.py`` or ``game/__init__.py``), 
+
 """
+
 import sys
 
 from panda3d.core import PStatClient
@@ -17,21 +39,32 @@ from wecs.panda3d import ECSShowBase
 def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False,
              debug_keys=False):
     """
-    Runs the game by using the panda3D's main run loop.
-    It also sets up several handy keyboard shortcuts to use while deveoping:
-    esc: quit
-    F9 : show/hide console
-    F10: show/hide frame rate meter
-    F11: debug using pdb, during event loop
-    F12: pstats; connects to a running server
+    This function...
 
-    :param module_name:
-    :param simplepbr:
-    :param simplepbr_kwargs:
-    :param console:
-    :param keybindings:
-    :param debug_keys:
+    - starts a Panda3D instance
+    - sets it up for use with WECS
+    - imports the module ``game``
+    - adds systems of types specified in ``game.system_types`` (if
+      present) to ``base.ecs_world``,
+    - runs Panda3D's main loop.
 
+
+    :param simplepbr: Initialize ``panda3d-simplepbr``.
+    :param simplepbr_kwargs: key word argument to pass to 
+        ``simplepbr.init()`` (if :param simplepbr: is True.) 
+    :param console: Set up the CEF-based console
+        (``panda3d-cefconsole``).
+    :param keybindings: Set up ``panda3d-keybindings`` listener.
+    :param module_name: Passed as ``config_module`` to the keybinding
+        listener's ``add_device_listener``.
+    :param debug_keys: The boilerplate will use Panda3D's key press
+        events to make four functions available:
+
+        - ``Escape``: Close the application by calling ``sys.exit()``.
+        - ``F9``: open / close the CEF console (if present).
+        - ``F10``: show / hide the frame rate meter.
+        - ``F11``: Start a ``pdb`` session in the underlying terminal.
+        - ``F12``: Connect to ``pstats``.
     """
     # Application Basics
     ECSShowBase()
@@ -57,8 +90,6 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
     if console:
         from cefconsole import add_console
         from cefconsole import PythonSubconsole
-        # FIXME next check looks redundant. cefconsole uses F9 as default,
-        # FIXME and it's activated even if debug_keys false
         if debug_keys:
 
             add_console(subconsoles=[PythonSubconsole()], toggle="f9")
@@ -90,7 +121,9 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
     # Set up the world:
     import game  
-    # system_types is deprecated, because badly named. Do not use.
+    # FIXME: system_types is a bad name, since the allowed specs are now
+    # more complicated (see add_systems' code). system_specs would be
+    # better.
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
     if console:
@@ -102,11 +135,30 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
 
 def add_systems(system_specs):
     """
-    Register additional systems to the world.
+    Registers additional systems to the world. Each system specification
+    must be in one of these formats:
+
+    .. code-block:: python
+    
+       system_types = [
+          SystemType,
+          system_instance,
+          (sort, priority, SystemType),
+          (sort, priority, system_instance),
+       ]
+    
+    Each ``SystemType`` is instantiated with no arguments.
+    
+    ``sort`` and ``priority`` refer to the same parameter's in
+    Panda3D's task manager. If they are not provided, a best effort
+    guess is made: Starting at sort 1 and priority 0, priority is
+    counted down. If the values are provided, then the next system
+    for which they are *not* specified will continue counting down
+    from the last provided values.
+
     Registered systems will be activated in every update.
 
-    :param system_specs:
-    :return:
+    :param system_specs: An iterable containing system specifications.
     """
     sort, priority = 1, 1
 

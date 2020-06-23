@@ -25,8 +25,8 @@ Installation, etc.
 * Installation: `pip install wecs`
 * Documentation: [readthedocs.io](https://wecs.readthedocs.io/en/latest/)
 * Source code: [GitHub repository](https://github.com/TheCheapestPixels/wecs)
-* Chat: [Panda3D Offtopic Discord server](),
-  channel [`#wecs`](https://discord.gg/pcR4ZTS)
+* Chat: [Panda3D Offtopic Discord server](https://discord.gg/pcR4ZTS),
+  channel [#wecs](https://discord.com/channels/722508679118848012/722510686474731651)
 
 
 Hello World

@@ -58,7 +58,7 @@ class Interpreter(InteractiveConsole):
             old_notify = notify.get_ostream_ptr()
             notify.set_ostream_ptr(self.stream, False)
             with redirect_stdout(self.stringio):
-            # Exec, writing output to buffers
+                # Exec, writing output to buffers
                 exec(code, self.locals)
             # Write buffers to output string.
             io_data = self.stringio.getvalue()

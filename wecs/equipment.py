@@ -23,7 +23,7 @@ class Slot:
     # An entity must have a component of this type to be equippable
     # in this slot
     type: type
-    content: UID # The actual item
+    content: UID  # The actual item
 
 
 @Component()

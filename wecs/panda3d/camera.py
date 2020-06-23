@@ -18,8 +18,8 @@ from .model import Clock
 
 @Component()
 class Camera:
-    camera: NodePath = field(default_factory=lambda:base.camera)
-    pivot: NodePath = field(default_factory=lambda:NodePath("camera pivot"))
+    camera: NodePath = field(default_factory=lambda: base.camera)
+    pivot: NodePath = field(default_factory=lambda: NodePath("camera pivot"))
 
 
 @Component()
@@ -41,9 +41,9 @@ class ObjectCentricCameraMode:
 
 @Component()
 class CollisionZoom:
-    collision: CollisionNode = field(default_factory=lambda:CollisionNode("cam collisions"))
-    traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser("cam traverser"))
-    queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
+    collision: CollisionNode = field(default_factory=lambda: CollisionNode("cam collisions"))
+    traverser: CollisionTraverser = field(default_factory=lambda: CollisionTraverser("cam traverser"))
+    queue: CollisionHandlerQueue = field(default_factory=lambda: CollisionHandlerQueue())
     body_width: float = 0.5
 
 
@@ -171,7 +171,7 @@ class CollideCamerasWithTerrain(System):
         w = zoom.body_width / 2
         segs = ((0, 0, w), (0, 0, -w), (w, 0, 0), (-w, 0, 0))
         for seg in segs:
-            segment = CollisionSegment(seg,(0, -center.distance, 0))
+            segment = CollisionSegment(seg, (0, -center.distance, 0))
             zoom.collision.add_solid(segment)
         zoom.collision.set_into_collide_mask(0)
         cn = camera.camera.parent.attach_new_node(zoom.collision)

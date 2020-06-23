@@ -1,3 +1,6 @@
+"""
+Simple movement System and component.
+"""
 from enum import Enum
 
 from panda3d.core import Vec3
@@ -7,7 +10,6 @@ from wecs.core import System
 from wecs.core import and_filter
 from wecs.panda3d import Position
 from wecs.panda3d import Model
-from wecs.panda3d import Scene
 
 
 class Players(Enum):
@@ -17,24 +19,45 @@ class Players(Enum):
 
 @Component()
 class Movement:
-    value: Vec3
+    """
+    The :class:Movement Component holds a 3D vector which represents the direction of the
+    component which uses it, for example, the model of the ball, or the paddles.
+    It's the 3D change that should happen during one second,so it serves as a "speed"
+    element as well.
+    """
+    direction: Vec3
 
 
 class MoveObject(System):
+    """
+    :class:MoveObject update the position of the Entity's :class:Model according to it's
+    movement direction.
+    """
     entity_filters = {
-        'move': and_filter([
+        'movable': and_filter([
             Model,
-            Scene,
             Position,
             Movement,
         ]),
     }
 
     def update(self, entities_by_filter):
-        for entity in entities_by_filter['move']:
+        """
+        On update, iterate all 'movable' entities. For each:
+            - Get its position
+            - Get its movement(direction)
+            - Get its model
+            - finally, update its model according to position and direction
+
+        Note the position is update by the direction multiplied by dt, which is the deltaTime
+        since the previous update, as the update function is called several times per second.
+
+        :param entities_by_filter:
+        """
+        for entity in entities_by_filter['movable']:
             position = entity[Position]
             movement = entity[Movement]
             model = entity[Model]
 
-            position.value += movement.value * globalClock.dt
+            position.value += movement.direction * globalClock.dt
             model.node.set_pos(position.value)

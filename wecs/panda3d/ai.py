@@ -12,7 +12,7 @@ from .character import CharacterController
 
 @Component()
 class ConstantCharacterAI:
-    '''
+    """
     Keeps moving in the same direction.
 
     :param Vec3 move: (0, 0, 0) - relative directional movement speed
@@ -21,7 +21,7 @@ class ConstantCharacterAI:
     :param bool sprints: False - is sprinting
     :param bool crouches: False - is crouching
     :param bool jumps: False - starts jumping
-    '''
+    """
 
     move: Vec3 = field(default_factory=lambda:Vec3(0, 0, 0))
     heading: float = 0.0

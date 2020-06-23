@@ -21,13 +21,14 @@ engine <https://www.panda3d.org/>`__ are provided.
 Installation, etc.
 ------------------
 
-Installation: ``pip install wecs``
-
-Documentation:
-`readthedocs.io <https://wecs.readthedocs.io/en/latest/>`__
-
-Source code: `GitHub
-repository <https://github.com/TheCheapestPixels/wecs>`__
+-  Installation: ``pip install wecs``
+-  Documentation:
+   `readthedocs.io <https://wecs.readthedocs.io/en/latest/>`__
+-  Source code: `GitHub
+   repository <https://github.com/TheCheapestPixels/wecs>`__
+-  Chat: `Panda3D Offtopic Discord
+   server <https://discord.gg/pcR4ZTS>`__, channel
+   `#wecs <https://discord.com/channels/722508679118848012/722510686474731651>`__
 
 Hello World
 -----------

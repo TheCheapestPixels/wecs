@@ -16,6 +16,9 @@ To distinguish state objects and logic, state objects are called `Components`,
 while logic objects are called `Systems`. `Entities` are collections of
 `Components`.
 
+### Talk to us
+
+We're still early stages, but we welcome anyone who is curious to join us on the wecs [Discord channel](https://discord.gg/hXGyd43).
 
 ## WECS' ECS definition
 

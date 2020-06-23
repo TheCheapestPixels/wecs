@@ -1,3 +1,8 @@
+"""
+The Paddle Component and System
+
+Each Paddle has information about it's player, size and speed.
+"""
 from panda3d.core import KeyboardButton
 
 from wecs.core import Component
@@ -13,12 +18,22 @@ from movement import Players
 
 @Component()
 class Paddle:
+    """
+    The Paddle Component holds: an int representing the player controlling it,
+    a its speed.
+    """
+
     player: int
     size: float = 0.3
-    speed: float = 0.2
 
 
 class ResizePaddles(System):
+    """
+    ResizePaddles ensures that the paddle's size stays updated.
+    The idea is that other systems may influence the size by changing
+    the paddle's Component state. ResizePaddles will make the actual change
+    to the Model.
+    """
     entity_filters = {
         'paddle': and_filter([
             Model,
@@ -27,6 +42,9 @@ class ResizePaddles(System):
     }
 
     def update(self, entities_by_filter):
+        """
+        Update the paddle size by setting the scale of the paddle's Model.
+        """
         for entity in entities_by_filter['paddle']:
             model = entity[Model]
             paddle = entity[Paddle]
@@ -65,7 +83,7 @@ class GivePaddlesMoveCommands(System):
                 delta -= 1
 
             # Store movement
-            movement.value.z = delta
+            movement.direction.z = delta
 
 
 class PaddleTouchesBoundary(System):
@@ -87,7 +105,7 @@ class PaddleTouchesBoundary(System):
             z = position.value.z
             size = paddle.size
 
-            if z + size  > 1:
+            if z + size > 1:
                 position.value.z = 1 - size
             elif (z - size) < -1:
                 position.value.z = -1 + size

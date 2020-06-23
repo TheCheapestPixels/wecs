@@ -1,25 +1,26 @@
-import types
+"""Aspects"""
 
 
 def factory(factory_function):
     def func():
         return factory_function()
+
     return func
 
 
 class Aspect:
-    '''
+    """
     An aspect is a set of
     :class:`wecs.core.Component` types (and values diverging from the
     defaults) and parent aspects. When you create an entity from a set
     of aspects, all component types get pooled.
-    '''
+    """
 
     def __init__(self, aspects_or_components, overrides=None, name=None):
         self.name = name
         self.components = {}
         for aoc in aspects_or_components:
-            if isinstance(aoc, (Aspect)):
+            if isinstance(aoc, Aspect):
                 if any(key in aoc.components for key in self.components.keys()):
                     raise ValueError("Aspect {} has clashing components".format(aoc))
                 self.components.update(aoc.components)

@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
 import sys
+import logging
 
 from panda3d.core import Vec3
 from panda3d.core import Point3
-from panda3d.core import VBase3
 
-from wecs.core import World
-from wecs.core import Component
-from wecs.core import System
 from wecs.panda3d import ECSShowBase
 from wecs import panda3d
 
@@ -19,6 +16,7 @@ import movement
 import paddles
 import ball
 
+logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     ECSShowBase()  # ShowBase + base.ecs_world + base.add_system()
@@ -61,31 +59,44 @@ if __name__ == '__main__':
     # All systems are set up now, so all that's missing are the
     # entities.
 
-    paddle_left = base.ecs_world.create_entity(
+    # left paddle
+    base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='paddle.bam'),
+        panda3d.Geometry(file='resources/paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Vec3(-1.1, 0, 0)),
-        movement.Movement(value=Vec3(0, 0, 0)),
+        movement.Movement(direction=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.LEFT),
     )
 
-    paddle_right = base.ecs_world.create_entity(
+    # right paddle
+    base.ecs_world.create_entity(
         panda3d.Model(),
-        panda3d.Geometry(file='paddle.bam'),
+        panda3d.Geometry(file='resources/paddle.bam'),
         panda3d.Scene(node=base.aspect2d),
         panda3d.Position(value=Point3(1.1, 0, 0)),
-        movement.Movement(value=Vec3(0, 0, 0)),
+        movement.Movement(direction=Vec3(0, 0, 0)),
         paddles.Paddle(player=paddles.Players.RIGHT),
     )
 
-    ball = base.ecs_world.create_entity(
+    # ball
+    base.ecs_world.create_entity(
         panda3d.Position(value=Point3(0, 0, 0)),
         panda3d.Model(),
-        panda3d.Geometry(file='ball.bam'),
+        panda3d.Geometry(file='resources/ball.bam'),
         panda3d.Scene(node=base.aspect2d),
         ball.Ball(),
         ball.Resting(),
     )
+
+    # another ball - uncomment to enjoy the HARD mode
+    # base.ecs_world.create_entity(
+    #     panda3d.Position(value=Point3(0.5, 0, 0.1)),
+    #     panda3d.Model(),
+    #     panda3d.Geometry(file='resources/ball.bam'),
+    #     panda3d.Scene(node=base.aspect2d),
+    #     ball.Ball(),
+    #     ball.Resting(),
+    # )
 
     base.run()

@@ -10,4 +10,5 @@ if __name__ == '__main__':
         os.path.dirname(__file__),
         console=False,
         keybindings=False,
+        debug_keys=True
     )

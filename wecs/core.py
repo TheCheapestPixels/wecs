@@ -312,10 +312,25 @@ class Entity:
         you can write
         comp = entity[some_component_type]
 
-        :param component_type:
+        :param component_type: The type of :class:`wecs.core.Component` to get.
         :return: :The :class:`wecs.core.Component` instance.
         """
         return self.get_component(component_type)
+
+    def get(self, component_type, default=None):
+        """
+        Helper function to use instead of :func:`get_component`. Allows adding a default
+        value in case :class:`wecs.core.Component` is not part of the entity.
+
+        :param component_type: The type of :class:`wecs.core.Component` to get.
+        :param default: the return value if :class:`wecs.core.Component` is not found
+        :return: either the :class:`wecs.core.Component` or the default value.
+        """
+        try:
+            return self.get_component(component_type)
+        except KeyError:
+            return default
+
 
     def has_component(self, component_type):
         """

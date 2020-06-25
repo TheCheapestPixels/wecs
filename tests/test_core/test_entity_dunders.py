@@ -16,6 +16,9 @@ def test_get(world, entity, null_component):
     entity.add_component(null_component)
     world._flush_component_updates()
     assert entity[NullComponent] is null_component
+    assert entity.get(NullComponent) is null_component
+    assert entity.get("missing") is None
+    assert entity.get("missing", "default_value") is "default_value"
 
 
 def test_contains(world, entity, null_component):

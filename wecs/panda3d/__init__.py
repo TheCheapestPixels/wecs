@@ -8,9 +8,3 @@ from .ai import *
 from .animation import *
 
 
-def panda_clock():
-
-    def read_dt():
-        return globalClock.dt
-
-    return read_dt

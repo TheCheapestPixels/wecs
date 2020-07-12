@@ -1,3 +1,13 @@
+"""
+A :class:`Clock` measures time for an entity. A typical use case is to
+measure a frame's time in real-time applications, or advancing a 
+simulation by specific time steps. Clocks provide a mechanism to clamp
+time steps to a maximum (e.g. so as not to overwhelm a physics engine,
+and allow it to regain real-time performance). They also provide a
+mechanism to build a hierarchy of clocks, with children running at a
+settable speed relative to their parent.
+"""
+
 from types import FunctionType
 from collections import defaultdict
 
@@ -18,8 +28,27 @@ class SettableClock:
         return self.dt
 
 
+def panda3d_clock():
+    return globalClock.dt
+
+
 @Component()
 class Clock:
+    """
+    clock: A function that is called with no arguments and returns the
+      elapsed time.
+    timestep: Deprecated. Use wall_time, frame_time, or game_time
+      instead.
+    max_timestep: float = 1.0 / 30
+    scaling_factor: Time dilation factor. This clock's game_time runs
+      with a speed of `scaling_factor` relative to its parent.
+      Default: 1.0
+    parent: UID of the entity with the parent clock. `None` for root
+      clocks.
+    wall_time: The actual time delta. Set by :class:`DetermineTimestep`
+    frame_time: The wall time, clamped to max_timestep.
+    game_time: Frame time, scaled by scaling factor
+    """
     clock: FunctionType = None
     timestep: float = 0.0  # Deprecated
     max_timestep: float = 1.0 / 30
@@ -31,6 +60,9 @@ class Clock:
 
 
 class DetermineTimestep(System):
+    """
+    Update clocks. 
+    """
     entity_filters = {
         'clock': and_filter([Clock]),
     }

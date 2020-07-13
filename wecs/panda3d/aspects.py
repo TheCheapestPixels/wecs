@@ -2,10 +2,11 @@ from panda3d.core import Vec3
 from panda3d.core import NodePath
 from panda3d.core import CollisionSphere
 
-from wecs import panda3d
-from wecs import mechanics
 from wecs.aspects import Aspect
 from wecs.aspects import factory
+
+from wecs.mechanics import clock
+from wecs import panda3d as wp3d
 
 # An ontology of aspects:
 # * Controllable beings on the map
@@ -28,15 +29,15 @@ from wecs.aspects import factory
 
 character = Aspect(
     [
-        mechanics.Clock,
-        panda3d.Position,
-        panda3d.Scene,
-        panda3d.CharacterController,
-        panda3d.Model,
-        panda3d.Geometry,
+        clock.Clock,
+        wp3d.Position,
+        wp3d.Scene,
+        wp3d.CharacterController,
+        wp3d.Model,
+        wp3d.Geometry,
     ],
     overrides={
-        mechanics.Clock: dict(clock=panda3d.panda_clock),
+        clock.Clock: dict(clock=clock.panda3d_clock),
     },
 )
 
@@ -63,22 +64,24 @@ def rebecca_lifter():
 
 walking = Aspect(
     [
-        panda3d.WalkingMovement,
-        panda3d.CrouchingMovement,
-        panda3d.SprintingMovement,
-        panda3d.InertialMovement,
-        panda3d.BumpingMovement,
-        panda3d.FallingMovement,
-        panda3d.JumpingMovement,
+        wp3d.WalkingMovement,
+        wp3d.CrouchingMovement,
+        wp3d.SprintingMovement,
+        wp3d.InertialMovement,
+        wp3d.BumpingMovement,
+        wp3d.FallingMovement,
+        wp3d.JumpingMovement,
     ],
     overrides={
-        panda3d.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-        panda3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
+        wp3d.BumpingMovement: dict(solids=factory(rebecca_bumper)),
+        wp3d.FallingMovement: dict(solids=factory(rebecca_lifter)),
     },
 )
-animated = Aspect([panda3d.Actor, panda3d.Animation])
+animated = Aspect([wp3d.Actor, wp3d.Animation])
 avatar = Aspect([character, walking, animated],
-                overrides={panda3d.Actor: dict(file='../../assets/rebecca.bam')})
+                overrides={
+                    wp3d.Actor: dict(file='../../assets/rebecca.bam'),
+                })
 
 
 def spectator_bumper():
@@ -93,34 +96,43 @@ def spectator_bumper():
     )
 
 
-spectator = Aspect([character, panda3d.FloatingMovement, panda3d.BumpingMovement],
-                   overrides={
-                       panda3d.Model: dict(node=factory(lambda: NodePath('spectator'))),
-                       panda3d.BumpingMovement: dict(solids=factory(spectator_bumper)),
-                   },
-                   )
+spectator = Aspect(
+    [
+        character,
+        wp3d.FloatingMovement,
+        wp3d.BumpingMovement,
+    ],
+    overrides={
+        wp3d.Model: dict(
+            node=factory(lambda: NodePath('spectator')),
+        ),
+        wp3d.BumpingMovement: dict(
+            solids=factory(spectator_bumper),
+        ),
+    },
+)
 
-pc_mind = Aspect([panda3d.Input],
+pc_mind = Aspect([wp3d.Input],
                  overrides={
-                     panda3d.Input: dict(contexts=[
+                     wp3d.Input: dict(contexts=[
                          'character_movement',
                          'camera_movement',
                          'clock_control',
                      ]),
                  },
                  )
-npc_mind_constant = Aspect([panda3d.ConstantCharacterAI])
-npc_mind_brownian = Aspect([panda3d.BrownianWalkerAI])
+npc_mind_constant = Aspect([wp3d.ConstantCharacterAI])
+npc_mind_brownian = Aspect([wp3d.BrownianWalkerAI])
 
 first_person = Aspect([
-    panda3d.Camera,
-    panda3d.MountedCameraMode,
+    wp3d.Camera,
+    wp3d.MountedCameraMode,
 ])
 third_person = Aspect([
-    panda3d.Camera,
-    panda3d.ObjectCentricCameraMode,
-    panda3d.TurningBackToCameraMovement,
-    panda3d.CollisionZoom,
+    wp3d.Camera,
+    wp3d.ObjectCentricCameraMode,
+    wp3d.TurningBackToCameraMovement,
+    wp3d.CollisionZoom,
 ])
 
 player_character = Aspect([avatar, pc_mind, third_person])

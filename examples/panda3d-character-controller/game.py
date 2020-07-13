@@ -2,7 +2,7 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 
 from wecs import cefconsole
-from wecs import mechanics
+from wecs.mechanics import clock
 from wecs import panda3d as wp3d
 from wecs.aspects import Aspect
 from wecs.panda3d import aspects
@@ -13,7 +13,7 @@ system_types = [
     wp3d.ManageGeometry,  # Manages a model's geometry and its nodepaths.
     wp3d.SetupModels,  # Makes them collibable.
     wp3d.PrepareCameras,  # Attach / detach camera pivots to / from models.
-    wp3d.UpdateClocks,  # How long is this frame? Update all clocks.
+    clock.DetermineTimestep,  # How long is this frame? Update all clocks.
     # What movement do the characters intend to do?
     # wp3d.AcceptInput,  # Input from player, ranges ([-1; 1]), not scaled for time.
     wp3d.Think,  # Input from AIs, the same
@@ -43,7 +43,7 @@ system_types = [
 
 # Aspects are basically classes for entities. Here are two that we will use.
 game_map = Aspect(
-    [mechanics.Clock,
+    [clock.Clock,
      wp3d.Position,
      wp3d.Model,
      wp3d.Geometry,
@@ -52,7 +52,7 @@ game_map = Aspect(
      wp3d.FlattenStrong,
      ],
     overrides={
-        mechanics.Clock: dict(clock=wp3d.panda_clock),
+        clock.Clock: dict(clock=lambda: clock.panda3d_clock),
         wp3d.Geometry: dict(file='roadE.bam'),
         wp3d.Scene: dict(node=base.render),
     },
@@ -74,7 +74,7 @@ player_avatar = Aspect(
 player_avatar.add(
     base.ecs_world.create_entity(name="Playerbecca"),
     overrides={
-        mechanics.Clock: dict(parent=map_entity._uid),
+        clock.Clock: dict(parent=map_entity._uid),
         wp3d.Position: dict(value=Point3(50, 290, 0)),
     },
 )
@@ -84,7 +84,7 @@ aspects.non_player_character.add(
     base.ecs_world.create_entity(name="Rebecca"),
     overrides={
         wp3d.Position: dict(value=Point3(60, 290, 0)),
-        mechanics.Clock: dict(parent=map_entity._uid),
+        clock.Clock: dict(parent=map_entity._uid),
     },
 )
 
@@ -97,7 +97,7 @@ aspects.non_player_character.add(
             move=Vec3(0.0, 0.25, 0.0),
             heading=-0.5,
         ),
-        mechanics.Clock: dict(parent=map_entity._uid),
+        clock.Clock: dict(parent=map_entity._uid),
     },
 )
 
@@ -107,7 +107,7 @@ new_npc.add(
     base.ecs_world.create_entity(name="Randombecca"),
     overrides={
         wp3d.Position: dict(value=Point3(80, 290, 0)),
-        mechanics.Clock: dict(parent=map_entity._uid),
+        clock.Clock: dict(parent=map_entity._uid),
     },
 )
 
@@ -126,7 +126,7 @@ sprite = Aspect(
 sprite.add(
     base.ecs_world.create_entity(name="mr. man"),
     overrides={
-        mechanics.Clock: dict(parent=map_entity._uid),
+        clock.Clock: dict(parent=map_entity._uid),
         wp3d.Sprite: dict(image_name="../../assets/mrman.png"),
         wp3d.SpriteAnimation: dict(
             animations={

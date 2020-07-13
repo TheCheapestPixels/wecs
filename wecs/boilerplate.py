@@ -24,6 +24,7 @@ To write your game, implement the module ``game`` (either in a
 """
 
 import sys
+import importlib
 
 from panda3d.core import PStatClient
 from panda3d.core import loadPrcFileData
@@ -36,19 +37,22 @@ from wecs.core import System
 from wecs.panda3d import ECSShowBase
 
 
-def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=False, keybindings=False,
+def run_game(game_module='game', module_name=None, simplepbr=False,
+             simplepbr_kwargs=None, console=False, keybindings=False,
              debug_keys=False):
     """
     This function...
 
-    - starts a Panda3D instance
-    - sets it up for use with WECS
-    - imports the module ``game``
+    - starts a Panda3D instance,
+    - sets it up for use with WECS,
+    - imports the module ``game`` (or whatever name is passed as
+      ``game_module``),
     - adds systems of types specified in ``game.system_types`` (if
       present) to ``base.ecs_world``,
     - runs Panda3D's main loop.
 
 
+    :param game_module: The name of the game module
     :param simplepbr: Initialize ``panda3d-simplepbr``.
     :param simplepbr_kwargs: key word argument to pass to 
         ``simplepbr.init()`` (if :param simplepbr: is True.) 
@@ -120,7 +124,7 @@ def run_game(module_name=None, simplepbr=False, simplepbr_kwargs=None, console=F
         base.accept('f12', pstats)
 
     # Set up the world:
-    import game  
+    game = importlib.import_module(game_module)
     # FIXME: system_types is a bad name, since the allowed specs are now
     # more complicated (see add_systems' code). system_specs would be
     # better.

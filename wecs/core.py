@@ -241,6 +241,7 @@ class Entity:
     def __init__(self, world, name=None):
         self.world = world
         self._uid = UID(name)
+        self.name = name
         self.components = {}  # type: instance
         self._added_components = {}  # type: instance
         self._dropped_components = set()  # types

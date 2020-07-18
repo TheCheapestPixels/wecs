@@ -2,6 +2,7 @@ from wecs.core import Component
 from wecs.core import and_filter, or_filter
 
 from fixtures import world, entity
+from fixtures import bare_null_world, bare_null_system, NullComponent
 
 
 @Component()
@@ -240,3 +241,21 @@ def test_multiarg_creation():
 
     s = set([ComponentA, ComponentB, ComponentC])
     assert f(s)
+
+
+# Test whether bare component types in entity_filters work as expected
+
+def test_bare_system(bare_null_world, bare_null_system):
+    entity = bare_null_world.create_entity(NullComponent())
+    bare_null_world._flush_component_updates()
+    assert entity in bare_null_system.entities["null"]
+    assert len(bare_null_system.entries) == 1
+    assert bare_null_system.entries[0] == (['null'], entity)
+
+
+def test_bare_system_not_adding(bare_null_world, bare_null_system):
+    entity_a = bare_null_world.create_entity()
+    entity_b = bare_null_world.create_entity(ComponentA())
+    bare_null_world._flush_component_updates()
+    assert entity_a not in bare_null_system.entities["null"]
+    assert entity_b not in bare_null_system.entities["null"]

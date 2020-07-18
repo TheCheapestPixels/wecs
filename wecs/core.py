@@ -515,7 +515,7 @@ class System:
     def _propose_removal(self, entity):
         exited_filters = []
         future_components = entity._get_post_removal_component_types()
-        for filter_name, filter_func in self.entity_filters.items():
+        for filter_func, filter_name in self.filters.items():
             matches = filter_func(future_components)
             present = entity in self.entities[filter_name]
             if present and not matches:
@@ -526,7 +526,7 @@ class System:
     def _propose_addition(self, entity):
         entered_filters = []
         future_components = entity._get_post_addition_component_types()
-        for filter_name, filter_func in self.entity_filters.items():
+        for filter_func, filter_name in self.filters.items():
             matches = filter_func(future_components)
             present = entity in self.entities[filter_name]
             if matches and not present:

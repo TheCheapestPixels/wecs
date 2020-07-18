@@ -56,12 +56,29 @@ class NullSystem(System):
         self.updates.append(entities_by_filter)
 
 
+class BareNullSystem(NullSystem):
+    entity_filters = {
+        "null": NullComponent,
+    }
+
+
 @pytest.fixture
 def null_system():
     return NullSystem()
 
 
 @pytest.fixture
+def bare_null_system():
+    return BareNullSystem()
+
+
+@pytest.fixture
 def null_system_world(world, null_system):
     world.add_system(null_system, 0)
+    return world
+
+
+@pytest.fixture
+def bare_null_world(world, bare_null_system):
+    world.add_system(bare_null_system, 0)
     return world

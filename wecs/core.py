@@ -409,6 +409,17 @@ class Component:
         return cls
 
 
+class Proxy:
+    def __init__(self, name):
+        self.name = name
+
+
+class  ProxyType:
+    def __init__(self, component_type, field_name=None):
+        self.component_type = component_type
+        self.field_name = field_name
+
+
 #
 # Systems and Filters
 #
@@ -458,10 +469,13 @@ class System:
     def __init__(self, throw_exc=False):
         self.throw_exc = throw_exc
         self.filters = {}
-        for name, func in self.entity_filters.items():
+        for name in self.entity_filters.keys():
+            func = self.entity_filters[name]
             if not isinstance(func, Filter):
                 # A base component is (hopefully) being used
                 func = and_filter(func)
+                self.entity_filters[name] = func
+            # FIXME: Replace Proxies
             self.filters[func] = name
         self.entities = {
             name: set()

@@ -1,8 +1,9 @@
-from wecs.core import Component
-from wecs.core import and_filter, or_filter
+from wecs.core import Component, Proxy, ProxyType
+from wecs.core import System, and_filter, or_filter
 
 from fixtures import world, entity
-from fixtures import bare_null_world, bare_null_system, NullComponent
+from fixtures import bare_null_world, bare_null_system
+from fixtures import NullSystem, NullComponent
 
 
 @Component()
@@ -259,3 +260,74 @@ def test_bare_system_not_adding(bare_null_world, bare_null_system):
     bare_null_world._flush_component_updates()
     assert entity_a not in bare_null_system.entities["null"]
     assert entity_b not in bare_null_system.entities["null"]
+
+
+class ProxyingNullSystem(NullSystem):
+    entity_filters = {
+        "null": Proxy('null_proxy'),
+    }
+
+
+def test_proxying_system__proxy_is_bare_component(world):
+    class BareTypeProxy(ProxyingNullSystem):
+        proxies = {
+            'null_proxy': NullComponent,
+        }
+
+    system = BareTypeProxy()
+    world.add_system(system, 0)
+    entity = world.create_entity(NullComponent())
+    world._flush_component_updates()
+    assert entity in system.entities["null"]
+    assert len(system.entries) == 1
+    assert system.entries[0] == (['null'], entity)
+
+
+def test_proxying_system__proxy_type(world):
+    class NonBareTypeProxy(ProxyingNullSystem):
+        proxies = {
+            'null_proxy': ProxyType(NullComponent),
+        }
+
+    system = NonBareTypeProxy()
+    world.add_system(system, 0)
+    entity = world.create_entity(NullComponent())
+    world._flush_component_updates()
+    assert entity in system.entities["null"]
+    assert len(system.entries) == 1
+    assert system.entries[0] == (['null'], entity)
+
+
+def test_proxying_system__field_lookup(world):
+    token = '123'
+    global token_out
+    token_out = None
+
+    @Component()
+    class TestComponent:
+        foo: str = None
+
+    class BareTypeProxy(System):
+        entity_filters = {
+            'test': Proxy('proxy'),
+        }
+        proxies = {
+            'proxy': ProxyType(TestComponent, 'foo'),
+        }
+
+        def update(self, entity_by_filters):
+            for entity in entity_by_filters['test']:
+                proxy = self.proxies['proxy']
+                test = entity[proxy.component_type]
+
+                token = proxy.field(test)
+
+                global token_out
+                token_out = token
+
+    system = BareTypeProxy()
+    world.add_system(system, 0)
+    entity = world.create_entity(TestComponent(foo=token))
+    world.update()
+
+    assert token == token_out

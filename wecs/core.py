@@ -410,15 +410,51 @@ class Component:
 
 
 class Proxy:
+    """
+    When at coding time it is not yet known what component types and
+    field names will be used for an aspect of functionality that a
+    system will work on (e.g. where to find a `NodePath` to center a
+    camera on), a `Proxy` can be used instead to declare a name under
+    which the definition can actually be looked up. For example:
+
+        class ProxyingSystem(System):
+            entity_filters = {
+                'test': Proxy('proxy'),
+            }
+    
+            def update(self, entity_by_filters):
+                for entity in entity_by_filters['test']:
+                    proxy = self.proxies['proxy']
+                    my_component = entity[proxy.component_type]
+    
+                    field_value = proxy.field(my_component)
+    
+
+        @Component()
+        class MyComponent:
+            foo: str = '123'
+
+
+        class ActualSystem(ProxyingSystem):
+            proxies = {
+                'proxy': ProxyType(MyComponent, 'foo'),
+            }
+
+    `ActualSystem` thus is an implementation of `ProxyingSystem` where
+    `my_component = entity[MyComponent]` and 
+    `field_value = my_component.foo`.
+    """
     def __init__(self, name):
         self.name = name
 
 
-class  ProxyType:
+class ProxyType:
     def __init__(self, component_type, field_name=None):
         self.component_type = component_type
         self.field_name = field_name
 
+    def field(self, component):
+        return getattr(component, self.field_name)
 
 #
 # Systems and Filters
@@ -475,6 +511,8 @@ class System:
                 # A base component is (hopefully) being used
                 func = and_filter(func)
                 self.entity_filters[name] = func
+            if hasattr(self, 'proxies'):
+                func._resolve_proxies(self.proxies)
             # FIXME: Replace Proxies
             self.filters[func] = name
         self.entities = {
@@ -571,11 +609,27 @@ class Filter:
     """
 
     def __init__(self, *types_and_filters):
-        old_style = len(types_and_filters) == 1 and isinstance(types_and_filters[0], list)
+        has_one_element = len(types_and_filters) == 1
+        is_a_list = isinstance(types_and_filters[0], list)
+        old_style = has_one_element and is_a_list
         if old_style:
             self.types_and_filters = types_and_filters[0]
         else:
             self.types_and_filters = types_and_filters
+        self.types_and_filters = list(self.types_and_filters)
+
+    def _resolve_proxies(self, proxies):
+        for idx in range(len(self.types_and_filters)):
+            t_o_f = self.types_and_filters[idx]
+            if isinstance(t_o_f, Proxy):
+                proxy = proxies[t_o_f.name]
+                if isinstance(proxy, ProxyType):
+                    resolved_type = proxy.component_type
+                else:
+                    # Bare component type
+                    resolved_type = proxy
+                self.types_and_filters[idx] = resolved_type
+                    
 
     def _get_component_dependencies(self):
         """

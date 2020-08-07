@@ -32,7 +32,6 @@ system_types = [
     wp3d.Animate,
     wp3d.UpdateSprites,
     # We're done with character movement, now update the cameras and console.
-    wp3d.ResetMountedCamera,
     wp3d.ReorientObjectCentricCamera,
     wp3d.CollideCamerasWithTerrain,
     wp3d.UpdateBillboards,

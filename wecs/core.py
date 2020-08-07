@@ -453,7 +453,8 @@ class ProxyType:
         self.component_type = component_type
         self.field_name = field_name
 
-    def field(self, component):
+    def field(self, entity):
+        component = entity[self.component_type]
         return getattr(component, self.field_name)
 
 #
@@ -495,25 +496,33 @@ class System:
                 print("Entity has exited the filter")
 
     When a `Printer` component is added to an entity a flush
-    happens, and `enter_filter_printers` will be called (with the entity as
-    argument). Conversely, when the component is removed, 
+    happens, and `enter_filter_printers` will be called (with the entity
+    as argument). Conversely, when the component is removed, 
     `exit_filter_printers` will be called. As long as it has the
     component during an update, it will be present in the
     `entities_by_filter` dictionary in the set under the key `printers`.
+
+    FIXME: Document `System.proxy` / `System(proxies=...)`
     """
 
-    def __init__(self, throw_exc=False):
+    def __init__(self, proxies=None, throw_exc=False):
+        if proxies is not None:
+            if not hasattr(self, 'proxies'):
+                self.proxies = {}
+            self.proxies.update(proxies)
         self.throw_exc = throw_exc
+
         self.filters = {}
         for name in self.entity_filters.keys():
             func = self.entity_filters[name]
+            # Wrap bare components
             if not isinstance(func, Filter):
-                # A base component is (hopefully) being used
                 func = and_filter(func)
                 self.entity_filters[name] = func
+            # Replace proxies with proxied component types
             if hasattr(self, 'proxies'):
                 func._resolve_proxies(self.proxies)
-            # FIXME: Replace Proxies
+            # Build reverse filter dict
             self.filters[func] = name
         self.entities = {
             name: set()

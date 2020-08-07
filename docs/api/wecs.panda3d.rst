@@ -16,5 +16,7 @@ wecs.panda3d package
    wecs.panda3d.character
    wecs.panda3d.clock
    wecs.panda3d.core
+   wecs.panda3d.debug
    wecs.panda3d.input
    wecs.panda3d.model
+   wecs.panda3d.prototype

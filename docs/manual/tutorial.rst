@@ -184,6 +184,9 @@ When the ``World`` runs the actual update, the ``System``\ ’s
 ``update(self, entities_by_filter)`` function gets called, receiving a
 dictionary of all entities in each filter.
 
+Flushing
+~~~~~~~~
+
 Let’s deep-dive into the flush for a moment. The ``World`` has an
 ``addition_pool`` and a ``removal_pool`` to track which ``Entities``
 have pending additions or removals of ``Components``. When flushing, the
@@ -215,6 +218,78 @@ default behavior implemented by
 ``System.enter_filters(self, filters, entity)`` and
 ``System.exit_filters(self, filters, entity)``, so you can override it.
 ``filters`` is the list of names of ``Filters`` to be entered/exited.
+
+Proxying Component Types
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When developing a system, it is entirely possible that you don’t know
+what field of which component it will be working on. For example, when
+developing a camera mechanic, you may neither know nor care what type it
+should be aimed at, just that there is a ``NodePath`` that the camera
+should be looking at, from, following, whatever the system does.
+
+To do that, the component type and field where the ``NodePath`` can be
+found can be proxied. In an ``entity_filter``, ``Proxy`` can be used as
+a stand-in. A name is given to it to look up the actual type to use
+later.
+
+.. code:: python
+
+   from wecs.core import System
+   from wecs.core import Proxy
+   from wecs.panda3d.camera import Camera
+
+
+   class MyAbstractCamera(System):
+       entity_filters = {
+           'camera': and_filter(Camera, Proxy('camera_focus')),
+       }
+
+When writing a game that uses that camera system, the component type
+will of course be known. Let’s say we use the prototype mechanics, and
+want to center the camera on the visible geometry:
+
+.. code:: python
+
+   from wecs.panda3d.prototype import Geometry
+
+
+   class MyNonAbstractCamera(MyAbstractCamera):
+       proxies = {
+           'camera_focus': ProxyType(Geometry, 'node'),
+       }
+
+This system’s ``camera`` filter will now match all entities with the
+``Camera`` and ``Geometry`` components. This syntax is helpful if you
+want to provide defaults, but more compact way to specify proxies is to
+pass them as keyword arguments:
+
+.. code:: python
+
+   camera_system = MyAbstractCamera(
+       proxies={'camera_focus': ProxyType(Geometry, 'node')},
+   )
+
+Within the system’s functions (``enter_filter_*``, ``exit_filter_*``,
+``update``, etc.), the proxy can be used like this:
+
+.. code:: python
+
+   class MyAbstractCamera(System):
+       entity_filters = {
+           'camera': and_filter(Camera, Proxy('camera_focus')),
+       }
+       proxies = {
+           'camera_focus': ProxyType(Geometry, 'node'),
+       }
+
+       def update(self, entities_by_filter):
+           for entity in entities_by_filter['camera']:
+           focus_proxy = self.proxies['camera_focus']
+               # Instead of `focus = entity[Geometry]`:
+           focus = entity[focus_proxy.component_type]
+               # Instead of `node = focus.node`:
+           node = focus_proxy.field(entity)
 
 Summary: WECS core
 ------------------

@@ -1,3 +1,93 @@
+"""
+The character controller mechanic is a collection of game-typical modes
+of movement, steered by user input or AI, applied to a node that
+represents the character.
+
+The core of the mechanic consists of the :class:`CharacterController`
+(which in the following will be abbreviated as `character`) component,
+and the systems :class:`UpdateCharacter` and :class:`ExecuteMovement`. 
+Additionally, :class:`Clock` and :class:`Input` see heavy use. Together,
+these implement a basic character that can be moved around.
+
+* UpdateCharacter
+  * If the entity has an `Input` component, and
+    `UpdateCharacter.input_context` (default: 'character_movement') is
+    in `Input.contexts`, then that context is read from the device
+    listener and transcribed to the `CharacterController` component.
+    Specifically:
+    * `character.move` (`x` and `y`) is set to the context's `direction`
+    * `character.heading` is set to the negative of the context's
+      `rotation.x`
+    * `character.pitch` is set to the context's `rotation.y`
+    * Some boolean flags (FIXME: ...which should probably be moved to
+      their respective movement mechanics) are set:
+      * `character.jumps` to the context's `jump`
+      * `character.sprints` to the context's `sprint`
+      * `character.crouches` to the context's `crouch`
+    
+    So far, these values are in "input space", using a value range of
+    [-1; 1]. Also, so far they only represent the *intention* to make a
+    movement, and no actual movement will happen in this system.
+
+    If no `Input` component is present, or the system's input context is
+    not handled by that component, then the fields listed above are not
+    changed. It falls to the developer to set them some other way (e.g.
+    by an AI system), otherwise the character will keep moving based on
+    the last used input (which may be the values set at the
+    `CharacterController` component's creation).
+  * Time scaling is applied to these values, meaning that they are
+    understood as being "requested movement per second", and are scaled
+    down to the movement requested for just this frame.
+    * `character.rotation` is a time-scaled `Vec3` HPR version of
+      `character.heading` and `character.pitch`.
+    * `character.translation` is a `Vec3` XYZ version of
+      `character.move`. Additionally, since the input values are based
+      on a square, should they be outside of the unit circle, they are
+      scaled down to be on the edge of it, in the same direction as the
+      input was using.
+* ExecuteMovement: The values which so far were only intentions are now
+  applied to the node.
+  * The node is moved (`set_pos`) relative to itself by
+    `character.translate`.
+  * The node's rotation is adjusted by adding `character.rotation`.
+    Before that, if `character.clamp_pitch` is True,
+    `character.rotation.y` is adjusted so that the node's pitch will
+    stay in the [-89.99; 89.99] range. 
+  * `character.last_rotation_speed` and
+    `character.last_translation_speed` are set to un-timescaled versions
+    of the applied movement and rotation.
+
+Obviously, this alone does us not get us very far; But now we can add
+further mechanics between `UpdateCharacter` and `ExecuteMovement`. They
+can change the values on the `CharacterController` to make it conform
+with the level geometry, other entities present on it, and the physics
+and mechanics of the game world. In many cases, they consist simply of
+a component type that indicates that a character is subject to a certain
+movement type's rules (and with which parameters, e.g. maximum speed),
+and the system to process it (and the `CharacterController`).
+
+Provided in this module are:
+
+* Floating: Scales the character's intentions up by the speed-per-second
+  values on the `FloatingMovement` component.
+* Walking: Scales the intentions by the speed in `WalkingMovement`,
+  `SprintingMovement`, or `CrouchingMovement` (where applicable), and
+  sets the pitch adjustment to 0.
+* Inertiing: Applies corrections to the intention to account for
+  inertia, making the character "want" to continue their movement the
+  same way as the frame before.
+* Bumping: Checks whether the movement as calculated so far will cause
+  a collision with surrounding terrain / characters, and change the
+  intended movement to where Panda3D's CollisionPusher would move the
+  charactter.
+* Falling: Applies gravity, then lifts the node back up based on
+  collisions with the ground.
+* Jumping: Adds an upward impulse to the `FallingMovement`, so that the
+  character will "fall upwards" starting the next frame.
+* TurningBackToCamera: Makes the character turn towards the direction
+  into which the camera looks, away from the camera itself.
+"""
+
 from math import sqrt
 from dataclasses import field
 
@@ -14,12 +104,12 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 from wecs.core import or_filter
+from wecs.mechanics.clock import Clock
 from wecs.panda3d.input import Input
 
 from .model import Model
 from .model import Geometry
 from .model import Scene
-from .model import Clock
 
 from .camera import Camera
 from .camera import ObjectCentricCameraMode

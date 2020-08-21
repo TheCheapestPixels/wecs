@@ -102,6 +102,8 @@ from panda3d.core import CollisionNode
 
 from wecs.core import Component
 from wecs.core import System
+from wecs.core import Proxy
+from wecs.core import ProxyType
 from wecs.core import and_filter
 from wecs.core import or_filter
 from wecs.mechanics.clock import Clock
@@ -293,13 +295,14 @@ class UpdateCharacter(System):
         'character': and_filter([
             CharacterController,
             Clock,
-            Model,
+            Proxy('character_node'),  # Not used, but required for a cmplete character
         ]),
         'input': and_filter([
             CharacterController,
             Input,
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
     input_context = 'character_movement'
 
     def update(self, entities_by_filter):
@@ -326,7 +329,6 @@ class UpdateCharacter(System):
 
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]
-            model = entity[Model]
             dt = entity[Clock].game_time
 
             # Rotation
@@ -358,6 +360,8 @@ class UpdateCharacter(System):
 # traverser, so first we provide a helpful base class.
 
 class CollisionSystem(System):
+    proxies = {'character_node': ProxyType(Model, 'node')}
+
     def init_sensors(self, entity, movement):
         solids = movement.solids
         for tag, solid in solids.items():
@@ -376,7 +380,10 @@ class CollisionSystem(System):
             movement.traverser.show_collisions(entity[Scene].node)
 
     def add_shape(self, entity, movement, solid, shape):
-        model = entity[Model]
+        model_proxy = self.proxies['character_node']
+        model = entity[model_proxy.component_type]
+        model_node = model_proxy.field(entity)
+
         node = NodePath(CollisionNode(
             '{}-{}'.format(
                 movement.tag_name,
@@ -386,7 +393,7 @@ class CollisionSystem(System):
         solid['node'] = node
         node.node().add_solid(shape)
         node.node().set_into_collide_mask(0)
-        node.reparent_to(model.node)
+        node.reparent_to(model_node)
         movement.traverser.add_collider(node, movement.queue)
         node.set_python_tag(movement.tag_name, movement)
         if 'debug' in solid and solid['debug']:
@@ -468,7 +475,7 @@ class TurningBackToCamera(System):
         'character': and_filter([
             TurningBackToCameraMovement,
             CharacterController,
-            Model,
+            Proxy('character_node'),
             Camera,
             ObjectCentricCameraMode,
             Clock,
@@ -478,11 +485,11 @@ class TurningBackToCamera(System):
             ]),
         ])
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
-            model = entity[Model]
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]
             turning = entity[TurningBackToCameraMovement]
@@ -547,15 +554,19 @@ class Inertiing(System):
         'character': and_filter([
             CharacterController,
             InertialMovement,
-            Model,
+            Proxy('character_node'),
             Clock,
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def enter_filter_character(self, entity):
         movement = entity[InertialMovement]
-        model = entity[Model]
-        movement.node.reparent_to(model.node)
+        model_proxy = self.proxies['character_node']
+        model = entity[model_proxy.component_type]
+        model_node = model_proxy.field(entity)
+
+        movement.node.reparent_to(model_node)
         movement.node.set_hpr(0, 0, 0)
 
     def exit_filter_character(self, entity):
@@ -566,7 +577,9 @@ class Inertiing(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].game_time
-            model = entity[Model]
+            model_proxy = self.proxies['character_node']
+            model = entity[model_proxy.component_type]
+            model_node = model_proxy.field(entity)
             character = entity[CharacterController]
             inertia = entity[InertialMovement]
 
@@ -591,7 +604,7 @@ class Inertiing(System):
             inertia.node.set_hpr(
                 -character.last_rotation_speed * dt * (1 - inertia.rotated_inertia),
             )
-            last_speed_vector = model.node.get_relative_vector(
+            last_speed_vector = model_node.get_relative_vector(
                 inertia.node,
                 character.last_translation_speed,
             )
@@ -626,9 +639,10 @@ class Bumping(CollisionSystem):
             CharacterController,
             BumpingMovement,
             Clock,
-            Model,
+            Proxy('character_node'),
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
@@ -665,9 +679,10 @@ class Falling(CollisionSystem):
             FallingMovement,
             Scene,
             Clock,
-            Model,
+            Proxy('character_node'),
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def enter_filter_character(self, entity):
         self.init_sensors(entity, entity[FallingMovement])
@@ -684,14 +699,16 @@ class Falling(CollisionSystem):
             self.fall_and_land(entity)
 
     def predict_falling(self, entity):
-        model = entity[Model]
+        model_proxy = self.proxies['character_node']
+        model = entity[model_proxy.component_type]
+        model_node = model_proxy.field(entity)
         scene = entity[Scene]
         clock = entity[Clock]
         controller = entity[CharacterController]
         falling_movement = entity[FallingMovement]
 
         # Adjust inertia by gravity
-        falling_movement.local_gravity = model.node.get_relative_vector(
+        falling_movement.local_gravity = model_node.get_relative_vector(
             scene.node,
             falling_movement.gravity,
         )
@@ -754,9 +771,10 @@ class Jumping(CollisionSystem):
             FallingMovement,
             Scene,
             Clock,
-            Model,
+            Proxy('character_node'),
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
@@ -782,29 +800,32 @@ class ExecuteMovement(System):
     entity_filters = {
         'character': and_filter([
             CharacterController,
-            Model,
+            Proxy('character_node'),
             Clock,
         ]),
     }
+    proxies = {'character_node': ProxyType(Model, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            model = entity[Model]
+            model_proxy = self.proxies['character_node']
+            model = entity[model_proxy.component_type]
             character = entity[CharacterController]
             dt = entity[Clock].game_time
 
             # Translation: Simple self-relative movement for now.
-            model.node.set_pos(model.node, character.translation)
+            model_node = model_proxy.field(entity)
+            model_node.set_pos(model_node, character.translation)
             character.last_translation_speed = character.translation / dt
 
             # Rotation
             if character.clamp_pitch:
                 # Adjust intended pitch until it won't move you over a pole.
-                preclamp_pitch = model.node.get_p() + character.rotation.y
+                preclamp_pitch = model_node.get_p() + character.rotation.y
                 clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
                 character.rotation.y += clamped_pitch - preclamp_pitch
 
-            model.node.set_hpr(model.node.get_hpr() + character.rotation)
+            model_node.set_hpr(model_node.get_hpr() + character.rotation)
             character.last_rotation_speed = character.rotation / dt
 
 

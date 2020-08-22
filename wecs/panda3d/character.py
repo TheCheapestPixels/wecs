@@ -293,9 +293,9 @@ class UpdateCharacter(System):
     '''
     entity_filters = {
         'character': and_filter([
-            CharacterController,
+            Proxy('character_node'),  # Not used, but required for a complete character
             Clock,
-            Proxy('character_node'),  # Not used, but required for a cmplete character
+            CharacterController,
         ]),
         'input': and_filter([
             CharacterController,
@@ -360,7 +360,10 @@ class UpdateCharacter(System):
 # traverser, so first we provide a helpful base class.
 
 class CollisionSystem(System):
-    proxies = {'character_node': ProxyType(Model, 'node')}
+    proxies = {
+        'character_node': ProxyType(Model, 'node'),
+        'scene_node': ProxyType(Scene, 'node'),
+    }
 
     def init_sensors(self, entity, movement):
         solids = movement.solids
@@ -377,7 +380,11 @@ class CollisionSystem(System):
                 )
                 self.add_shape(entity, movement, solid, shape)
         if movement.debug:
-            movement.traverser.show_collisions(entity[Scene].node)
+            scene_proxy = self.proxies['scene_node']
+            scene = entity[scene_proxy.component_type]
+            scene_node = scene_proxy.field(entity)
+
+            movement.traverser.show_collisions(scene_node)
 
     def add_shape(self, entity, movement, solid, shape):
         model_proxy = self.proxies['character_node']
@@ -400,8 +407,11 @@ class CollisionSystem(System):
             node.show()
 
     def run_sensors(self, entity, movement):
-        scene = entity[Scene]
-        movement.traverser.traverse(scene.node)
+        scene_proxy = self.proxies['scene_node']
+        scene = entity[scene_proxy.component_type]
+        scene_node = scene_proxy.field(entity)
+
+        movement.traverser.traverse(scene_node)
         movement.queue.sort_entries()
         movement.contacts = movement.queue.entries
 
@@ -473,16 +483,16 @@ class TurningBackToCamera(System):
     '''
     entity_filters = {
         'character': and_filter([
+            Proxy('character_node'),
+            Clock,
             TurningBackToCameraMovement,
             CharacterController,
-            Proxy('character_node'),
-            Camera,
-            ObjectCentricCameraMode,
-            Clock,
             or_filter([
                 WalkingMovement,
                 FloatingMovement,
             ]),
+            Camera,
+            ObjectCentricCameraMode,
         ])
     }
     proxies = {'character_node': ProxyType(Model, 'node')}
@@ -525,19 +535,23 @@ class TurningBackToCamera(System):
 class FaceMovement(System):
     entity_filters = {
         'character': and_filter([
-            CharacterController,
-            Geometry,
+            Proxy('geometry_node'),
             Clock,
+            CharacterController,
             FacingMovement,
         ]),
     }
+    proxies = {'geometry_node': ProxyType(Geometry, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            geometry = entity[Geometry]
+            geometry_proxy = self.proxies['geometry_node']
+            geometry = entity[geometry_proxy.component_type]
+            geometry_node = geometry_proxy.field(entity)
+
             controller = entity[CharacterController]
             x, y, z = controller.last_translation_speed
-            geometry.node.look_at(x, y, 0)
+            geometry_node.look_at(x, y, 0)
 
 
 class Inertiing(System):
@@ -552,10 +566,10 @@ class Inertiing(System):
     '''
     entity_filters = {
         'character': and_filter([
-            CharacterController,
-            InertialMovement,
             Proxy('character_node'),
             Clock,
+            CharacterController,
+            InertialMovement,
         ]),
     }
     proxies = {'character_node': ProxyType(Model, 'node')}
@@ -635,14 +649,17 @@ class Bumping(CollisionSystem):
     '''
     entity_filters = {
         'character': and_filter([
-            Scene,
+            Proxy('scene_node'),
+            Proxy('character_node'),
+            Clock,
             CharacterController,
             BumpingMovement,
-            Clock,
-            Proxy('character_node'),
         ]),
     }
-    proxies = {'character_node': ProxyType(Model, 'node')}
+    proxies = {
+        'character_node': ProxyType(Model, 'node'),
+        'scene_node': ProxyType(Scene, 'node'),
+    }
 
     def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
@@ -653,13 +670,15 @@ class Bumping(CollisionSystem):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            scene = entity[Scene]
+            scene_proxy = self.proxies['scene_node']
+            scene = entity[scene_proxy.component_type]
+            scene_node = scene_proxy.field(entity)
             character = entity[CharacterController]
             movement = entity[BumpingMovement]
             bumper = movement.solids['bumper']
             node = bumper['node']
             node.set_pos(character.translation)
-            movement.traverser.traverse(scene.node)
+            movement.traverser.traverse(scene_node)
             character.translation = node.get_pos()
 
 
@@ -675,14 +694,17 @@ class Falling(CollisionSystem):
     '''
     entity_filters = {
         'character': and_filter([
+            Proxy('scene_node'),
+            Proxy('character_node'),
+            Clock,
             CharacterController,
             FallingMovement,
-            Scene,
-            Clock,
-            Proxy('character_node'),
         ]),
     }
-    proxies = {'character_node': ProxyType(Model, 'node')}
+    proxies = {
+        'character_node': ProxyType(Model, 'node'),
+        'scene_node': ProxyType(Scene, 'node'),
+    }
 
     def enter_filter_character(self, entity):
         self.init_sensors(entity, entity[FallingMovement])
@@ -702,14 +724,17 @@ class Falling(CollisionSystem):
         model_proxy = self.proxies['character_node']
         model = entity[model_proxy.component_type]
         model_node = model_proxy.field(entity)
-        scene = entity[Scene]
+        scene_proxy = self.proxies['scene_node']
+        scene = entity[scene_proxy.component_type]
+        scene_node = scene_proxy.field(entity)
+
         clock = entity[Clock]
         controller = entity[CharacterController]
         falling_movement = entity[FallingMovement]
 
         # Adjust inertia by gravity
         falling_movement.local_gravity = model_node.get_relative_vector(
-            scene.node,
+            scene_node,
             falling_movement.gravity,
         )
         frame_gravity = falling_movement.local_gravity * clock.game_time
@@ -766,15 +791,18 @@ class Jumping(CollisionSystem):
     '''
     entity_filters = {
         'character': and_filter([
+            Proxy('scene_node'),
+            Proxy('character_node'),
+            Clock,
             CharacterController,
             JumpingMovement,
             FallingMovement,
-            Scene,
-            Clock,
-            Proxy('character_node'),
         ]),
     }
-    proxies = {'character_node': ProxyType(Model, 'node')}
+    proxies = {
+        'character_node': ProxyType(Model, 'node'),
+        'scene_node': ProxyType(Scene, 'node'),
+    }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
@@ -799,9 +827,9 @@ class ExecuteMovement(System):
     '''
     entity_filters = {
         'character': and_filter([
-            CharacterController,
             Proxy('character_node'),
             Clock,
+            CharacterController,
         ]),
     }
     proxies = {'character_node': ProxyType(Model, 'node')}
@@ -865,9 +893,9 @@ class UpdateStamina(System):
     '''
     entity_filters = {
         'character': and_filter([
+            Clock,
             CharacterController,
             Stamina,
-            Clock,
         ]),
     }
 

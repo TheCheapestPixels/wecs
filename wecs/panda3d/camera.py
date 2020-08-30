@@ -196,14 +196,14 @@ class ReorientObjectCentricCamera(System):
     """
     entity_filters = {
         'camera': and_filter([
+            Clock,
             Camera,
             ObjectCentricCameraMode,
-            Clock,
         ]),
         'input': and_filter([
+            Input,
             Camera,
             ObjectCentricCameraMode,
-            Input,
         ]),
     }
     input_context = 'camera_movement'
@@ -216,7 +216,6 @@ class ReorientObjectCentricCamera(System):
                 self.process_input(entity, context)
 
         for entity in entities_by_filter['camera']:
-            model = entity[Model]
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]
             dt = entity[Clock].timestep

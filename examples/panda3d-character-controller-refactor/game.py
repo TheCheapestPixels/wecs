@@ -29,6 +29,8 @@ system_types = [
     wecs.panda3d.camera.PrepareCameras(proxies=m_proxy),
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
+    # Character AI
+    wecs.panda3d.ai.Think,
     # Character controller
     wecs.panda3d.character.UpdateCharacter(proxies=cn_proxy),
     wecs.panda3d.character.Walking,
@@ -138,6 +140,25 @@ pc_mind = Aspect(
 )
 
 
+npc_mind_constant = Aspect(
+    [
+        wecs.panda3d.ai.ConstantCharacterAI,
+    ],
+    overrides={
+        wecs.panda3d.ai.ConstantCharacterAI: dict(
+            heading=1.0,
+        ),
+    },
+)
+
+
+npc_mind_brownian = Aspect(
+    [
+        wecs.panda3d.ai.BrownianWalkerAI,
+    ],
+)
+
+
 static_appearance = Aspect(
     [
         wecs.panda3d.prototype.Geometry,
@@ -167,6 +188,7 @@ non_player = Aspect(
     [
         avatar,
         animated_appearance,
+        npc_mind_constant,
     ],
 )
 
@@ -193,14 +215,7 @@ def rebecca_lifter():
     }
 
 
-static_rebecca = {
-    wecs.panda3d.prototype.Geometry: dict(file='../../assets/rebecca.bam'),
-    wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-    wecs.panda3d.character.FallingMovement: dict(solids=factory(rebecca_lifter)),
-}
-
-
-animated_rebecca = {
+rebecca = {
     wecs.panda3d.prototype.Geometry: dict(file='../../assets/rebecca.bam'),
     wecs.panda3d.prototype.Actor: dict(file='../../assets/rebecca.bam'),
     wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
@@ -232,11 +247,14 @@ spawn_point_2 = {
 
 player.add(
     base.ecs_world.create_entity(name="Playerbecca"),
-    overrides={**animated_rebecca, **spawn_point_1},
+    overrides={**rebecca, **spawn_point_1},
 )
 
 
 non_player.add(
     base.ecs_world.create_entity(name="Rebecca"),
-    overrides={**animated_rebecca, **spawn_point_2},
+    overrides={
+        **rebecca,
+        **spawn_point_2,
+    },
 )

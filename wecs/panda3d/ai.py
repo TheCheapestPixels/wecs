@@ -7,7 +7,7 @@ from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
 
-from .character import CharacterController
+from wecs.panda3d.character import CharacterController
 
 
 @Component()

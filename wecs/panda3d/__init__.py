@@ -8,3 +8,4 @@ from .ai import *
 from .animation import *
 
 from . import prototype
+from . import debug

@@ -1,5 +1,7 @@
 from dataclasses import field
 
+from wecs.core import Proxy
+from wecs.core import ProxyType
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
@@ -7,10 +9,10 @@ from wecs.core import or_filter
 
 from .input import Input
 from .character import CharacterController, FallingMovement
-from .model import Geometry
-from .model import Actor
-from .model import Scene
-from .model import Clock
+# from .model import Geometry
+from wecs.panda3d.prototype import Actor
+# from .model import Scene
+# from .model import Clock
 
 
 @Component()
@@ -24,17 +26,19 @@ class Animation:
 class AnimateCharacter(System):
     entity_filters = {
         'animated_character': and_filter([
-            Actor,
+            Proxy('actor'),
             Animation,
             CharacterController
         ])
     }
+    proxies = {'actor': ProxyType(Actor, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animated_character']:
             controller = entity[CharacterController]
             animation = entity[Animation]
-            actor = entity[Actor].node
+            actor_proxy = self.proxies['actor']
+            actor = actor_proxy.field(entity)
 
             if FallingMovement in entity:
                 grounded = entity[FallingMovement].ground_contact
@@ -118,15 +122,18 @@ class AnimateCharacter(System):
 class Animate(System):
     entity_filters = {
         'animation': and_filter([
-            Actor,
+            Proxy('actor'),
             Animation,
         ])
     }
+    proxies = {'actor': ProxyType(Actor, 'node')}
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['animation']:
             animation = entity[Animation]
-            actor = entity[Actor].node
+            actor_proxy = self.proxies['actor']
+            actor = actor_proxy.field(entity)
+
             if not animation.playing == animation.to_play:
                 if len(animation.to_play) > 0:
                     actor.enableBlend()

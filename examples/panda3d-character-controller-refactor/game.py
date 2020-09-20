@@ -33,15 +33,20 @@ system_types = [
     wecs.panda3d.ai.Think,
     # Character controller
     wecs.panda3d.character.UpdateCharacter(proxies=cn_proxy),
+    wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,
+    wecs.panda3d.character.Inertiing(proxies=cn_proxy),
     wecs.panda3d.character.Bumping(proxies=cn_proxy),
     wecs.panda3d.character.Falling(proxies=cn_proxy),
+    wecs.panda3d.character.Jumping(proxies=cn_proxy),
+    wecs.panda3d.character.TurningBackToCamera(proxies=cn_proxy),
     wecs.panda3d.character.ExecuteMovement(proxies=cn_proxy),
     # Animation
     wecs.panda3d.animation.AnimateCharacter(proxies=a_proxy),
     wecs.panda3d.animation.Animate(proxies=a_proxy),
     # Camera
     wecs.panda3d.camera.ReorientObjectCentricCamera,
+    wecs.panda3d.camera.CollideCamerasWithTerrain,
     # WECS subconsoles
     # wecs.panda3d.cefconsole.UpdateWecsSubconsole,
     # wecs.panda3d.cefconsole.WatchEntitiesInSubconsole,
@@ -103,8 +108,17 @@ character = Aspect(
 walking = Aspect(
     [
         wecs.panda3d.character.WalkingMovement,
+        wecs.panda3d.character.InertialMovement,
         wecs.panda3d.character.BumpingMovement,
         wecs.panda3d.character.FallingMovement,
+        wecs.panda3d.character.JumpingMovement,
+    ],
+)
+
+
+walking_away_from_camera = Aspect(
+    [
+        wecs.panda3d.character.TurningBackToCameraMovement,
     ],
 )
 
@@ -121,6 +135,7 @@ third_person = Aspect(
     [
         wecs.panda3d.camera.Camera,
         wecs.panda3d.camera.ObjectCentricCameraMode,
+        wecs.panda3d.camera.CollisionZoom,
     ],
 )
 
@@ -174,12 +189,20 @@ animated_appearance = Aspect(
 )
 
 
+sprite_appearance = Aspect(
+    [
+        wecs.panda3d.prototype.Sprite,
+    ],
+)
+
+
 player = Aspect(
     [
         avatar,
         animated_appearance,
         pc_mind,
         third_person,
+        walking_away_from_camera,
     ],
 )
 
@@ -193,7 +216,16 @@ non_player = Aspect(
 )
 
 
-# WECS' default character is Rebecca, and these are her parameters.
+non_player_sprite = Aspect(
+    [
+        avatar,
+        sprite_appearance,
+        npc_mind_constant,
+    ],
+)
+
+
+# WECS' default 3D character is Rebecca, and these are her parameters.
 
 def rebecca_bumper():
     return {
@@ -223,6 +255,24 @@ rebecca = {
 }
 
 
+# WECS' default 2D character is Mr. Man
+
+mrman = {
+    wecs.panda3d.prototype.Sprite: dict(
+        image_name="../../assets/mrman.png",
+        sprite_height=32,
+        sprite_width=32,
+        animations={
+            "walking": [6, 7, 8, 9, 10, 11]
+        },
+        animation="walking",
+        framerate=15,
+    ),
+    wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
+    wecs.panda3d.character.FallingMovement: dict(solids=factory(rebecca_lifter)),
+}
+
+
 # For the moment, we implement spawn points by just giving coordinates.
 
 spawn_point_1 = {
@@ -243,6 +293,15 @@ spawn_point_2 = {
 }
 
 
+spawn_point_3 = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(70, 290, 0),
+        ),
+    ),
+}
+
+
 # Now let's ceate a Rebecca at the spawn point:
 
 player.add(
@@ -256,5 +315,14 @@ non_player.add(
     overrides={
         **rebecca,
         **spawn_point_2,
+    },
+)
+
+
+non_player_sprite.add(
+    base.ecs_world.create_entity(name="Mr. Man"),
+    overrides={
+        **mrman,
+        **spawn_point_3,
     },
 )

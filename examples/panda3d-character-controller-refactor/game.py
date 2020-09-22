@@ -192,6 +192,7 @@ animated_appearance = Aspect(
 sprite_appearance = Aspect(
     [
         wecs.panda3d.prototype.Sprite,
+        wecs.panda3d.prototype.Billboard,
     ],
 )
 
@@ -260,8 +261,8 @@ rebecca = {
 mrman = {
     wecs.panda3d.prototype.Sprite: dict(
         image_name="../../assets/mrman.png",
-        sprite_height=32,
-        sprite_width=32,
+        sprite_height=16,
+        sprite_width=16,
         animations={
             "walking": [6, 7, 8, 9, 10, 11]
         },

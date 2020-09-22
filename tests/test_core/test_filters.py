@@ -318,9 +318,9 @@ def test_proxying_system__field_lookup(world):
         def update(self, entity_by_filters):
             for entity in entity_by_filters['test']:
                 proxy = self.proxies['proxy']
-                test = entity[proxy.component_type]
+                # test = entity[proxy.component_type]
 
-                token = proxy.field(test)
+                token = proxy.field(entity)
 
                 global token_out
                 token_out = token

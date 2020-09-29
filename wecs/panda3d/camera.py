@@ -57,9 +57,8 @@ from wecs.core import Proxy
 from wecs.core import ProxyType
 from wecs.core import and_filter
 from wecs.panda3d.input import Input
-
-from .model import Model
-from .model import Clock
+from wecs.panda3d.prototype import Model
+from wecs.mechanics.clock import Clock
 
 
 @Component()

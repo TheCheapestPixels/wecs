@@ -7,12 +7,9 @@ from wecs.core import System
 from wecs.core import and_filter
 from wecs.core import or_filter
 
-from .input import Input
-from .character import CharacterController, FallingMovement
-# from .model import Geometry
+from wecs.panda3d.input import Input
+from wecs.panda3d.character import CharacterController, FallingMovement
 from wecs.panda3d.prototype import Actor
-# from .model import Scene
-# from .model import Clock
 
 
 @Component()

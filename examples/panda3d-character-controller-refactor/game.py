@@ -10,40 +10,28 @@ from wecs.aspects import factory
 # from wecs.panda3d import debug
 
 
-m_proxy = {
-    'model': ProxyType(wecs.panda3d.prototype.Model, 'node'),
-}
-cn_proxy = {
-    'character_node': ProxyType(wecs.panda3d.prototype.Model, 'node'),
-    'scene_node': ProxyType(wecs.panda3d.prototype.Model, 'parent'),
-}
-a_proxy = {
-    'actor': ProxyType(wecs.panda3d.prototype.Actor, 'node'),
-}
-
-
 # Each frame, run these systems. This defines the game itself.
 system_types = [
     # Set up newly added models/camera, tear down removed ones
     wecs.panda3d.prototype.ManageModels,
-    wecs.panda3d.camera.PrepareCameras(proxies=m_proxy),
+    wecs.panda3d.camera.PrepareCameras,
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
     # Character AI
     wecs.panda3d.ai.Think,
     # Character controller
-    wecs.panda3d.character.UpdateCharacter(proxies=cn_proxy),
+    wecs.panda3d.character.UpdateCharacter,
     wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,
-    wecs.panda3d.character.Inertiing(proxies=cn_proxy),
-    wecs.panda3d.character.Bumping(proxies=cn_proxy),
-    wecs.panda3d.character.Falling(proxies=cn_proxy),
-    wecs.panda3d.character.Jumping(proxies=cn_proxy),
-    wecs.panda3d.character.TurningBackToCamera(proxies=cn_proxy),
-    wecs.panda3d.character.ExecuteMovement(proxies=cn_proxy),
+    wecs.panda3d.character.Inertiing,
+    wecs.panda3d.character.Bumping,
+    wecs.panda3d.character.Falling,
+    wecs.panda3d.character.Jumping,
+    wecs.panda3d.character.TurningBackToCamera,
+    wecs.panda3d.character.ExecuteMovement,
     # Animation
-    wecs.panda3d.animation.AnimateCharacter(proxies=a_proxy),
-    wecs.panda3d.animation.Animate(proxies=a_proxy),
+    wecs.panda3d.animation.AnimateCharacter,
+    wecs.panda3d.animation.Animate,
     # Camera
     wecs.panda3d.camera.ReorientObjectCentricCamera,
     wecs.panda3d.camera.CollideCamerasWithTerrain,
@@ -249,10 +237,18 @@ def rebecca_lifter():
 
 
 rebecca = {
-    wecs.panda3d.prototype.Geometry: dict(file='../../assets/rebecca.bam'),
-    wecs.panda3d.prototype.Actor: dict(file='../../assets/rebecca.bam'),
-    wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-    wecs.panda3d.character.FallingMovement: dict(solids=factory(rebecca_lifter)),
+    wecs.panda3d.prototype.Geometry: dict(
+        file='../../assets/rebecca.bam',
+    ),
+    wecs.panda3d.prototype.Actor: dict(
+        file='../../assets/rebecca.bam',
+    ),
+    wecs.panda3d.character.BumpingMovement: dict(
+        solids=factory(rebecca_bumper),
+    ),
+    wecs.panda3d.character.FallingMovement: dict(
+        solids=factory(rebecca_lifter),
+    ),
 }
 
 
@@ -269,8 +265,12 @@ mrman = {
         animation="walking",
         framerate=15,
     ),
-    wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-    wecs.panda3d.character.FallingMovement: dict(solids=factory(rebecca_lifter)),
+    wecs.panda3d.character.BumpingMovement: dict(
+        solids=factory(rebecca_bumper),
+    ),
+    wecs.panda3d.character.FallingMovement: dict(
+        solids=factory(rebecca_lifter),
+    ),
 }
 
 

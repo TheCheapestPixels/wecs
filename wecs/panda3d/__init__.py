@@ -1,11 +1,7 @@
 from .core import ECSShowBase
-from .clock import *
-from .model import *
-from .input import *
-from .camera import *
-from .character import *
-from .ai import *
-from .animation import *
 
-from . import prototype
-from . import debug
+import wecs.panda3d.prototype
+import wecs.panda3d.camera
+import wecs.panda3d.ai
+import wecs.panda3d.animation
+import wecs.panda3d.debug

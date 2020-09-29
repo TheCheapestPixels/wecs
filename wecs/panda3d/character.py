@@ -109,9 +109,8 @@ from wecs.core import or_filter
 from wecs.mechanics.clock import Clock
 from wecs.panda3d.input import Input
 
-from .model import Model
-from .model import Geometry
-from .model import Scene
+from wecs.panda3d.prototype import Model
+from wecs.panda3d.prototype import Geometry
 
 from .camera import Camera
 from .camera import ObjectCentricCameraMode
@@ -362,7 +361,7 @@ class UpdateCharacter(System):
 class CollisionSystem(System):
     proxies = {
         'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Scene, 'node'),
+        'scene_node': ProxyType(Model, 'parent'),
     }
 
     def init_sensors(self, entity, movement):
@@ -658,7 +657,7 @@ class Bumping(CollisionSystem):
     }
     proxies = {
         'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Scene, 'node'),
+        'scene_node': ProxyType(Model, 'parent'),
     }
 
     def enter_filter_character(self, entity):
@@ -703,7 +702,7 @@ class Falling(CollisionSystem):
     }
     proxies = {
         'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Scene, 'node'),
+        'scene_node': ProxyType(Model, 'parent'),
     }
 
     def enter_filter_character(self, entity):
@@ -801,7 +800,7 @@ class Jumping(CollisionSystem):
     }
     proxies = {
         'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Scene, 'node'),
+        'scene_node': ProxyType(Model, 'parent'),
     }
 
     def update(self, entities_by_filter):

@@ -98,14 +98,4 @@ if __name__ == '__main__':
         ball.Resting(),
     )
 
-    # another ball - uncomment to enjoy the HARD mode
-    # base.ecs_world.create_entity(
-    #     panda3d.Position(value=Point3(0.5, 0, 0.1)),
-    #     panda3d.Model(),
-    #     panda3d.Geometry(file='resources/ball.bam'),
-    #     panda3d.Scene(node=base.aspect2d),
-    #     ball.Ball(),
-    #     ball.Resting(),
-    # )
-
     base.run()

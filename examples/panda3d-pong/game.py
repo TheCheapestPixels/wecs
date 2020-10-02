@@ -37,10 +37,10 @@ system_types = [
     # * The paddle is in reach, and the ball reflects off it.
     # * The other player has scored, and the game is reset to its
     #   starting state.
-    ball.BallTouchesPaddleLine(),
+    ball.BallTouchesPaddleLine(proxies=model_proxies),
     # If the ball is in its Resting state, and the players indicate
     # that the game should start, the ball is set in motion.
-    ball.StartBallMotion(),
+    ball.StartBallMotion(proxies=model_proxies),
 ]
 
 
@@ -77,13 +77,3 @@ base.ecs_world.create_entity(
     ball.Ball(),
     ball.Resting(),
 )
-
-# another ball - uncomment to enjoy the HARD mode
-# base.ecs_world.create_entity(
-#     panda3d.Position(value=Point3(0.5, 0, 0.1)),
-#     panda3d.Model(),
-#     panda3d.Geometry(file='resources/ball.bam'),
-#     panda3d.Scene(node=base.aspect2d),
-#     ball.Ball(),
-#     ball.Resting(),
-# )

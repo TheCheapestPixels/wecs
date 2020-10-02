@@ -7,11 +7,7 @@ from panda3d.core import Point3
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
-#from wecs.panda3d import Model
-#from wecs.panda3d import Scene
-#from wecs.panda3d import Position
-from wecs.panda3d.prototype import Model
-from wecs.panda3d.prototype import Geometry
+from wecs.core import Proxy
 
 from movement import Movement
 from movement import Players
@@ -35,7 +31,7 @@ class BallTouchesBoundary(System):
     """
     entity_filters = {
         'ball': and_filter([
-            Model,
+            Proxy('model'),
             Movement,
             Ball,
         ]),
@@ -43,17 +39,18 @@ class BallTouchesBoundary(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['ball']:
-            model = entity[Model]
+            model_proxy = self.proxies['model']
+            model_node = model_proxy.field(entity)
             movement = entity[Movement]
 
             # The ball's size is assumed to be 0.1, and if it moved over
             # the upper or lower boundary (1 / -1), we reflect it.
-            z = model.node.get_z()
+            z = model_node.get_z()
             if z > 0.9:
-                model.node.set_z(0.9 - (z - 0.9))
+                model_node.set_z(0.9 - (z - 0.9))
                 movement.direction.z = -movement.direction.z
             if z < -0.9:
-                model.node.set_z(-0.9 - (z + 0.9))
+                model_node.set_z(-0.9 - (z + 0.9))
                 movement.direction.z = -movement.direction.z
 
 
@@ -67,38 +64,43 @@ class BallTouchesPaddleLine(System):
     """
     entity_filters = {
         'ball': and_filter([
-            Model,
+            Proxy('model'),
             Movement,
             Ball,
         ]),
         'paddles': and_filter([
-            Model,
+            Proxy('model'),
             Paddle,
         ]),
     }
 
     def update(self, entities_by_filter):
         """
-        The Update goes over all the relevant Entities (which should be only the ball)
-        and check whether it reached each paddle's line. A ball always has a Position component
-        so it has so we can check it's x position. Same goes for the paddles.
-        If x is touching the paddle's line , we check whether the ball hit the paddle or not.
+        The Update goes over all the relevant Entities (which should be
+        only the ball) and check whether it reached each paddle's line.
+        A ball always has a Position component so it has so we can check
+        it's x position. Same goes for the paddles.
+        If x is touching the paddle's line, we check whether the ball
+        hit the paddle or not.
         If it hit the paddle it would bounce back.
-        If it misses the paddle, it would print "SCORE" and stop the balls movement.
-        Note that to stop the ball's movement the update deletes the Movement component from the
-        ball's Entity. It also adds the Resting component to ensure that the StartBallMotion
-        System will return the ball to a moving state when the game restarts.
+        If it misses the paddle, it would print "SCORE" and stop the
+        balls movement.
+        Note that to stop the ball's movement the update deletes the 
+        Movement component from the ball's Entity. It also adds the
+        Resting component to ensure that the StartBallMotion System will
+        return the ball to a moving state when the game restarts.
         """
         paddles = {
             p[Paddle].player: p for p in entities_by_filter['paddles']
         }
 
         for entity in set(entities_by_filter['ball']):
-            ball_model = entity[Model]
+            model_proxy = self.proxies['model']
+            ball_node = model_proxy.field(entity)
             movement = entity[Movement]
             
             # Whose line are we behind, if any?
-            ball_x = ball_model.node.get_x()
+            ball_x = ball_node.get_x()
             if ball_x < -1:
                 player = Players.LEFT
             elif ball_x > 1:
@@ -106,13 +108,13 @@ class BallTouchesPaddleLine(System):
             else:
                 continue
 
-            ball_z = ball_model.node.get_z()
+            ball_z = ball_node.get_z()
 
             paddle = paddles[player]
-            paddle_model = paddle[Model]
+            paddle_node = model_proxy.field(paddle)
             paddle_paddle = paddle[Paddle]
 
-            paddle_z = paddle_model.node.get_z()
+            paddle_z = paddle_node.get_z()
             paddle_size = paddle_paddle.size
 
             if abs(paddle_z - ball_z) > paddle_size:
@@ -120,7 +122,7 @@ class BallTouchesPaddleLine(System):
                 print("SCORE!")
                 del entity[Movement]
                 entity[Resting] = Resting()
-                ball_model.node.set_pos(0, 0, 0)
+                ball_node.set_pos(0, 0, 0)
             else:
                 # Reverse left-right direction
                 movement.direction.x *= -1
@@ -137,7 +139,7 @@ class StartBallMotion(System):
     """
     entity_filters = {
         'ball': and_filter([
-            Model,
+            Proxy('model'),
             Resting,
             Ball,
         ]),

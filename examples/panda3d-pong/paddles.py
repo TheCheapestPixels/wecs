@@ -8,9 +8,8 @@ from panda3d.core import KeyboardButton
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
-from wecs.panda3d import Model
-from wecs.panda3d import Scene
-from wecs.panda3d import Position
+from wecs.core import Proxy
+from wecs.core import ProxyType
 
 from movement import Movement
 from movement import Players
@@ -19,8 +18,8 @@ from movement import Players
 @Component()
 class Paddle:
     """
-    The Paddle Component holds: an int representing the player controlling it,
-    a its speed.
+    The Paddle Component holds: an int representing the player 
+    controlling it, a its speed.
     """
 
     player: int
@@ -31,32 +30,32 @@ class ResizePaddles(System):
     """
     ResizePaddles ensures that the paddle's size stays updated.
     The idea is that other systems may influence the size by changing
-    the paddle's Component state. ResizePaddles will make the actual change
-    to the Model.
+    the paddle's Component state. ResizePaddles will make the actual 
+    change to the Model.
     """
     entity_filters = {
         'paddle': and_filter([
-            Model,
+            Proxy('model'),
             Paddle,
         ]),
     }
 
     def update(self, entities_by_filter):
         """
-        Update the paddle size by setting the scale of the paddle's Model.
+        Update the paddle size by setting the scale of the paddle's 
+        Model.
         """
         for entity in entities_by_filter['paddle']:
-            model = entity[Model]
+            model_proxy = self.proxies['model']
             paddle = entity[Paddle]
-            model.node.set_scale(paddle.size)
+
+            model_proxy.field(entity).set_scale(paddle.size)
 
 
 class GivePaddlesMoveCommands(System):
     entity_filters = {
         'paddle': and_filter([
-            Model,
-            Scene,
-            Position,
+            Proxy('model'),
             Movement,
             Paddle,
         ]),
@@ -89,9 +88,7 @@ class GivePaddlesMoveCommands(System):
 class PaddleTouchesBoundary(System):
     entity_filters = {
         'paddles': and_filter([
-            Model,
-            Scene,
-            Position,
+            Proxy('model'),
             Paddle,
         ]),
     }

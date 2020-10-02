@@ -5,11 +5,12 @@ from enum import Enum
 
 from panda3d.core import Vec3
 
+import wecs
 from wecs.core import Component
 from wecs.core import System
 from wecs.core import and_filter
-from wecs.panda3d import Position
-from wecs.panda3d import Model
+from wecs.core import Proxy
+from wecs.core import ProxyType
 
 
 class Players(Enum):
@@ -35,8 +36,7 @@ class MoveObject(System):
     """
     entity_filters = {
         'movable': and_filter([
-            Model,
-            Position,
+            Proxy('model'),
             Movement,
         ]),
     }
@@ -55,9 +55,9 @@ class MoveObject(System):
         :param entities_by_filter:
         """
         for entity in entities_by_filter['movable']:
-            position = entity[Position]
             movement = entity[Movement]
-            model = entity[Model]
+            model_proxy = self.proxies['model']
+            model = entity[model_proxy.component_type]
 
-            position.value += movement.direction * globalClock.dt
-            model.node.set_pos(position.value)
+            movement = movement.direction * globalClock.dt
+            model.node.set_pos(model.node, movement)

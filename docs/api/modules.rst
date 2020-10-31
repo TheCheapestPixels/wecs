@@ -1,4 +1,4 @@
-api
+wecs
 ====
 
 .. toctree::

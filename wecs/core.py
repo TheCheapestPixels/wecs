@@ -122,7 +122,7 @@ class World:
             already has a system of that type.
             If True, do not `use get_system()` to retrieve systems with  multiple instances.
         """
-        logging.info(f"in {__name__} got {system, sort, add_duplicates}")
+        # logging.info(f"in {__name__} got {system, sort, add_duplicates}")
         if self.has_system(type(system)) and not add_duplicates:
             raise KeyError(f"System of type {system} was already added to the  world.")
         if sort in self.systems:

@@ -115,6 +115,9 @@ from wecs.panda3d.prototype import Geometry
 from .camera import Camera
 from .camera import ObjectCentricCameraMode
 
+from wecs.panda3d.constants import BUMPING_MASK
+from wecs.panda3d.constants import FALLING_MASK
+
 
 @Component()
 class CharacterController:
@@ -248,6 +251,8 @@ class BumpingMovement:
     This character's horizontal movement is hindered by collisions.
     '''
     tag_name: str = 'bumping'
+    from_collide_mask: int = BUMPING_MASK
+    into_collide_mask: int = BUMPING_MASK
     solids: dict = field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
@@ -265,6 +270,8 @@ class FallingMovement:
     local_gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -9.81))
     ground_contact: bool = False
     tag_name: str = 'falling'
+    from_collide_mask: int = FALLING_MASK
+    into_collide_mask: int = 0x0
     solids: dict = field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
@@ -398,7 +405,8 @@ class CollisionSystem(System):
         ))
         solid['node'] = node
         node.node().add_solid(shape)
-        node.node().set_into_collide_mask(0)
+        node.node().set_from_collide_mask(movement.from_collide_mask)
+        node.node().set_into_collide_mask(movement.into_collide_mask)
         node.reparent_to(model_node)
         movement.traverser.add_collider(node, movement.queue)
         node.set_python_tag(movement.tag_name, movement)

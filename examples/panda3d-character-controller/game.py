@@ -9,6 +9,10 @@ from wecs.aspects import Aspect
 from wecs.aspects import factory
 # from wecs.panda3d import debug
 
+from wecs.panda3d.constants import FALLING_MASK
+from wecs.panda3d.constants import BUMPING_MASK
+from wecs.panda3d.constants import CAMERA_MASK
+
 
 # Each frame, run these systems. This defines the game itself.
 system_types = [
@@ -54,6 +58,9 @@ game_map = Aspect(
      ],
     overrides={
         wecs.panda3d.prototype.Geometry: dict(file='roadE.bam'),
+        wecs.panda3d.prototype.CollidableGeometry: dict(
+            mask=FALLING_MASK|BUMPING_MASK|CAMERA_MASK,
+        ),
     },
 )
 

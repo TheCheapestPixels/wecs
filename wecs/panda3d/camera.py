@@ -60,6 +60,8 @@ from wecs.panda3d.input import Input
 from wecs.panda3d.prototype import Model
 from wecs.mechanics.clock import Clock
 
+from wecs.panda3d.constants import CAMERA_MASK
+
 
 @Component()
 class Camera:
@@ -113,6 +115,7 @@ class ObjectCentricCameraMode:
 @Component()
 class CollisionZoom:
     collision: CollisionNode = field(default_factory=lambda: CollisionNode("cam collisions"))
+    mask: int = CAMERA_MASK
     traverser: CollisionTraverser = field(default_factory=lambda: CollisionTraverser("cam traverser"))
     queue: CollisionHandlerQueue = field(default_factory=lambda: CollisionHandlerQueue())
     body_width: float = 0.5
@@ -235,7 +238,7 @@ class ReorientObjectCentricCamera(System):
     def process_input(self, entity, context):
         camera = entity[Camera]
         center = entity[ObjectCentricCameraMode]
-        if context['rotation'] is not None:
+        if 'rotation' in context and context['rotation'] is not None:
             center.heading += -context['rotation'].x
             center.pitch += context['rotation'].y
         center.distance *= 1 + context['zoom'] * 0.01  # FIXME: Respect actual time!
@@ -267,7 +270,8 @@ class CollideCamerasWithTerrain(System):
         for seg in segs:
             segment = CollisionSegment(seg, (0, -center.distance, 0))
             zoom.collision.add_solid(segment)
-        zoom.collision.set_into_collide_mask(0)
+        zoom.collision.set_from_collide_mask(zoom.mask)
+        zoom.collision.set_into_collide_mask(0x0)
         cn = camera.camera.parent.attach_new_node(zoom.collision)
         zoom.traverser.add_collider(cn, zoom.queue)
 

@@ -117,7 +117,7 @@ class CollidableGeometry:
     """
     Set the collide mask on the geometry node.
     """
-    mask: int = 1 << 0
+    mask: int = 0
 
 
 @Component()

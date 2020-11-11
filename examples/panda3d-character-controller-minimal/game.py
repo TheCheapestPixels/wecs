@@ -54,7 +54,6 @@ game_map = Aspect(
 )
 
 
-
 map_entity = base.ecs_world.create_entity(name="Level geometry")
 game_map.add(map_entity)
 

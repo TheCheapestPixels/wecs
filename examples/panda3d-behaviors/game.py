@@ -260,21 +260,24 @@ class ClickOnEntity(System):
         if click_for_command and target_entity_uid is not None:
             target_entity = self.world.get_entity(target_entity_uid)
             # Who gets the command?
-            if ui.selected_entity: # The selected entity...
+            if ui.selected_entity:  # The selected entity...
                 acting_entity = self.world.get_entity(ui.selected_entity)
-            else: # ...or the player entity, if none is selected.
+            elif BehaviorAI in entity:  # ...or the player entity, if none is selected.
                 acting_entity = entity
-            if Targetable in target_entity:
-                ai = acting_entity[wecs.panda3d.ai.BehaviorAI]
-                if target_entity_uid == ui.selected_entity:
-                    action = ['idle']
-                elif ui.selected_entity is None:
-                    action = ['walk_to_entity', target_entity_uid]
-                    if target_entity_uid == acting_entity._uid:
+            else:  # There is no entity to give the command to.
+                acting_entity = None
+            if acting_entity is not None:
+                if Targetable in target_entity:
+                    ai = acting_entity[wecs.panda3d.ai.BehaviorAI]
+                    if target_entity_uid == ui.selected_entity:
                         action = ['idle']
-                else:
-                    action = ['walk_to_entity', target_entity_uid]
-                ai.behavior = action
+                    elif ui.selected_entity is None:
+                        action = ['walk_to_entity', target_entity_uid]
+                        if target_entity_uid == acting_entity._uid:
+                            action = ['idle']
+                    else:
+                        action = ['walk_to_entity', target_entity_uid]
+                    ai.behavior = action
 
 
 class BevaviorInhibitsDirectCharacterControl(System):
@@ -298,17 +301,16 @@ system_types = [
     # Set up newly added models/camera, tear down removed ones
     wecs.panda3d.prototype.ManageModels,
     wecs.panda3d.camera.PrepareCameras,
-    #
-    MouseOverOnEntity,
-    #PrintMouseOveredEntity,
-    ClickOnEntity,
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
-    # Character AI
+    # Interface interactions
+    MouseOverOnEntity,
+    ClickOnEntity,
+    # Set inputs to the character controller
     wecs.panda3d.ai.Think,
     BevaviorInhibitsDirectCharacterControl,
-    # Character controller
     wecs.panda3d.character.UpdateCharacter,
+    # Character controller
     wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,
     wecs.panda3d.character.Inertiing,
@@ -355,22 +357,7 @@ map_entity = base.ecs_world.create_entity(name="Level geometry")
 game_map.add(map_entity)
 
 
-# Player
-#
-# * A player is character is an avatar with a PC mind, an animated
-#   appearance, and a third person camera.
-#   * An avatar is a walking character.
-#     * A character is a `CharacterController` with a `Clock` and a
-#       `Model`.
-#     * An entity that is walking performs `WalkingMovement`,
-#       `BumpingMovement`, and `FallingMovement`.
-#   * A PC mind means that this entity's "AI" is user `Input`.
-#   * A third person camera is a `Camera` in `ObjectCentricCameraMode`.
-#   * An animated appearance is simply an `Actor`.
-#
-# Note how the Aspects form a tree that eventually ends in component
-# types, and that no part of the tree is overlapping with any other,
-# meaning that each component type appears in its leafs only once.
+# Characters, Avatars, Observers
 
 character = Aspect(
     [
@@ -398,16 +385,18 @@ walking = Aspect(
 )
 
 
-walking_away_from_camera = Aspect(
-    [
-        wecs.panda3d.character.TurningBackToCameraMovement,
-    ],
-)
+# walking_away_from_camera = Aspect(
+#     [
+#         wecs.panda3d.character.TurningBackToCameraMovement,
+#     ],
+# )
 
 
 avatar = Aspect(
     [
         character,
+        wecs.panda3d.prototype.Actor,
+        wecs.panda3d.animation.Animation,
         walking,
         MouseOverable,
         Targetable,
@@ -415,6 +404,24 @@ avatar = Aspect(
     overrides={
         MouseOverable: dict(solid=CollisionSphere(0, 0, 1, 1)),
     },
+)
+
+
+observer = Aspect(
+    [
+        character,
+        wecs.panda3d.character.FloatingMovement,
+    ],
+)
+
+
+# User interface
+
+first_person = Aspect(
+    [
+        wecs.panda3d.camera.Camera,
+        wecs.panda3d.camera.MountedCameraMode,
+    ],
 )
 
 
@@ -427,10 +434,12 @@ third_person = Aspect(
 )
 
 
+# Interface / AI
+
 pc_mind = Aspect(
     [
-        wecs.panda3d.ai.BehaviorAI,
         wecs.panda3d.input.Input,
+        MouseOveringCamera,
         UserInterface,
     ],
     overrides={
@@ -449,26 +458,18 @@ pc_mind = Aspect(
 npc_mind = Aspect(
     [
         wecs.panda3d.ai.BehaviorAI,
+        Selectable,
     ],
 )
 
 
-animated_appearance = Aspect(
-    [
-        wecs.panda3d.prototype.Actor,
-        wecs.panda3d.animation.Animation,
-    ],
-)
-
+# Game Objects, finally!
 
 player = Aspect(
     [
-        avatar,
-        animated_appearance,
+        observer,
+        first_person,
         pc_mind,
-        third_person,
-        walking_away_from_camera,
-        MouseOveringCamera,
     ],
 )
 
@@ -476,9 +477,7 @@ player = Aspect(
 non_player = Aspect(
     [
         avatar,
-        animated_appearance,
         npc_mind,
-        Selectable,
     ],
 )
 
@@ -550,10 +549,19 @@ spawn_point_3 = {
 }
 
 
+spawn_point_air = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(55, 250, 20),
+        ),
+    ),
+}
+
+
 # Now let's create Rebeccas at the spawn points:
 
-player.add(
-    base.ecs_world.create_entity(name="Playerbecca"),
+non_player.add(
+    base.ecs_world.create_entity(name="Rebecca 1"),
     overrides={
         **rebecca,
         **spawn_point_1,
@@ -562,7 +570,7 @@ player.add(
 
 
 non_player.add(
-    base.ecs_world.create_entity(name="Rebecca"),
+    base.ecs_world.create_entity(name="Rebecca 2"),
     overrides={
         **rebecca,
         **spawn_point_2,
@@ -571,9 +579,19 @@ non_player.add(
 
 
 non_player.add(
-    base.ecs_world.create_entity(name="Rebecca"),
+    base.ecs_world.create_entity(name="Rebecca 3"),
     overrides={
         **rebecca,
         **spawn_point_3,
+    },
+)
+
+
+# ...and a disembodied player
+
+player.add(
+    base.ecs_world.create_entity(name="Observer"),
+    overrides={
+        **spawn_point_air,
     },
 )

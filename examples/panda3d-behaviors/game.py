@@ -357,7 +357,8 @@ map_entity = base.ecs_world.create_entity(name="Level geometry")
 game_map.add(map_entity)
 
 
-# Characters, Avatars, Observers
+# There are characters, which are points in space that can be moved around
+# using the `CharacterController`, using either player input or AI control.
 
 character = Aspect(
     [
@@ -373,6 +374,18 @@ character = Aspect(
 )
 
 
+# Avatars are characters which have (presumably humanoid) animated models
+# that can walk around. Their entities can be found using the mouse cursor
+# or other collision sensors.
+
+animated = Aspect(
+    [
+        wecs.panda3d.prototype.Actor,
+        wecs.panda3d.animation.Animation,
+    ],
+)
+
+
 walking = Aspect(
     [
         wecs.panda3d.character.WalkingMovement,
@@ -380,23 +393,16 @@ walking = Aspect(
         wecs.panda3d.character.BumpingMovement,
         wecs.panda3d.character.FallingMovement,
         wecs.panda3d.character.JumpingMovement,
+        # wecs.panda3d.character.TurningBackToCameraMovement,
     ],
     #overrides={wecs.panda3d.character.WalkingMovement:dict(turning_speed=400)}
 )
 
 
-# walking_away_from_camera = Aspect(
-#     [
-#         wecs.panda3d.character.TurningBackToCameraMovement,
-#     ],
-# )
-
-
 avatar = Aspect(
     [
         character,
-        wecs.panda3d.prototype.Actor,
-        wecs.panda3d.animation.Animation,
+        animated,
         walking,
         MouseOverable,
         Targetable,
@@ -407,7 +413,10 @@ avatar = Aspect(
 )
 
 
-observer = Aspect(
+# Disembodied entities are simply characters that can float.
+# FIXME: They should probably also fall/bump into things.
+
+disembodied = Aspect(
     [
         character,
         wecs.panda3d.character.FloatingMovement,
@@ -415,7 +424,7 @@ observer = Aspect(
 )
 
 
-# User interface
+# Cameras
 
 first_person = Aspect(
     [
@@ -434,7 +443,12 @@ third_person = Aspect(
 )
 
 
-# Interface / AI
+# Player interface / AI.
+# Note that these aren't mutually exclusive. Both can exert control over the
+# `CharacterController`. If `Input.contexts` includes 'character_movement',
+# AI input is overwritten by player input; If it doesn't, it isn't.
+# The player interface also can control the NPC AI, using the entity to send
+# commands to it if no other entity is selected as recipient.
 
 pc_mind = Aspect(
     [
@@ -464,17 +478,30 @@ npc_mind = Aspect(
 
 
 # Game Objects, finally!
+# An observer is a disembodied, player-controlled character.
+# A player_character is a player-controlled avatar
+# A non_player_character is an AI-controlled avatar.
 
-player = Aspect(
+observer = Aspect(
     [
-        observer,
+        disembodied,
         first_person,
         pc_mind,
     ],
 )
 
 
-non_player = Aspect(
+player_character = Aspect(
+    [
+        avatar,
+        third_person,
+        pc_mind,
+        npc_mind,
+    ],
+)
+
+
+non_player_character = Aspect(
     [
         avatar,
         npc_mind,
@@ -560,7 +587,7 @@ spawn_point_air = {
 
 # Now let's create Rebeccas at the spawn points:
 
-non_player.add(
+non_player_character.add(
     base.ecs_world.create_entity(name="Rebecca 1"),
     overrides={
         **rebecca,
@@ -569,7 +596,7 @@ non_player.add(
 )
 
 
-non_player.add(
+non_player_character.add(
     base.ecs_world.create_entity(name="Rebecca 2"),
     overrides={
         **rebecca,
@@ -578,7 +605,7 @@ non_player.add(
 )
 
 
-non_player.add(
+non_player_character.add(
     base.ecs_world.create_entity(name="Rebecca 3"),
     overrides={
         **rebecca,
@@ -589,9 +616,10 @@ non_player.add(
 
 # ...and a disembodied player
 
-player.add(
+player_character.add(
     base.ecs_world.create_entity(name="Observer"),
     overrides={
+        **rebecca,
         **spawn_point_air,
     },
 )

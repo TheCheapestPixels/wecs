@@ -50,6 +50,10 @@ class ManageTerrain(System):
     }
 
     def enter_filter_gpu_terrain(self, entity):
+        """
+        Handles the creation/attachment of GPUTerrain components
+        """
+        
         # Retrieve our Model and GPUTerrain components
         geometry = entity[Model]
         terrain = entity[GPUTerrain]
@@ -74,7 +78,10 @@ class ManageTerrain(System):
 
         # Generate the terrain NodePath and attach it to our model
         terrain.terrain.generate()
-        terrain.node = geometry.node.attach_new_node(terrain.terrain)
+        if terrain.node != None:
+            terrain.node.reparent_to(geometry.node)
+        else:
+            terrain.node = geometry.node.attach_new_node(terrain.terrain)
 
         # Set our terrain's calculated scale value using the size of the heightfield as
         # the scale input
@@ -87,3 +94,12 @@ class ManageTerrain(System):
             scale_z = terrain.scale_z
         terrain.node.set_scale(scale_x, scale_y, scale_z)
 
+    def exit_filter_gpu_terrain(self, entity):
+        """
+        Handles the detachment/destruction of GPUTerrain components
+        """
+
+        # Get our terrain component and detach the node
+        terrain = entity[GPUTerrain]
+        if terrain.node != None:
+            terrain.node.detach_node()

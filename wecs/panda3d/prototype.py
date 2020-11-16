@@ -28,6 +28,8 @@ from panda3d.core import SamplerState
 from panda3d.core import Texture
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletRigidBodyNode
+from panda3d.core import Shader as PandaShader
+from panda3d.core import Filename
 
 from direct.actor.Actor import Actor as DirectActor
 
@@ -142,6 +144,20 @@ class PhysicsBody:
     timestep: float = 0.0
 
 
+@Component()
+class Shader:
+    """
+    """
+
+    shader_type: int
+    vertex_shader: str
+    fragment_shader: str
+    geometry_shader: str = None
+    tess_control_shader: str = None
+    tess_eval_shader: str = None
+    shader_inputs: dict = field(default_factory=dict)
+
+
 class ManageModels(System):
     entity_filters = {
         'model': and_filter(Model),
@@ -152,6 +168,7 @@ class ManageModels(System):
         'collidable': and_filter(Geometry, CollidableGeometry),
         'billboard': and_filter(Sprite, Billboard),
         'physics': and_filter(Model, PhysicsBody),
+        'shader': and_filter(Model, Shader)
     }
 
     def enter_filter_model(self, entity):
@@ -243,7 +260,33 @@ class ManageModels(System):
 
         physics_world.world.attach_rigid_body(physics_body.body)
 
+    def enter_filter_shader(self, entity):
+        model = entity[Model]
+        shader = entity[Shader]
+        
+        # Compile the shader from the VFS
+        file_paths = [
+            shader.vertex_shader,
+            shader.fragment_shader,
+            shader.geometry_shader,
+            shader.tess_control_shader,
+            shader.tess_eval_shader
+        ]
+        shader_paths = []
+        for path in file_paths:
+            if path is None:
+                continue
+
+            shader_paths.append(Filename(path))
+        shader_inst = PandaShader.load(shader.shader_type, *shader_paths)
+
+        # Set our shader instance and initial inputs
+        model.node.set_shader(shader_inst)
+        for key, val in shader.shader_inputs.items():
+            model.node.set_shader_input(key, val)
+
     def update(self, entities_by_filter):
+        # Update sprites
         for entity in entities_by_filter['sprite']:
             if Clock in entity:
                 sprite = entity[Sprite]
@@ -252,6 +295,14 @@ class ManageModels(System):
                     self.animate(entity)
                 if sprite.update:
                     self.set_frame(entity)
+
+        # Update shader inputs
+        for entity in entities_by_filter['shader']:
+            model = entity[Model]
+            shader = entity[Shader]   
+
+            for key, val in shader.shader_inputs.items():
+                model.node.set_shader_input(key, val)
 
     def animate(self, entity):
         sprite = entity[Sprite]

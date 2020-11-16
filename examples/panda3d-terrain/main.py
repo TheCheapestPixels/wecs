@@ -68,8 +68,7 @@ def main():
             shader_type=Shader.SL_GLSL,
             vertex_shader='terrain.vert.glsl',
             fragment_shader='terrain.frag.glsl',
-            shader_inputs={'camera': base.camera})
-    )
+            shader_inputs={'camera': base.camera}))
 
     # Start our showbase instance
     base.run()

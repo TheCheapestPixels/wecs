@@ -16,7 +16,6 @@ from wecs.core import and_filter
 from wecs.core import or_filter
 from wecs.core import UID
 
-
 @Component()
 class Terrain:
     """
@@ -26,6 +25,7 @@ class Terrain:
     :param NodePath node: The scene graph object representing the ShaderterrainMesh
     :param str heightfield: File path pointing to the the heightfield to load
     :param float target_triangle_width: Sets the target triangle width. Defaults to a value of 10.0
+    :param bool generate_patches: If this option is set to true, GeomPatches will be used instead of GeomTriangles. This is required when the terrain is used with tesselation shaders
     :param int chunk_size: This sets the chunk size of the terrain. Defaults to 16
     :param float scale_z: Z height scaling of the terrain. Leave at default 0 to auto calculate based on heightmap size
     """
@@ -34,6 +34,7 @@ class Terrain:
     node: NodePath = None
     heightfield: str = None
     target_triangle_width: float = 10.0
+    generate_patches: bool = False
     chunk_size: int = 16
     scale_z: float = 0
 
@@ -41,12 +42,14 @@ class ManageTerrain(System):
     """
     Handles Terrain component management and setup
 
-        Components used :func:`wecs.core.and_filter` `Terrain`
+        Components used in this system are
+            | :func:`wecs.core.and_filter` 
+            | :class:`Terrain` 
             | :class:`wecs.panda3d.mode.Model`
     """
 
     entity_filters = {
-        'terrain': and_filter(Model, Terrain)
+        'terrain': and_filter(Model, Terrain),
     }
 
     def enter_filter_terrain(self, entity):
@@ -55,7 +58,7 @@ class ManageTerrain(System):
         """
 
         # Retrieve our Model and Terrain components
-        geometry = entity[Model]
+        model = entity[Model]
         terrain = entity[Terrain]
 
         # Set a heightfield, the heightfield should be a 16-bit png and
@@ -76,12 +79,16 @@ class ManageTerrain(System):
         # Sets the terrains chunk size
         terrain.terrain.set_chunk_size(terrain.chunk_size)
 
+        # Set our generate patches flag. This is required when the terrain is used with tesselation shaders, 
+        # since patches are required for tesselation, whereas triangles are required for regular rendering.
+        terrain.terrain.set_generate_patches(terrain.generate_patches)
+
         # Generate the terrain NodePath and attach it to our model
         terrain.terrain.generate()
         if terrain.node != None:
-            terrain.node.reparent_to(geometry.node)
+            terrain.node.reparent_to(model.node)
         else:
-            terrain.node = geometry.node.attach_new_node(terrain.terrain)
+            terrain.node = model.node.attach_new_node(terrain.terrain)
 
         # Set our terrain's calculated scale value using the size of the heightfield as
         # the scale input

@@ -18,7 +18,7 @@ from wecs.core import UID
 
 
 @Component()
-class GPUTerrain:
+class Terrain:
     """
     a renderable Heightfield terrain object
 
@@ -31,7 +31,7 @@ class GPUTerrain:
     """
 
     terrain: ShaderTerrainMesh = field(default_factory=ShaderTerrainMesh)
-    node: NodePath = field(default_factory=lambda: NodePath(""))
+    node: NodePath = None
     heightfield: str = None
     target_triangle_width: float = 10.0
     chunk_size: int = 16
@@ -41,22 +41,22 @@ class ManageTerrain(System):
     """
     Handles Terrain component management and setup
 
-        Components used :func:`wecs.core.and_filter` `GPUTerrain`
+        Components used :func:`wecs.core.and_filter` `Terrain`
             | :class:`wecs.panda3d.mode.Model`
     """
 
     entity_filters = {
-        'gpu_terrain': and_filter(Model, GPUTerrain)
+        'terrain': and_filter(Model, Terrain)
     }
 
-    def enter_filter_gpu_terrain(self, entity):
+    def enter_filter_terrain(self, entity):
         """
-        Handles the creation/attachment of GPUTerrain components
+        Handles the creation/attachment of Terrain components
         """
-        
-        # Retrieve our Model and GPUTerrain components
+
+        # Retrieve our Model and Terrain components
         geometry = entity[Model]
-        terrain = entity[GPUTerrain]
+        terrain = entity[Terrain]
 
         # Set a heightfield, the heightfield should be a 16-bit png and
         # have a quadratic size of a power of two.
@@ -94,12 +94,12 @@ class ManageTerrain(System):
             scale_z = terrain.scale_z
         terrain.node.set_scale(scale_x, scale_y, scale_z)
 
-    def exit_filter_gpu_terrain(self, entity):
+    def exit_filter_terrain(self, entity):
         """
-        Handles the detachment/destruction of GPUTerrain components
+        Handles the detachment/destruction of Terrain components
         """
 
         # Get our terrain component and detach the node
-        terrain = entity[GPUTerrain]
+        terrain = entity[Terrain]
         if terrain.node != None:
             terrain.node.detach_node()

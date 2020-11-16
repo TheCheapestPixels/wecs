@@ -61,7 +61,7 @@ def main():
     base.ecs_world.create_entity(
         prototype.Model(
             post_attach=configure_texture),
-        terrain.GPUTerrain(
+        terrain.Terrain(
             heightfield='heightfield.png',
             target_triangle_width=10.0),
         prototype.Shader(

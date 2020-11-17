@@ -1,5 +1,3 @@
-from dataclasses import field
-
 from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import CollisionSphere
@@ -17,283 +15,178 @@ from wecs.panda3d.constants import BUMPING_MASK
 from wecs.panda3d.constants import CAMERA_MASK
 
 
-# Behavior and interface stuff
-from panda3d.core import CollisionTraverser
-from panda3d.core import CollisionHandlerQueue
-from panda3d.core import CollisionRay
-from panda3d.core import CollisionNode
-from panda3d.core import NodePath
+# Break this out into something of its own
 
+from wecs.panda3d.ai import BehaviorAI
+from wecs.panda3d.character import CharacterController
 from wecs.core import System, Component
 from wecs.core import Proxy
 from wecs.panda3d.camera import Camera
 from wecs.panda3d.input import Input
-from wecs.panda3d import prototype
-
-from wecs.panda3d.ai import BehaviorAI
-from wecs.panda3d.character import CharacterController
-
-
-MOUSEOVER_MASK = 1 << 4
-
-
-@Component()
-class MouseOverable:
-    solid: object
-    mask = MOUSEOVER_MASK
-    _node: None = None
+from wecs.panda3d.mouseover import MouseOverable
+from wecs.panda3d.mouseover import MouseOverableGeometry
+from wecs.panda3d.mouseover import MouseOveringCamera
+from wecs.panda3d.mouseover import UserInterface
+from wecs.panda3d.mouseover import Pointable
+from wecs.panda3d.mouseover import Targetable
+from wecs.panda3d.mouseover import Selectable
 
 
 @Component()
-class MouseOverableGeometry:
-    mask = MOUSEOVER_MASK
-
-
-@Component()
-class MouseOveringCamera:
-    entity: object = None
-    collision_entry: object = None
-
-    
-class MouseOverOnEntity(System):
-    entity_filters = {
-        'mouseoverable': [Proxy('model'), MouseOverable],
-        'mouseoverable_geometry': [Proxy('geometry'), MouseOverableGeometry],
-        'camera': [Camera, Input, MouseOveringCamera],
-    }
-    proxies = {
-        'model': ProxyType(prototype.Model, 'node'),
-        'geometry': ProxyType(prototype.Geometry, 'node'),
-    }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.traverser = CollisionTraverser()
-        self.queue = CollisionHandlerQueue()
-        
-        self.picker_ray = CollisionRay()
-        self.picker_node = CollisionNode('mouse ray')
-        self.picker_node.add_solid(self.picker_ray)
-        self.picker_node.set_from_collide_mask(MOUSEOVER_MASK)
-        self.picker_node.set_into_collide_mask(0x0)
-        self.picker_node_path = NodePath(self.picker_node)
-
-        self.traverser.add_collider(self.picker_node_path, self.queue)
-
-    def enter_filter_mouseoverable(self, entity):
-        model_proxy = self.proxies['model']
-        model_node = model_proxy.field(entity)
-        mouseoverable = entity[MouseOverable]
-
-        into_node = CollisionNode('wecs_mouseoverable')
-        into_node.add_solid(mouseoverable.solid)
-        into_node.set_from_collide_mask(0x0)
-        into_node.set_into_collide_mask(mouseoverable.mask)
-        into_node_path = model_node.attach_new_node(into_node)
-        into_node_path.set_python_tag('wecs_mouseoverable', entity._uid)
-
-    def exit_filter_mouseoverable(self, entity):
-        # FIXME: Undo all the other stuff that accumulated!
-        entity[MouseOverable].solid.detach_node()
-
-    def enter_filter_mouseoverable_geometry(self, entity):
-        into_node = self.proxies['geometry'].field(entity)
-
-        old_mask = into_node.get_collide_mask()
-        new_mask = old_mask | entity[MouseOverableGeometry].mask
-        into_node.set_collide_mask(new_mask)
-        into_node.find('**/+GeomNode').set_python_tag('wecs_mouseoverable', entity._uid)
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['camera']:
-            mouse_overing = entity[MouseOveringCamera]
-            camera = entity[Camera]
-            input = entity[Input]
-
-            # Reset overed entity to None
-            mouse_overing.entity = None
-            mouse_overing.collision_entry = None
-
-            requested = 'mouse_over' in entity[Input].contexts
-            has_mouse = base.mouseWatcherNode.has_mouse()
-            if requested and has_mouse:
-                # Attach and align testing ray, and run collisions
-                self.picker_node_path.reparent_to(camera.camera)
-                mpos = base.mouseWatcherNode.get_mouse()
-                self.picker_ray.set_from_lens(
-                    base.camNode,
-                    mpos.getX(),
-                    mpos.getY(),
-                )
-                self.traverser.traverse(camera.camera.get_top())
-
-                # Remember reference to mouseovered entity, if any
-                if self.queue.get_num_entries() > 0:
-                    self.queue.sort_entries()
-                    entry = self.queue.get_entry(0)
-                    picked_node = entry.get_into_node_path()
-                    picked_uid = picked_node.get_python_tag('wecs_mouseoverable')
-                    mouse_overing.entity = picked_uid
-                    mouse_overing.collision_entry = entry
-
-
-class PrintMouseOveredEntity(System):
-    entity_filters = {
-        'camera': [Camera, Input, MouseOveringCamera],
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['camera']:
-            mouse_overing = entity[MouseOveringCamera]
-            if mouse_overing.entity is not None:
-                print(self.world.get_entity(mouse_overing.entity))
-
-
-@Component()
-class Selectable:
+class Embodiable:
     pass
 
 
-def select_indicator():
-    model = base.loader.load_model('models/smiley')
-    model.set_sz(0.1)
-    return model
-
-
-@Component()
-class Targetable:
-    pass
-
-
-def target_indicator():
-    model = base.loader.load_model('models/frowney')
-    model.set_scale(0.1, 0.1, 0.25)
-    model.set_z(2.1)
-    return model
-
-
-@Component()
-class Pointable:
-    pass
-
-
-def point_indicator():
-    model = base.loader.load_model('models/jack')
-    model.set_scale(0.1)
-    return model
-
-
-@Component()
-class UserInterface:
-    selected_entity: object = None
-    select_indicator: NodePath = field(default_factory=select_indicator)
-    target_indicator: NodePath = field(default_factory=target_indicator)
-    point_indicator: NodePath = field(default_factory=point_indicator)
-
-
-class ClickOnEntity(System):
+class AvatarUI(System):
+    """
+    Command rules:
+    if not embodied and not targeting_selection:
+        selection(goto target)
+    if not embodied and targeting_selection:
+        selection(idle)
+    if embodied and selecting and not targeting_selection:
+        selection(goto target)
+    if embodied and selecting and targeting_selection:
+        selection(idle)
+    if embodied and not selecting and targeting_selection:
+        self(idle)
+    if embodied and not selecting and not targeting_selection:
+        self(goto target)
+    """
     entity_filters = {
         'cursor': [Input, MouseOveringCamera, UserInterface],
     }
+    proxies = {
+        'parent': ProxyType(wecs.panda3d.prototype.Model, 'parent'),
+    }
     input_context = 'select_entity'
-
+    
     def update(self, entities_by_filter):
         for entity in entities_by_filter['cursor']:
             input = entity[Input]
             if self.input_context in input.contexts:
                 context = base.device_listener.read_context(self.input_context)
                 self.process_input(entity, context)
-                
+
     def process_input(self, entity, context):
         ui = entity[UserInterface]
-        target_entity_uid = entity[MouseOveringCamera].entity
-        click_for_select = context.get('select', False)
-        click_for_command = context.get('command', False)
+        mouseover = entity[MouseOveringCamera]
 
-        # If we're not pointing at an entity, don't indicate targeting
-        if target_entity_uid is None:
-            ui.target_indicator.detach_node()
-            ui.point_indicator.detach_node()
-        # If we *do* point at an entity...
-        if target_entity_uid is not None:
-            target_entity = self.world.get_entity(target_entity_uid)
-            if Targetable in target_entity:
-                target_node = target_entity[wecs.panda3d.prototype.Model].node
-                ui.target_indicator.reparent_to(target_node)
-                ui.point_indicator.detach_node()
-            #elif Pointable in target_entity:
-            #    entry = entity[MouseOveringCamera].collision_entry
-            #    
-            #    ui.point_indicator.reparent_to(target_node)
-            #    ui.target_indicator.detach_node()
-            else:
-                ui.target_indicator.detach_node()
+        mouseovered_entity = None
+        if mouseover.entity is not None:
+            mouseovered_entity = self.world.get_entity(mouseover.entity)
+        targeting_self = mouseover.entity == entity._uid
 
-        # Was the selected entity removed? Then unselect.
+        selected_entity = None
         if ui.selected_entity is not None:
-            try:
-                self.world.get_entity(ui.selected_entity)
-            except NoSuchUID:
+            selected_entity = self.world.get_entity(ui.selected_entity)
+        target_entity = None
+        if ui.targeted_entity is not None:
+            target_entity = self.world.get_entity(ui.targeted_entity)
+        point_coordinates = ui.point_coordinates
+        targeting_selection = False
+        if selected_entity is not None and ui.selected_entity == ui.targeted_entity:
+            targeting_selection = True
+        
+        embodied = Embodiable in entity
+        targeting_embodiable = None
+        if mouseovered_entity is not None:
+            targeting_embodiable = Embodiable in mouseovered_entity
+        
+        # Now we can evaluate the player's input. First, he clicked to
+        # select.
+        if context.get('select', False):
+            if target_entity is None or Selectable not in target_entity:
+                # Selecting while not pointing at a valid target
+                # unselects.
                 ui.selected_entity = None
                 ui.select_indicator.detach_node()
-
-        # Selecting while not pointing at any entity unselects.
-        if click_for_select and target_entity_uid is None:
-            ui = entity[UserInterface]
-            ui.selected_entity = None
-            ui.select_indicator.detach_node()
-        # Select a selectable entity, unselect if no selectable entity is indicated
-        if click_for_select and target_entity_uid is not None:
-            target_entity = self.world.get_entity(target_entity_uid)
-            if Selectable in target_entity:
-                ui.selected_entity = target_entity_uid
-                target_node = target_entity[wecs.panda3d.prototype.Model].node
-                ui.select_indicator.reparent_to(target_node)
             else:
-                ui.selected_entity = None
-                ui.select_indicator.detach_node()
-        # If we command with no entity at all, unselect.
-        if click_for_command and target_entity_uid is None:
-            ui.selected_entity = None
-            ui.select_indicator.detach_node()
-        # But if we point to something...
-        if click_for_command and target_entity_uid is not None:
-            target_entity = self.world.get_entity(target_entity_uid)
-            # Who gets the command?
-            if ui.selected_entity:  # The selected entity...
-                acting_entity = self.world.get_entity(ui.selected_entity)
-            elif BehaviorAI in entity:  # ...or the player entity, if none is selected.
-                acting_entity = entity
-            else:  # There is no entity to give the command to.
-                acting_entity = None
-            if acting_entity is not None:
-                if Targetable in target_entity:
-                    ai = acting_entity[wecs.panda3d.ai.BehaviorAI]
-                    if target_entity_uid == ui.selected_entity:
-                        action = ['idle']
-                    elif ui.selected_entity is None:
-                        action = ['walk_to_entity', target_entity_uid]
-                        if target_entity_uid == acting_entity._uid:
-                            action = ['idle']
-                    else:
-                        action = ['walk_to_entity', target_entity_uid]
-                    ai.behavior = action
+                # But selecting a selectable entity... selects it.
+                if not embodied or mouseover.entity != entity._uid:
+                    ui.selected_entity = target_entity._uid
+        # The player instead clicked to give a command, and there is a
+        # valid target, ...
+        elif context.get('command', False):
+            # 3rd person mode, giving command with to selected entity
+            if not embodied and selected_entity and target_entity and not targeting_selection:
+                action = ['walk_to_entity', mouseover.entity]
+                if point_coordinates:
+                    action.append(point_coordinates)
+                self.command(selected_entity, *action)
+            if not embodied and targeting_selection:
+                self.command(selected_entity, 'idle')
+            if embodied and selected_entity and target_entity and not targeting_selection:
+                action = ['walk_to_entity', mouseover.entity]
+                if point_coordinates:
+                    action.append(point_coordinates)
+                self.command(selected_entity, *action)
+            if embodied and ui.selected_entity and target_entity and not targeting_selection:
+                self.command(entity, 'idle')
+            if embodied and targeting_selection:
+                self.command(selected_entity, 'idle')
+            if embodied and not ui.selected_entity and targeting_selection:
+                self.command(entity, 'idle')
+            if embodied and not ui.selected_entity and target_entity and not targeting_self:
+                action = ['walk_to_entity', mouseover.entity]
+                if point_coordinates:
+                    action.append(point_coordinates)
+                self.command(entity, *action)
+            if embodied and targeting_self and not ui.selected_entity:
+                self.command(entity, 'idle')
+        # Now the player clicked to dis-/embody...
+        elif context.get('embody', False):
+            if not embodied and not targeting_embodiable and selected_entity:
+                self.embody(entity, selected_entity)
+            if not embodied and targeting_embodiable:
+                self.embody(entity, target_entity)
+            if embodied and targeting_embodiable and not targeting_self:
+                self.jump_body(entity, target_entity)
+            if embodied and not targeting_embodiable:
+                self.disembody(entity)
 
+    def command(self, entity, *action):
+        ai = entity[BehaviorAI]
+        ai.behavior = action
 
-class BevaviorInhibitsDirectCharacterControl(System):
-    entity_filters = {
-        'character': [Input, BehaviorAI, CharacterController],
-    }
+    def embody(self, entity, target):
+        pc_mind.add(target)
+        third_person.add(target)
+        self.world.destroy_entity(entity)
 
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            behavior = entity[BehaviorAI]
-            input = entity[Input]
+    def jump_body(self, entity, target):
+        pc_mind.remove(entity)
+        third_person.remove(entity)
+        pc_mind.add(target)
+        third_person.add(target)
 
-            if behavior.behavior == ['idle']:
-                input.contexts.add('character_movement')
-            elif 'character_movement' in input.contexts:
-                input.contexts.remove('character_movement')
+    def disembody(self, entity):
+        scene = self.proxies['parent'].field(entity)
+        pos = entity[Camera].camera.get_pos(scene)
+        hpr = entity[Camera].camera.get_hpr(scene)
+        pos.z += 0.5
+        hpr.y = 0
+        hpr.z = 0
+        pc_mind.remove(entity)
+        if first_person.in_entity(entity):
+            first_person.remove(entity)
+        if third_person.in_entity(entity):
+            third_person.remove(entity)
+        spawn_point = {
+            wecs.panda3d.prototype.Model: dict(
+                parent=scene,
+                post_attach=lambda: wecs.panda3d.prototype.transform(
+                    pos=pos,
+                    hpr=hpr,
+                ),
+            ),
+        }
+        observer.add(
+            self.world.create_entity(name="Observer"),
+            overrides={
+                **spawn_point,
+            },
+        )
 
             
 # Each frame, run these systems. This defines the game itself.
@@ -304,11 +197,12 @@ system_types = [
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
     # Interface interactions
-    MouseOverOnEntity,
-    ClickOnEntity,
+    wecs.panda3d.mouseover.MouseOverOnEntity,
+    wecs.panda3d.mouseover.UpdateMouseOverUI,
+    AvatarUI,
     # Set inputs to the character controller
     wecs.panda3d.ai.Think,
-    BevaviorInhibitsDirectCharacterControl,
+    wecs.panda3d.ai.BehaviorInhibitsDirectCharacterControl,
     wecs.panda3d.character.UpdateCharacter,
     # Character controller
     wecs.panda3d.character.Floating,
@@ -341,8 +235,8 @@ game_map = Aspect(
         wecs.panda3d.prototype.Geometry,
         wecs.panda3d.prototype.CollidableGeometry,
         wecs.panda3d.prototype.FlattenStrong,
-        MouseOverableGeometry,
-        Pointable,
+        wecs.panda3d.mouseover.MouseOverableGeometry,
+        wecs.panda3d.mouseover.Pointable,
      ],
     overrides={
         wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadE.bam'),
@@ -357,8 +251,9 @@ map_entity = base.ecs_world.create_entity(name="Level geometry")
 game_map.add(map_entity)
 
 
-# There are characters, which are points in space that can be moved around
-# using the `CharacterController`, using either player input or AI control.
+# There are characters, which are points in space that can be moved
+# around using the `CharacterController`, using either player input or
+# AI control.
 
 character = Aspect(
     [
@@ -374,9 +269,9 @@ character = Aspect(
 )
 
 
-# Avatars are characters which have (presumably humanoid) animated models
-# that can walk around. Their entities can be found using the mouse cursor
-# or other collision sensors.
+# Avatars are characters which have (presumably humanoid) animated
+# models that can walk around. Their entities can be found using the
+# mouse cursor or other collision sensors.
 
 animated = Aspect(
     [
@@ -404,12 +299,10 @@ avatar = Aspect(
         character,
         animated,
         walking,
-        MouseOverable,
-        Targetable,
+        wecs.panda3d.mouseover.MouseOverable,
+        wecs.panda3d.mouseover.Targetable,
+        Embodiable,
     ],
-    overrides={
-        MouseOverable: dict(solid=CollisionSphere(0, 0, 1, 1)),
-    },
 )
 
 
@@ -444,17 +337,18 @@ third_person = Aspect(
 
 
 # Player interface / AI.
-# Note that these aren't mutually exclusive. Both can exert control over the
-# `CharacterController`. If `Input.contexts` includes 'character_movement',
-# AI input is overwritten by player input; If it doesn't, it isn't.
-# The player interface also can control the NPC AI, using the entity to send
-# commands to it if no other entity is selected as recipient.
+# Note that these aren't mutually exclusive. Both can exert control over
+# the `CharacterController`. If `Input.contexts` includes
+# 'character_movement', AI input is overwritten by player input; If it
+# doesn't, it isn't.
+# The player interface also can control the NPC AI, using the entity to
+# send commands to it if no other entity is selected as recipient.
 
 pc_mind = Aspect(
     [
         wecs.panda3d.input.Input,
-        MouseOveringCamera,
-        UserInterface,
+        wecs.panda3d.mouseover.MouseOveringCamera,
+        wecs.panda3d.mouseover.UserInterface,
     ],
     overrides={
         wecs.panda3d.input.Input: dict(
@@ -472,7 +366,7 @@ pc_mind = Aspect(
 npc_mind = Aspect(
     [
         wecs.panda3d.ai.BehaviorAI,
-        Selectable,
+        wecs.panda3d.mouseover.Selectable,
     ],
 )
 
@@ -544,6 +438,9 @@ rebecca = {
     wecs.panda3d.character.FallingMovement: dict(
         solids=factory(rebecca_lifter),
     ),
+    MouseOverable: dict(
+        solid=CollisionSphere(0, 0, 1, 1),
+    ),
 }
 
 
@@ -614,12 +511,21 @@ non_player_character.add(
 )
 
 
-# ...and a disembodied player
+# ...and a player
 
-player_character.add(
+observer.add(
     base.ecs_world.create_entity(name="Observer"),
     overrides={
-        **rebecca,
         **spawn_point_air,
     },
 )
+
+# To be created as a player character, instead just do this:
+# 
+# player_character.add(
+#     base.ecs_world.create_entity(name="Playerbecca"),
+#     overrides={
+#         **rebecca,
+#         **spawn_point_air,
+#     },
+# )

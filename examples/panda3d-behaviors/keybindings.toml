@@ -36,8 +36,9 @@
 
   [character_movement.rotation]
   _type = "axis2d"
-  _device_order = ["gamepad", "keyboard"]
+  _device_order = ["gamepad", "spatial_mouse", "keyboard"]
   gamepad = "dpad_left,dpad_right,dpad_down,dpad_up"
+  spatial_mouse = "yaw:flip:scale=3,pitch:scale=2"
   keyboard = "arrow_left,arrow_right,arrow_down,arrow_up"
 
   [character_movement.jump]
@@ -84,11 +85,16 @@
 [select_entity]
 
   [select_entity.select]
-  _type = "button"
+  _type = "trigger"
   _device_order = ["keyboard"]
   keyboard = "mouse1"
 
   [select_entity.command]
-  _type = "button"
+  _type = "trigger"
   _device_order = ["keyboard"]
   keyboard = "mouse3"
+
+  [select_entity.embody]
+  _type = "trigger"
+  _device_order = ["keyboard"]
+  keyboard = "1"

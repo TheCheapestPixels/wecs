@@ -10,6 +10,7 @@ from wecs.core import System
 from wecs.core import and_filter
 
 from wecs.panda3d.character import CharacterController
+from wecs.panda3d.input import Input
 
 
 def idle(entity):
@@ -112,13 +113,16 @@ def brownian_walker(entity):
     character.jumps = 0
 
 
-def walk_to_entity(entity, target_entity_uid):
+def walk_to_entity(entity, target_entity_uid, coordinates=None):
+    if coordinates is None:
+        coordinates = Vec3(0, 0, 0)
+
     character = entity[CharacterController]
     target_entity = base.ecs_world.get_entity(target_entity_uid)
 
     character_node = entity[wecs.panda3d.prototype.Model].node
     target_node = target_entity[wecs.panda3d.prototype.Model].node
-    rel_pos = target_node.get_pos(character_node)
+    rel_pos = character_node.get_relative_point(target_node, coordinates)
     xy_dist = Vec3(rel_pos.x, rel_pos.y, 0)
 
     character.heading = 0
@@ -184,3 +188,31 @@ class Think(System):
             args = ai.behavior[1:]
 
             ai.behaviors[behavior](entity, *args)
+
+
+class PrintBehaviorOnPlayerCharacters(System):
+    entity_filters = {
+        'character': [Input, BehaviorAI, CharacterController],
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            behavior = entity[BehaviorAI]
+
+            print(behavior.behavior)
+
+
+class BehaviorInhibitsDirectCharacterControl(System):
+    entity_filters = {
+        'character': [Input, BehaviorAI, CharacterController],
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            behavior = entity[BehaviorAI]
+            input = entity[Input]
+
+            if len(behavior.behavior) == 1 and behavior.behavior[0] == 'idle':
+                input.contexts.add('character_movement')
+            elif 'character_movement' in input.contexts:
+                input.contexts.remove('character_movement')

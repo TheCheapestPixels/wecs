@@ -372,6 +372,7 @@ class ManageModels(System):
         geometry.node.detach_node()
 
     def exit_filter_model(self, entity):
+        model = entity[Model]
         model.node.detach_node()
 
 

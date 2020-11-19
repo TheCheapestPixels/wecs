@@ -152,20 +152,18 @@ pc_mind = Aspect(
 
 npc_mind_constant = Aspect(
     [
+        wecs.panda3d.ai.BehaviorAI,
         wecs.panda3d.ai.ConstantCharacterAI,
     ],
     overrides={
         wecs.panda3d.ai.ConstantCharacterAI: dict(
+            move=Vec3(0, 0.2, 0),
             heading=1.0,
         ),
+        wecs.panda3d.ai.BehaviorAI: dict(
+            behavior=['constant'],
+        ),
     },
-)
-
-
-npc_mind_brownian = Aspect(
-    [
-        wecs.panda3d.ai.BrownianWalkerAI,
-    ],
 )
 
 

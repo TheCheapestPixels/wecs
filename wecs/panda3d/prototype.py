@@ -129,6 +129,14 @@ class Billboard:
 
 
 @Component()
+class Compass:
+    """
+    Set the compass effect on the model node
+    """
+    node: NodePath = None
+
+
+@Component()
 class PhysicsWorld:
     timestep: float = 0.0
     world: BulletWorld = field(default_factory=BulletWorld)
@@ -151,7 +159,8 @@ class ManageModels(System):
         'flatten': and_filter(Geometry, FlattenStrong),
         'collidable': and_filter(Geometry, CollidableGeometry),
         'billboard': and_filter(Sprite, Billboard),
-        'physics': and_filter(Model, PhysicsBody),
+        'compass': and_filter(Geometry, Compass),
+        'physics': and_filter(Model, PhysicsBody)
     }
 
     def enter_filter_model(self, entity):
@@ -230,6 +239,13 @@ class ManageModels(System):
 
         sprite.node.set_billboard_point_eye()
 
+    def enter_filter_compass(self, entity):
+        geometry = entity[Geometry]
+        compass = entity[Compass]
+
+        node = compass.node if compass.node else render
+        geometry.node.set_compass(node)
+
     def enter_filter_physics(self, entity):
         model = entity[Model]
         physics_body = entity[PhysicsBody]
@@ -307,6 +323,11 @@ class ManageModels(System):
     def exit_filter_billboard(self, entity):
         # FIXME: Undo geometry.node.set_billboard_point_eye()
         pass
+
+    def exit_filter_compass(self, entity):
+        geometry = entity[Geometry]
+
+        geometry.node.clear_compass()
 
     def exit_filter_collidable(self, entity):
         geometry = entity[Geometry]

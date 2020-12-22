@@ -151,6 +151,8 @@ class CharacterController:
     # Speed bookkeeping
     last_translation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
     last_rotation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
+    # Gravity vector
+    gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -1))
 
 
 @Component()

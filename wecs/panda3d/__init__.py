@@ -5,3 +5,4 @@ import wecs.panda3d.camera
 import wecs.panda3d.ai
 import wecs.panda3d.animation
 import wecs.panda3d.debug
+import wecs.panda3d.spawnpoints

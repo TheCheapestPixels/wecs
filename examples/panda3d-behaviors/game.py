@@ -193,6 +193,7 @@ class AvatarUI(System):
 system_types = [
     # Set up newly added models/camera, tear down removed ones
     wecs.panda3d.prototype.ManageModels,
+    wecs.panda3d.spawnpoints.Spawn,
     wecs.panda3d.camera.PrepareCameras,
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
@@ -234,12 +235,13 @@ game_map = Aspect(
         wecs.panda3d.prototype.Model,
         wecs.panda3d.prototype.Geometry,
         wecs.panda3d.prototype.CollidableGeometry,
-        wecs.panda3d.prototype.FlattenStrong,
+        # wecs.panda3d.prototype.FlattenStrong,
         wecs.panda3d.mouseover.MouseOverableGeometry,
         wecs.panda3d.mouseover.Pointable,
+        wecs.panda3d.spawnpoints.SpawnMap,
      ],
     overrides={
-        wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadE.bam'),
+        wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadF.bam'),
         wecs.panda3d.prototype.CollidableGeometry: dict(
             mask=FALLING_MASK|BUMPING_MASK|CAMERA_MASK,
         ),
@@ -254,12 +256,14 @@ game_map.add(map_entity)
 # There are characters, which are points in space that can be moved
 # around using the `CharacterController`, using either player input or
 # AI control.
+# They are spawned at one of the map's spawn points.
 
 character = Aspect(
     [
         wecs.mechanics.clock.Clock,
         wecs.panda3d.prototype.Model,
         wecs.panda3d.character.CharacterController,
+        wecs.panda3d.spawnpoints.SpawnAt,
     ],
     overrides={
         wecs.mechanics.clock.Clock: dict(
@@ -444,88 +448,52 @@ rebecca = {
 }
 
 
-# For the moment, we implement spawn points by just giving coordinates.
-
-spawn_point_1 = {
-    wecs.panda3d.prototype.Model: dict(
-        post_attach=lambda: wecs.panda3d.prototype.transform(
-            pos=Vec3(50, 290, 0),
-        ),
-    ),
-}
-
-
-spawn_point_2 = {
-    wecs.panda3d.prototype.Model: dict(
-        post_attach=lambda: wecs.panda3d.prototype.transform(
-            pos=Vec3(45, 300, 0),
-        ),
-    ),
-}
-
-
-spawn_point_3 = {
-    wecs.panda3d.prototype.Model: dict(
-        post_attach=lambda: wecs.panda3d.prototype.transform(
-            pos=Vec3(55, 300, 0),
-        ),
-    ),
-}
-
-
-spawn_point_air = {
-    wecs.panda3d.prototype.Model: dict(
-        post_attach=lambda: wecs.panda3d.prototype.transform(
-            pos=Vec3(55, 250, 20),
-        ),
-    ),
-}
-
-
 # Now let's create Rebeccas at the spawn points:
 
-non_player_character.add(
-    base.ecs_world.create_entity(name="Rebecca 1"),
-    overrides={
-        **rebecca,
-        **spawn_point_1,
-    },
-)
-
-
-non_player_character.add(
-    base.ecs_world.create_entity(name="Rebecca 2"),
-    overrides={
-        **rebecca,
-        **spawn_point_2,
-    },
-)
-
-
-non_player_character.add(
-    base.ecs_world.create_entity(name="Rebecca 3"),
-    overrides={
-        **rebecca,
-        **spawn_point_3,
-    },
-)
-
-
-# ...and a player
-
-observer.add(
-    base.ecs_world.create_entity(name="Observer"),
-    overrides={
-        **spawn_point_air,
-    },
-)
-
-# To be created as a player character, instead just do this:
-# 
-# player_character.add(
-#     base.ecs_world.create_entity(name="Playerbecca"),
+# non_player_character.add(
+#     base.ecs_world.create_entity(name="Rebecca 1"),
 #     overrides={
 #         **rebecca,
+#         **spawn_point_1,
+#     },
+# )
+# 
+# 
+# non_player_character.add(
+#     base.ecs_world.create_entity(name="Rebecca 2"),
+#     overrides={
+#         **rebecca,
+#         **spawn_point_2,
+#     },
+# )
+# 
+# 
+# non_player_character.add(
+#     base.ecs_world.create_entity(name="Rebecca 3"),
+#     overrides={
+#         **rebecca,
+#         **spawn_point_3,
+#     },
+# )
+
+
+# ...and a player observer
+
+# observer.add(
+#     base.ecs_world.create_entity(name="Observer"),
+#     overrides={
 #         **spawn_point_air,
 #     },
 # )
+
+# To be created as a player character, instead just do this:
+
+player_character.add(
+    base.ecs_world.create_entity(name="Playerbecca"),
+    overrides={
+        wecs.panda3d.spawnpoints.SpawnAt: dict(
+            name='spawn_city_a',
+        ),
+        **rebecca,
+    },
+)

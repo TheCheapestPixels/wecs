@@ -13,6 +13,8 @@ from wecs.core import System, Component
 from wecs.core import Proxy
 from wecs.core import ProxyType
 
+from wecs.panda3d.prototype import Model
+from wecs.panda3d.prototype import Geometry
 from wecs.panda3d.camera import Camera
 from wecs.panda3d.input import Input
 
@@ -44,8 +46,8 @@ class MouseOverOnEntity(System):
         'camera': [Camera, Input, MouseOveringCamera],
     }
     proxies = {
-        'model': ProxyType(wecs.panda3d.prototype.Model, 'node'),
-        'geometry': ProxyType(wecs.panda3d.prototype.Geometry, 'node'),
+        'model': ProxyType(Model, 'node'),
+        'geometry': ProxyType(Geometry, 'node'),
     }
 
     def __init__(self, *args, **kwargs):
@@ -181,7 +183,7 @@ class UpdateMouseOverUI(System):
     }
     input_context = 'select_entity'
     proxies = {
-        'model': ProxyType(wecs.panda3d.prototype.Model, 'node'),
+        'model': ProxyType(Model, 'node'),
     }
 
     def exit_filter_cursor(self, entity):

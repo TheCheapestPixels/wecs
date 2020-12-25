@@ -50,7 +50,8 @@ class Spawn(System):
                 if not spawn_point.is_empty():
                     model_node = self.proxies['model_node'].field(entity)
                     model_node.reparent_to(spawn_point)
-                    model_node.wrt_reparent_to(map_node)
+                    # We reparent to the first child so it inherrits the lights
+                    model_node.wrt_reparent_to(map_node.get_child(0))
                     break
             else:
                 print("Spawn point '{}' not found".format(spawn_point_name))

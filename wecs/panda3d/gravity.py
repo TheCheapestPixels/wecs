@@ -1,3 +1,7 @@
+import math
+
+from panda3d.core import Vec3
+
 from wecs.core import System
 from wecs.core import Component
 from wecs.core import Proxy
@@ -47,5 +51,14 @@ class ErectCharacter(System):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
             model_node = self.proxies['model_node'].field(entity)
+            up = character.gravity * -1
 
-            #model_node.heads_up(Vec3(0, 1, 0), character.gravity * -1)
+            roll = math.atan(character.gravity.x / character.gravity.z) / (2.0 * math.pi) * 360.0
+            model_node.set_r(model_node, roll)
+
+            # FIXME: We now shoud recalculate gravity by also rolling the vector.
+
+            pitch = math.atan(character.gravity.y / character.gravity.z) / (2.0 * math.pi) * 360.0
+            model_node.set_p(model_node, -pitch)
+
+            character.gravity = Vec3(0, 0, -character.gravity.length())

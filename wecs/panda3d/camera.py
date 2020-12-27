@@ -177,7 +177,7 @@ class PrepareCameras(System):
     def enter_filter_mount_actor(self, entity):
         camera = entity[Camera]
         node = entity[Actor].node 
-        joint = node.expose_joint(None, 'modelRoot', 'camerasz')
+        joint = node.expose_joint(None, 'modelRoot', 'camera')
         if joint:
             camera.pivot.set_pos((0, 0, 0))
             camera.pivot.reparent_to(joint)

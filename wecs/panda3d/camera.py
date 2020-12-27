@@ -58,6 +58,7 @@ from wecs.core import ProxyType
 from wecs.core import and_filter
 from wecs.panda3d.input import Input
 from wecs.panda3d.prototype import Model
+from wecs.panda3d.prototype import Actor
 from wecs.mechanics.clock import Clock
 
 from wecs.panda3d.constants import CAMERA_MASK
@@ -138,7 +139,11 @@ class PrepareCameras(System):
             Camera,
             MountedCameraMode,
         ]),
-
+        'mount_actor': and_filter([
+            Camera,
+            MountedCameraMode,
+            Actor,
+        ]),
         'center': and_filter([
             Camera,
             ObjectCentricCameraMode,
@@ -164,11 +169,18 @@ class PrepareCameras(System):
 
     def enter_filter_mount(self, entity):
         camera = entity[Camera]
-
         camera.pivot.set_pos(0, 0, 0)
         camera.pivot.set_hpr(0, 0, 0)
         camera.camera.set_pos(0, 0, 0)
         camera.camera.set_hpr(0, 0, 0)
+
+    def enter_filter_mount_actor(self, entity):
+        camera = entity[Camera]
+        node = entity[Actor].node 
+        joint = node.expose_joint(None, 'modelRoot', 'camerasz')
+        if joint:
+            camera.pivot.set_pos((0, 0, 0))
+            camera.pivot.reparent_to(joint)
 
     def exit_filter_mount(self, entity):
         model_proxy = self.proxies['model']
@@ -276,6 +288,7 @@ class CollideCamerasWithTerrain(System):
         zoom.traverser.add_collider(cn, zoom.queue)
 
     def update(self, entities_by_filter):
+        
         for entity in entities_by_filter['camera']:
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]

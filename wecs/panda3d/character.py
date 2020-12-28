@@ -267,9 +267,7 @@ class FallingMovement:
     '''
     This character falls unless on solid ground.
     '''
-    gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -9.81))
     inertia: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    local_gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -9.81))
     ground_contact: bool = False
     tag_name: str = 'falling'
     from_collide_mask: int = FALLING_MASK
@@ -730,6 +728,7 @@ class Falling(CollisionSystem):
             self.fall_and_land(entity)
 
     def predict_falling(self, entity):
+        character = entity[CharacterController]
         model_proxy = self.proxies['character_node']
         model = entity[model_proxy.component_type]
         model_node = model_proxy.field(entity)
@@ -742,11 +741,7 @@ class Falling(CollisionSystem):
         falling_movement = entity[FallingMovement]
 
         # Adjust inertia by gravity
-        falling_movement.local_gravity = model_node.get_relative_vector(
-            scene_node,
-            falling_movement.gravity,
-        )
-        frame_gravity = falling_movement.local_gravity * clock.game_time
+        frame_gravity = character.gravity * clock.game_time
         falling_movement.inertia += frame_gravity
 
         # Adjust lifter collider by inertia

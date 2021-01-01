@@ -857,7 +857,7 @@ class ExecuteMovement(System):
                 clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
                 character.rotation.y += clamped_pitch - preclamp_pitch
 
-            model_node.set_hpr(model_node.get_hpr() + character.rotation)
+            model_node.set_hpr(model_node, character.rotation)
             character.last_rotation_speed = character.rotation / dt
 
 

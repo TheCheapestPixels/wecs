@@ -1,0 +1,70 @@
+board:
+  instance: board
+  entity_type: map
+dancepole:
+  instance: dancepole
+  entity_type: map
+bishop:
+  instance: bishop
+  entity_type: character
+  character_type: player_character
+bishop.001:
+  instance: bishop
+  entity_type: character
+  character_type: non_player_character
+king:
+  instance: king
+  entity_type: character
+  character_type: non_player_character
+knight:
+  instance: knight
+  entity_type: character
+  character_type: non_player_character
+knight.001:
+  instance: knight
+  entity_type: character
+  character_type: non_player_character
+pawn:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.001:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.002:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.003:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.004:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.005:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.006:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+pawn.007:
+  instance: pawn
+  entity_type: character
+  character_type: non_player_character
+queen:
+  instance: queen
+  entity_type: character
+  character_type: non_player_character
+rook:
+  instance: rook
+  entity_type: character
+  character_type: non_player_character
+rook.001:
+  instance: rook
+  entity_type: character
+  character_type: non_player_character

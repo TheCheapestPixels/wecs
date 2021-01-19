@@ -421,76 +421,93 @@ args = parser.parse_args()
 
 
 map_node = base.loader.load_model(args.map_file)
-game_map.add(
-    base.ecs_world.create_entity(name="Map"),
-    overrides={
-        wecs.panda3d.prototype.Geometry: dict(node=map_node),
-    }
-)
+
+if not map_node.find('**/+GeomNode').is_empty():
+    # There's geometry in the map; It's actually a map!
+    game_map.add(
+        base.ecs_world.create_entity(name="Map"),
+        overrides={
+            wecs.panda3d.prototype.Geometry: dict(node=map_node),
+        }
+    )
 
 
 # Scan map for spawn points and instantiate
 
+def create_player_character(model):
+    # FIXME: There are a lot of constants here that should be drawn
+    # from the model itself and the spawn point node.
+    bumper_node = model.find('**/=bumper')
+    bumper_spec = {
+        'bumper': dict(
+            shape=CollisionSphere,
+            center=bumper_node.get_pos(),
+            radius=bumper_node.get_scale(),
+        ),
+    }
+    lifter_node = model.find('**/=lifter')
+    lifter_spec = {
+        'lifter': dict(
+            shape=CollisionSphere,
+            center=lifter_node.get_pos(),
+            radius=lifter_node.get_scale(),
+        ),
+    }
+    mouseover_node = model.find('**/=mouseover')
+    mouseover_spec = CollisionSphere(
+        mouseover_node.get_pos(),
+        mouseover_node.get_scale(),
+    )
+
+    player_character.add(
+        base.ecs_world.create_entity(name="Playerbecca"),
+        overrides={
+            wecs.panda3d.prototype.Geometry: dict(
+                file=model_file,
+            ),
+            wecs.panda3d.prototype.Actor: dict(
+                file=model_file,
+            ),
+            wecs.panda3d.character.BumpingMovement: dict(
+                solids=bumper_spec,
+            ),
+            wecs.panda3d.character.FallingMovement: dict(
+                solids=lifter_spec,
+            ),
+            MouseOverable: dict(
+                solid=mouseover_spec,
+            ),
+            wecs.panda3d.spawnpoints.SpawnAt: dict(
+                name=node.spawn_name,
+            ),
+        },
+    )
+
+
+def create_map(model):
+    game_map.add(
+        base.ecs_world.create_entity(name="Map"),
+        overrides={
+            wecs.panda3d.prototype.Geometry: dict(node=model),
+        },
+    )
+
+
 for node in map_node.find_all_matches('**/spawn_point:*'):
-    spawn_name = node.get_name().removeprefix('spawn_point:')
-    #entity_type = node.get_tag('entity_type')
-    entity_type = 'character'
+    # This is Python 3.9+:
+    # spawn_name = node.get_name().removeprefix('spawn_point:')
+    spawn_name = node.get_name()[len('spawn_point:'):]
     instance_type = node.get_tag('instance')
     model_file = '{}.bam'.format(instance_type)
     model = base.loader.load_model(model_file)
+    entity_type = model.get_tag('entity_type')
 
+    print("Creating {} from {} at {}".format(entity_type, instance_type, spawn_name))
     if entity_type == 'character':
-        # FIXME: There are a lot of constants here that should be drawn
-        # from the model itself and the spawn point node.
-        bumper_node = model.find('**/=bumper')
-        bumper_spec = {
-            'bumper': dict(
-                shape=CollisionSphere,
-                center=bumper_node.get_pos(),
-                radius=bumper_node.get_scale(),
-            ),
-        }
-        lifter_node = model.find('**/=lifter')
-        lifter_spec = {
-            'lifter': dict(
-                shape=CollisionSphere,
-                center=lifter_node.get_pos(),
-                radius=lifter_node.get_scale(),
-            ),
-        }
-        mouseover_node = model.find('**/=mouseover')
-        mouseover_spec = CollisionSphere(
-            mouseover_node.get_pos(),
-            mouseover_node.get_scale(),
-        )
-
-        player_character.add(
-            base.ecs_world.create_entity(name="Playerbecca"),
-            overrides={
-                wecs.panda3d.spawnpoints.SpawnAt: dict(
-                    name=node.spawn_name,
-                ),
-                wecs.panda3d.prototype.Geometry: dict(
-                    file=model_file,
-                ),
-                wecs.panda3d.prototype.Actor: dict(
-                    file=model_file,
-                ),
-                wecs.panda3d.character.BumpingMovement: dict(
-                    solids=bumper_spec,
-                ),
-                wecs.panda3d.character.FallingMovement: dict(
-                    solids=lifter_spec,
-                ),
-                MouseOverable: dict(
-                    solid=mouseover_spec,
-                ),
-            },
-        )
+        character_type = model.get_tag('character_type')
+        if character_type == 'player_character':
+            create_player_character(model)
+        elif character_type == 'non_player_character':
+            pass
     elif entity_type == 'map':
-        game_map.add(
-            base.ecs_world.create_entity(name="Map"),
-            overrides={
-                wecs.panda3d.prototype.Geometry: dict(node=model),
-            },
-        )
+        create_map(model)

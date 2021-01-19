@@ -55,4 +55,4 @@ lab_character = Aspect([aspects.player_character, cefconsole.WatchedEntity])
 
 # Create entities
 game_map.add(base.ecs_world.create_entity())
-lab_character.add(base.ecs_world.create_entity(name="Rebecca"))
+lab_character.add(base.ecs_world.create_entity(name="peter"))

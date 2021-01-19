@@ -75,7 +75,7 @@ character = Aspect(
 )
 
 
-def rebecca_bumper():
+def peter_bumper():
     return {
         'bumper': dict(
             shape=CollisionSphere,
@@ -85,7 +85,7 @@ def rebecca_bumper():
     }
 
 
-def rebecca_lifter():
+def peter_lifter():
     return {
         'lifter': dict(
             shape=CollisionSphere,
@@ -102,8 +102,8 @@ walking = Aspect(
         wecs.panda3d.character.FallingMovement,
     ],
     overrides={
-        wecs.panda3d.character.BumpingMovement: dict(solids=factory(rebecca_bumper)),
-        wecs.panda3d.character.FallingMovement: dict(solids=factory(rebecca_lifter)),
+        wecs.panda3d.character.BumpingMovement: dict(solids=factory(peter_bumper)),
+        wecs.panda3d.character.FallingMovement: dict(solids=factory(peter_lifter)),
     },
 )
 
@@ -114,7 +114,7 @@ avatar = Aspect(
         walking,
     ],
     overrides={
-        wecs.panda3d.prototype.Geometry: dict(file='../../assets/rebecca.bam'),
+        wecs.panda3d.prototype.Geometry: dict(file='../../assets/peter.bam'),
     },
 )
 

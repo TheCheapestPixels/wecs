@@ -407,9 +407,9 @@ non_player_character = Aspect(
 )
 
 
-# WECS' default 3D character is Rebecca, and these are her parameters.
+# WECS' default 3D character is peter, and these are his parameters.
 
-def rebecca_bumper():
+def peter_bumper():
     return {
         'bumper': dict(
             shape=CollisionSphere,
@@ -419,7 +419,7 @@ def rebecca_bumper():
     }
 
 
-def rebecca_lifter():
+def peter_lifter():
     return {
         'lifter': dict(
             shape=CollisionSphere,
@@ -429,18 +429,18 @@ def rebecca_lifter():
     }
 
 
-rebecca = {
+peter = {
     wecs.panda3d.prototype.Geometry: dict(
-        file='../../assets/rebecca.bam',
+        file='../../assets/peter.bam',
     ),
     wecs.panda3d.prototype.Actor: dict(
-        file='../../assets/rebecca.bam',
+        file='../../assets/peter.bam',
     ),
     wecs.panda3d.character.BumpingMovement: dict(
-        solids=factory(rebecca_bumper),
+        solids=factory(peter_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
-        solids=factory(rebecca_lifter),
+        solids=factory(peter_lifter),
     ),
     MouseOverable: dict(
         solid=CollisionSphere(0, 0, 1, 1),
@@ -448,30 +448,30 @@ rebecca = {
 }
 
 
-# Now let's create Rebeccas at the spawn points:
+# Now let's create peters at the spawn points:
 
 # non_player_character.add(
-#     base.ecs_world.create_entity(name="Rebecca 1"),
+#     base.ecs_world.create_entity(name="peter 1"),
 #     overrides={
-#         **rebecca,
+#         **peter,
 #         **spawn_point_1,
 #     },
 # )
 # 
 # 
 # non_player_character.add(
-#     base.ecs_world.create_entity(name="Rebecca 2"),
+#     base.ecs_world.create_entity(name="peter 2"),
 #     overrides={
-#         **rebecca,
+#         **peter,
 #         **spawn_point_2,
 #     },
 # )
 # 
 # 
 # non_player_character.add(
-#     base.ecs_world.create_entity(name="Rebecca 3"),
+#     base.ecs_world.create_entity(name="peter 3"),
 #     overrides={
-#         **rebecca,
+#         **peter,
 #         **spawn_point_3,
 #     },
 # )
@@ -489,11 +489,11 @@ rebecca = {
 # To be created as a player character, instead just do this:
 
 player_character.add(
-    base.ecs_world.create_entity(name="Playerbecca"),
+    base.ecs_world.create_entity(name="Playerpeter"),
     overrides={
         wecs.panda3d.spawnpoints.SpawnAt: dict(
             name='spawn_city_a',
         ),
-        **rebecca,
+        **peter,
     },
 )

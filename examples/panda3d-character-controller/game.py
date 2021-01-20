@@ -219,9 +219,9 @@ non_player_sprite = Aspect(
 )
 
 
-# WECS' default 3D character is Rebecca, and these are her parameters.
+# WECS' default 3D character is peter, and these are his parameters.
 
-def rebecca_bumper():
+def peter_bumper():
     return {
         'bumper': dict(
             shape=CollisionSphere,
@@ -231,7 +231,7 @@ def rebecca_bumper():
     }
 
 
-def rebecca_lifter():
+def peter_lifter():
     return {
         'lifter': dict(
             shape=CollisionSphere,
@@ -241,18 +241,18 @@ def rebecca_lifter():
     }
 
 
-rebecca = {
+peter = {
     wecs.panda3d.prototype.Geometry: dict(
-        file='../../assets/rebecca.bam',
+        file='../../assets/peter.bam',
     ),
     wecs.panda3d.prototype.Actor: dict(
-        file='../../assets/rebecca.bam',
+        file='../../assets/peter.bam',
     ),
     wecs.panda3d.character.BumpingMovement: dict(
-        solids=factory(rebecca_bumper),
+        solids=factory(peter_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
-        solids=factory(rebecca_lifter),
+        solids=factory(peter_lifter),
     ),
 }
 
@@ -271,10 +271,10 @@ mrman = {
         framerate=15,
     ),
     wecs.panda3d.character.BumpingMovement: dict(
-        solids=factory(rebecca_bumper),
+        solids=factory(peter_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
-        solids=factory(rebecca_lifter),
+        solids=factory(peter_lifter),
     ),
 }
 
@@ -308,18 +308,18 @@ spawn_point_3 = {
 }
 
 
-# Now let's ceate a Rebecca at the spawn point:
+# Now let's ceate a peter at the spawn point:
 
 player.add(
-    base.ecs_world.create_entity(name="Playerbecca"),
-    overrides={**rebecca, **spawn_point_1},
+    base.ecs_world.create_entity(name="Playerpeter"),
+    overrides={**peter, **spawn_point_1},
 )
 
 
 non_player.add(
-    base.ecs_world.create_entity(name="Rebecca"),
+    base.ecs_world.create_entity(name="peter"),
     overrides={
-        **rebecca,
+        **peter,
         **spawn_point_2,
     },
 )

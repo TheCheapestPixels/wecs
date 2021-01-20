@@ -44,10 +44,10 @@ class AnimateCharacter(System):
 
             initial = "idle"
             if not grounded:
-                if controller.jumps:
-                    initial = "jumping"
-                elif controller.translation.z < -0.2:
-                    initial = "falling"
+                if controller.translation.z > 0.1:
+                    initial = "jump"
+                elif controller.translation.z < -0.1:
+                    initial = "fall"
             elif controller.crouches:
                 initial = "crouch"
             animation.to_play = [initial, "walk_forward", "run_forward"]

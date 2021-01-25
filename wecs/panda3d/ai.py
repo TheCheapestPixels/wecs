@@ -43,6 +43,53 @@ def turn_right(entity, speed=1.0):
     character.jumps = False
 
 
+class BehaviorTree:
+    def __init__(self, root):
+        self.root = root
+
+    def __call__(self, entity, *args):
+        """Returns True if node has run, False if it can't be run, and
+        raises an exception for special cases, e.g. being done with a
+        task."""
+        self.root(entity, *args)
+
+
+class Priority:
+    def __init__(self, *nodes):
+        self.nodes = nodes
+        
+    def __call__(self, entity, *args):
+        for node in self.nodes:
+            if node(entity, *args):
+                return True
+        return False
+
+
+# Selector: Prioritized list of options.
+# Sequence: One child after the other
+# Parallel: Executes all children
+# FSM
+# Attached at runtime: Node behavior is specified re-/set runtime, if no
+#   behavior is attached, node fails
+# Decorators: Modify node behavior
+# * Return
+#   * Always succeed
+#   * Always fail
+#   * Always raise exception
+# * Interruptions
+#   * Minimum / maximum distance to entity reached
+#   * Sensor detects object
+#   * Timeout
+#   * Uninterruptable: Node will continue to be used until finished,
+#     even if higher-priority options become activate in the meantime.
+# * Repetition
+#   * Loop n times / infinitely
+# * Debugging
+#   * Tag: Present active tags to user
+#   * Message: Log message on activation / deactivation / per frame
+#   * Breakpoint: Pause game and inspect behavior
+
+
 @Component()
 class ConstantCharacterAI:
     """

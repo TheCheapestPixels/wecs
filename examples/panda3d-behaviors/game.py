@@ -17,7 +17,6 @@ from wecs.panda3d.constants import CAMERA_MASK
 
 # Break this out into something of its own
 
-from wecs.panda3d.ai import BehaviorAI
 from wecs.panda3d.character import CharacterController
 from wecs.core import System, Component
 from wecs.core import Proxy
@@ -30,6 +29,11 @@ from wecs.panda3d.mouseover import UserInterface
 from wecs.panda3d.mouseover import Pointable
 from wecs.panda3d.mouseover import Targetable
 from wecs.panda3d.mouseover import Selectable
+from wecs.panda3d.ai import BehaviorAI
+from wecs.panda3d.behavior_trees import BehaviorTree
+from wecs.panda3d.behavior_trees import IdleWhenDoneTree
+from wecs.panda3d.behavior_trees import Action
+from wecs.panda3d.behavior_trees import DoneOnPrecondition
 
 
 @Component()
@@ -193,7 +197,6 @@ class AvatarUI(System):
 system_types = [
     # Set up newly added models/camera, tear down removed ones
     wecs.panda3d.prototype.ManageModels,
-    wecs.panda3d.spawnpoints.Spawn,
     wecs.panda3d.camera.PrepareCameras,
     # Update clocks
     wecs.mechanics.clock.DetermineTimestep,
@@ -235,13 +238,12 @@ game_map = Aspect(
         wecs.panda3d.prototype.Model,
         wecs.panda3d.prototype.Geometry,
         wecs.panda3d.prototype.CollidableGeometry,
-        # wecs.panda3d.prototype.FlattenStrong,
+        wecs.panda3d.prototype.FlattenStrong,
         wecs.panda3d.mouseover.MouseOverableGeometry,
         wecs.panda3d.mouseover.Pointable,
-        wecs.panda3d.spawnpoints.SpawnMap,
      ],
     overrides={
-        wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadF.bam'),
+        wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadE.bam'),
         wecs.panda3d.prototype.CollidableGeometry: dict(
             mask=FALLING_MASK|BUMPING_MASK|CAMERA_MASK,
         ),
@@ -256,14 +258,12 @@ game_map.add(map_entity)
 # There are characters, which are points in space that can be moved
 # around using the `CharacterController`, using either player input or
 # AI control.
-# They are spawned at one of the map's spawn points.
 
 character = Aspect(
     [
         wecs.mechanics.clock.Clock,
         wecs.panda3d.prototype.Model,
         wecs.panda3d.character.CharacterController,
-        wecs.panda3d.spawnpoints.SpawnAt,
     ],
     overrides={
         wecs.mechanics.clock.Clock: dict(
@@ -367,11 +367,28 @@ pc_mind = Aspect(
 )
 
 
+npc_behaviors = dict(
+    idle=wecs.panda3d.ai.idle,
+    walk_to_entity=IdleWhenDoneTree(
+        DoneOnPrecondition(
+            wecs.panda3d.behavior_trees.distance_smaller(1.5),
+            Action(wecs.panda3d.ai.walk_to_entity),
+        ),
+    ),
+)
+
+
 npc_mind = Aspect(
     [
         wecs.panda3d.ai.BehaviorAI,
         wecs.panda3d.mouseover.Selectable,
     ],
+    overrides={
+        wecs.panda3d.ai.BehaviorAI: dict(
+            behavior=['idle'],
+            behaviors=npc_behaviors,
+        ),
+    },
 )
 
 
@@ -407,9 +424,9 @@ non_player_character = Aspect(
 )
 
 
-# WECS' default 3D character is peter, and these are his parameters.
+# WECS' default 3D character is Rebecca, and these are her parameters.
 
-def peter_bumper():
+def rebecca_bumper():
     return {
         'bumper': dict(
             shape=CollisionSphere,
@@ -419,7 +436,7 @@ def peter_bumper():
     }
 
 
-def peter_lifter():
+def rebecca_lifter():
     return {
         'lifter': dict(
             shape=CollisionSphere,
@@ -429,18 +446,18 @@ def peter_lifter():
     }
 
 
-peter = {
+rebecca = {
     wecs.panda3d.prototype.Geometry: dict(
-        file='../../assets/peter.bam',
+        file='../../assets/rebecca.bam',
     ),
     wecs.panda3d.prototype.Actor: dict(
-        file='../../assets/peter.bam',
+        file='../../assets/rebecca.bam',
     ),
     wecs.panda3d.character.BumpingMovement: dict(
-        solids=factory(peter_bumper),
+        solids=factory(rebecca_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
-        solids=factory(peter_lifter),
+        solids=factory(rebecca_lifter),
     ),
     MouseOverable: dict(
         solid=CollisionSphere(0, 0, 1, 1),
@@ -448,52 +465,88 @@ peter = {
 }
 
 
-# Now let's create peters at the spawn points:
+# For the moment, we implement spawn points by just giving coordinates.
 
-# non_player_character.add(
-#     base.ecs_world.create_entity(name="peter 1"),
-#     overrides={
-#         **peter,
-#         **spawn_point_1,
-#     },
-# )
-# 
-# 
-# non_player_character.add(
-#     base.ecs_world.create_entity(name="peter 2"),
-#     overrides={
-#         **peter,
-#         **spawn_point_2,
-#     },
-# )
-# 
-# 
-# non_player_character.add(
-#     base.ecs_world.create_entity(name="peter 3"),
-#     overrides={
-#         **peter,
-#         **spawn_point_3,
-#     },
-# )
+spawn_point_1 = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(50, 290, 0),
+        ),
+    ),
+}
 
 
-# ...and a player observer
+spawn_point_2 = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(45, 300, 0),
+        ),
+    ),
+}
 
-# observer.add(
-#     base.ecs_world.create_entity(name="Observer"),
+
+spawn_point_3 = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(55, 300, 0),
+        ),
+    ),
+}
+
+
+spawn_point_air = {
+    wecs.panda3d.prototype.Model: dict(
+        post_attach=lambda: wecs.panda3d.prototype.transform(
+            pos=Vec3(55, 250, 20),
+        ),
+    ),
+}
+
+
+# Now let's create Rebeccas at the spawn points:
+
+non_player_character.add(
+    base.ecs_world.create_entity(name="Rebecca 1"),
+    overrides={
+        **rebecca,
+        **spawn_point_1,
+    },
+)
+
+
+non_player_character.add(
+    base.ecs_world.create_entity(name="Rebecca 2"),
+    overrides={
+        **rebecca,
+        **spawn_point_2,
+    },
+)
+
+
+non_player_character.add(
+    base.ecs_world.create_entity(name="Rebecca 3"),
+    overrides={
+        **rebecca,
+        **spawn_point_3,
+    },
+)
+
+
+# ...and a player
+
+observer.add(
+    base.ecs_world.create_entity(name="Observer"),
+    overrides={
+        **spawn_point_air,
+    },
+)
+
+# To be created as a player character, instead just do this:
+# 
+# player_character.add(
+#     base.ecs_world.create_entity(name="Playerbecca"),
 #     overrides={
+#         **rebecca,
 #         **spawn_point_air,
 #     },
 # )
-
-# To be created as a player character, instead just do this:
-
-player_character.add(
-    base.ecs_world.create_entity(name="Playerpeter"),
-    overrides={
-        wecs.panda3d.spawnpoints.SpawnAt: dict(
-            name='spawn_city_a',
-        ),
-        **peter,
-    },
-)

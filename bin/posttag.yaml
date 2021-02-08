@@ -1,0 +1,10 @@
+board:
+  _root:
+    entity_type: map
+_scene:
+  spawn_point:peter:
+    entity_type: character
+    character_type: player_character
+  spawn_point:peter.001:
+    entity_type: character
+    character_type: non_player_character

@@ -94,6 +94,17 @@ if __name__ == '__main__':
     # Detach instances, copy or save their model file
     pruned_map, instances = munch_map(graph)
 
+    for collection in instances:
+        node = instances[collection]
+        if node.has_tag('linked_file'):
+            # Extract the node to use from linked files
+            linked_file = node.get_tag('linked_file')
+            collection_set = base.loader.load_model(
+                input_dir / linked_file,
+            )
+            collection_node = collection_set.find(collection)
+            instances[collection] = collection_node
+
     # Posttagging
     with open('posttag.yaml', 'r') as f:
         spec_text = f.read()
@@ -112,19 +123,8 @@ if __name__ == '__main__':
 
     # Save
     # TODO: Invoke blend2bam where needed
+    graph.write_bam_file(args.output_file)
+
     for collection, node in instances.items():
         filename = '{}.bam'.format(collection)
-        if not node.has_tag('linked_file'):
-            # Use the extracted graph for this collection
-            node.write_bam_file(filename)
-        else:
-            # Extract the node to use from linked files
-            linked_file = node.get_tag('linked_file')
-            collection_set = base.loader.load_model(
-                input_dir / linked_file,
-            )
-            collection_node = collection_set.find(collection)
-            import pdb; pdb.set_trace()
-            collection_node.write_bam_file(filename)
-
-    graph.write_bam_file(args.output_file)
+        node.write_bam_file(filename)

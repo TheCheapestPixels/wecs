@@ -1,10 +1,35 @@
+_scene:
+  spawn_point:peter:
+    character_type: player_character
+  spawn_point:peter.001:
+    character_type: non_player_character
+peter:
+  _root:
+    entity_type: character
 board:
   _root:
     entity_type: map
-_scene:
-  spawn_point:peter:
-    entity_type: character
-    character_type: player_character
-  spawn_point:peter.001:
-    entity_type: character
-    character_type: non_player_character
+dancepole:
+  _root:
+    entity_type: map
+test_cube:
+  _root:
+    entity_type: map
+bishop:
+  _root:
+    entity_type: nothing
+king:
+  _root:
+    entity_type: nothing
+knight:
+  _root:
+    entity_type: nothing
+pawn:
+  _root:
+    entity_type: nothing
+queen:
+  _root:
+    entity_type: nothing
+rook:
+  _root:
+    entity_type: nothing

@@ -34,6 +34,9 @@ class BehaviorTree:
             self.tree.reset()
         return rv
 
+    def reset(self):
+        self.tree.reset()
+
     def done(self, entity):
         raise NotImplementedError
 

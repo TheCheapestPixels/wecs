@@ -329,9 +329,16 @@ class UpdateCharacter(System):
                 # overrides walking and running. Jump by pressing space.
                 # This logic is implemented by the Walking system. Here,
                 # only intention is signalled.
-                character.jumps = context['jump']
-                character.sprints = context['sprint']
-                character.crouches = context['crouch']
+                character.jumps = False
+                character.sprints = False
+                character.crouches = False
+
+                if 'jump' in context:
+                    character.jumps = context['jump']
+                if 'sprint' in context:
+                    character.sprints = context['sprint']
+                if 'crouch' in context:
+                    character.crouches = context['crouch']
 
         for entity in entities_by_filter['character']:
             controller = entity[CharacterController]

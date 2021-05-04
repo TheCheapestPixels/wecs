@@ -224,11 +224,13 @@ class InertialMovement:
     :param float rotated_inertia: 0.5 - how much rotation impacts inertia
     :param NodePath node: NodePath("Inertia") - relative position based on inertia
     :param bool ignore_z: True - ignore_z
+    :param bool delta_inputs: False - Inputs in the character indicate a wish for change in speed, not absolute speed
     '''
     acceleration: float = 30.0
     rotated_inertia: float = 0.5
     node: NodePath = field(default_factory=lambda: NodePath("Inertia"))
     ignore_z: bool = True
+    delta_inputs: bool = False
 
 
 @Component()
@@ -277,6 +279,14 @@ class FallingMovement:
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
     debug: bool = False
+
+
+@Component()
+class FrictionalMovement:
+    '''
+    A slow-down is applied to the character.
+    '''
+    half_life: float = 5
 
 
 # @Component()
@@ -628,7 +638,8 @@ class Inertiing(System):
             # turns with you. If inertia.rotated_inertia = 0.0,
             # inertia.node will extrapolate the model's past rotation,
             # and the inertia vector will thus be kept still relative to
-            # the surroundings.
+            # the surroundings. And if it is between those, it will
+            # interpolate accordingly.
             inertia.node.set_hpr(
                 -character.last_rotation_speed * dt * (1 - inertia.rotated_inertia),
             )
@@ -640,11 +651,17 @@ class Inertiing(System):
             # Now we calculate the wanted speed difference, and scale it
             # within gameplay limits.
             wanted_speed_vector = character.translation / dt
-            delta_v = wanted_speed_vector - last_speed_vector
+            if inertia.delta_inputs:
+                delta_v = wanted_speed_vector
+            else:
+                delta_v = wanted_speed_vector - last_speed_vector
             max_delta_v = inertia.acceleration * dt
             if delta_v.length() > max_delta_v:
                 capped_delta_v = delta_v / delta_v.length() * max_delta_v
-                character.translation = (last_speed_vector + capped_delta_v) * dt
+            else:
+                capped_delta_v = delta_v
+
+            character.translation = (last_speed_vector + capped_delta_v) * dt
 
             if inertia.ignore_z:
                 character.translation.z = old_z
@@ -822,6 +839,51 @@ class Jumping(CollisionSystem):
             jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
                 falling_movement.inertia += jumping_movement.impulse
+
+
+class Frictioning(System):
+    '''
+    Applies a slow-down to the character.
+    '''
+    entity_filters = {
+        'character': and_filter([
+            Clock,
+            CharacterController,
+            FrictionalMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            dt = entity[Clock].game_time
+            character = entity[CharacterController]
+            friction = entity[FrictionalMovement]
+
+            character.translation *= 0.5 ** (dt / friction.half_life)
+
+
+class WalkSpeedLimiting(System):
+    '''
+    Applies a slow-down to the character.
+    '''
+    entity_filters = {
+        'character': and_filter([
+            Clock,
+            CharacterController,
+            WalkingMovement,
+        ]),
+    }
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            dt = entity[Clock].game_time
+            character = entity[CharacterController]
+            walking = entity[WalkingMovement]
+
+            v_length = character.translation.length()
+            if v_length > walking.speed * dt:
+                character.translation.normalize()
+                character.translation *= walking.speed * dt
 
 
 # Transcribe the final intended movement to the model, making it an

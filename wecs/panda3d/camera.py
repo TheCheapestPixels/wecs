@@ -69,10 +69,12 @@ class Camera:
     """
     A camera mount (camera + pivot).
 
+    :param:`fov`: Field of vision`
     :param:`camera`: Camera, by default `base.camera`
     :param:`pivot`: The pivot node.
     """
-    camera: NodePath = field(default_factory=lambda: base.camera)
+    fov: float = 45.0
+    camera: NodePath = field(default_factory=lambda: base.cam)
     pivot: NodePath = field(default_factory=lambda: NodePath("camera pivot"))
 
 
@@ -160,6 +162,7 @@ class PrepareCameras(System):
 
         camera.camera.reparent_to(camera.pivot)
         camera.pivot.reparent_to(model_proxy.field(entity))
+        camera.camera.node().get_lens().set_fov(camera.fov)
 
     def exit_filter_camera(self, entity):
         camera = entity[Camera]

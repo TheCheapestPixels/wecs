@@ -286,7 +286,7 @@ class FrictionalMovement:
     '''
     A slow-down is applied to the character.
     '''
-    half_life: float = 5
+    half_life: float = 5.0
 
 
 # @Component()

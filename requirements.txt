@@ -1,11 +1,8 @@
-cefpanda
-crayons
-graphviz
-jinja2
 panda3d
-panda3d-cefconsole
 panda3d-keybindings
 setuptools
 sphinx
 sphinx-autoapi
 sphinx_rtd_theme
+crayons
+graphviz

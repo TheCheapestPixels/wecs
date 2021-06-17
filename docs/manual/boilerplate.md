@@ -33,7 +33,6 @@ Integrations
 ------------
 
 FIXME:
-* cefconsole
 * keybindings
 * simplepbr
 * ???

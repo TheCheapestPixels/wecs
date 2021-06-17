@@ -25,7 +25,6 @@ from panda3d.core import Point3
 from panda3d.core import Vec3
 from panda3d.core import CollisionSphere
 
-# from wecs import cefconsole
 import wecs
 from wecs.core import NoSuchUID
 from wecs.core import ProxyType
@@ -243,9 +242,6 @@ system_types = [
     # Camera
     wecs.panda3d.camera.ReorientObjectCentricCamera,
     wecs.panda3d.camera.CollideCamerasWithTerrain,
-    # WECS subconsoles
-    # wecs.panda3d.cefconsole.UpdateWecsSubconsole,
-    # wecs.panda3d.cefconsole.WatchEntitiesInSubconsole,
     # Debug keys (`escape` to close, etc.)
     wecs.panda3d.debug.DebugTools,
 ]

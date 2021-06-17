@@ -13,7 +13,6 @@ looks like this:
    
    if __name__ == '__main__':
        boilerplate.run_game(
-           console=True,
            keybindings=True,
            module_name=os.path.dirname(__file__),
        )
@@ -38,7 +37,7 @@ from wecs.panda3d import ECSShowBase
 
 
 def run_game(game_module='game', module_name=None, simplepbr=False,
-             simplepbr_kwargs=None, console=False, keybindings=False,
+             simplepbr_kwargs=None, keybindings=False,
              debug_keys=False):
     """
     This function...
@@ -56,8 +55,6 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
     :param simplepbr: Initialize ``panda3d-simplepbr``.
     :param simplepbr_kwargs: key word argument to pass to 
         ``simplepbr.init()`` (if :param simplepbr: is True.) 
-    :param console: Set up the CEF-based console
-        (``panda3d-cefconsole``).
     :param keybindings: Set up ``panda3d-keybindings`` listener.
     :param module_name: Passed as ``config_module`` to the keybinding
         listener's ``add_device_listener``.
@@ -65,7 +62,6 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
         events to make four functions available:
 
         - ``Escape``: Close the application by calling ``sys.exit()``.
-        - ``F9``: open / close the CEF console (if present).
         - ``F10``: show / hide the frame rate meter.
         - ``F11``: Start a ``pdb`` session in the underlying terminal.
         - ``F12``: Connect to ``pstats``.
@@ -90,15 +86,6 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
         if simplepbr_kwargs is None:
             simplepbr_kwargs = {}  # i.e. dict(max_lights=1)
         simplepbr.init(**simplepbr_kwargs)
-
-    if console:
-        from cefconsole import add_console
-        from cefconsole import PythonSubconsole
-        if debug_keys:
-
-            add_console(subconsoles=[PythonSubconsole()], toggle="f9")
-        else:
-            add_console(subconsoles=[PythonSubconsole()])
 
     if debug_keys:
         base.accept('escape', sys.exit)
@@ -130,8 +117,6 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
     # better.
     if hasattr(game, 'system_types'):
         add_systems(game.system_types)
-    if console:
-        base.console.render_console()
 
     # And here we go...
     base.run()

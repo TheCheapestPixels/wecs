@@ -29,7 +29,7 @@ setup(
     python_requires='>=3.7, <4',
     install_requires=[],
     extras_require={
-        'panda3d': ['panda3d', 'cefpanda', 'jinja2'],
+        'panda3d': ['panda3d'],
         'graphviz': ['graphviz'],
         'bobthewizard': ['crayons'],
     },

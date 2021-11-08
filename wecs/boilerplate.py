@@ -14,7 +14,6 @@ looks like this:
    if __name__ == '__main__':
        boilerplate.run_game(
            keybindings=True,
-           module_name=os.path.dirname(__file__),
        )
 
 To write your game, implement the module ``game`` (either in a 
@@ -36,9 +35,10 @@ from wecs.core import System
 from wecs.panda3d import ECSShowBase
 
 
-def run_game(game_module='game', module_name=None, simplepbr=False,
+def run_game(game_module='game', simplepbr=False,
              simplepbr_kwargs=None, keybindings=False,
-             debug_keys=False):
+             debug_keys=False,
+             config=None, config_file=None, debug=None, assigner=None):
     """
     This function...
 
@@ -56,8 +56,6 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
     :param simplepbr_kwargs: key word argument to pass to 
         ``simplepbr.init()`` (if :param simplepbr: is True.) 
     :param keybindings: Set up ``panda3d-keybindings`` listener.
-    :param module_name: Passed as ``config_module`` to the keybinding
-        listener's ``add_device_listener``.
     :param debug_keys: The boilerplate will use Panda3D's key press
         events to make four functions available:
 
@@ -75,12 +73,19 @@ def run_game(game_module='game', module_name=None, simplepbr=False,
     if keybindings:
         from keybindings.device_listener import add_device_listener
         from keybindings.device_listener import SinglePlayerAssigner
-        add_device_listener(
-            config_module=module_name,
-            config_file="keybindings.toml",
-            debug=True,
-            assigner=SinglePlayerAssigner(),
-        )
+        dev_lis_args = {}
+        if config is not None:
+            dev_lis_args.update(dict(config=config))
+        if config_file is not None:
+            dev_lis_args.update(dict(config_file=config_file))
+        if debug is not None:
+            dev_lis_args.update(dict(debug=debug))
+        if assigner is not None:
+            dev_lis_args.update(dict(assigner=assigner))
+        else:
+            dev_lis_args.update(dict(assigner=SinglePlayerAssigner()))
+        add_device_listener(**dev_lis_args)
+
     if simplepbr is True:
         import simplepbr
         if simplepbr_kwargs is None:

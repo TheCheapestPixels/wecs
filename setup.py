@@ -22,7 +22,6 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.7',
     ],
     keywords='ecs panda3d',
     packages=find_packages(exclude=['tests', 'examples']),

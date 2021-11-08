@@ -1,16 +1,13 @@
-import wecs
-#from wecs.panda3d import behavior_trees
+from pychology.behavior_trees import Action
+from pychology.behavior_trees import Priorities
+from pychology.behavior_trees import Chain
+from pychology.behavior_trees import DoneOnPrecondition
+from pychology.behavior_trees import FailOnPrecondition
 
-from wecs.panda3d.behavior_trees import IdleWhenDoneTree
-from wecs.panda3d.behavior_trees import Action
-from wecs.panda3d.behavior_trees import Priorities
-from wecs.panda3d.behavior_trees import Chain
-from wecs.panda3d.behavior_trees import DebugPrint
-from wecs.panda3d.behavior_trees import DebugPrintOnEnter
-from wecs.panda3d.behavior_trees import DebugPrintOnReset
-from wecs.panda3d.behavior_trees import DoneOnPrecondition
-from wecs.panda3d.behavior_trees import FailOnPrecondition
+import wecs
+
 from wecs.panda3d.behavior_trees import DoneTimer
+from wecs.panda3d.behavior_trees import IdleWhenDoneTree
 
 
 def idle():

@@ -53,6 +53,9 @@ character = Aspect(
         wecs.mechanics.clock.Clock: dict(
             clock=lambda: factory(wecs.mechanics.clock.panda3d_clock),
         ),
+        wecs.panda3d.character.CharacterController: dict(
+            gravity=Vec3(0, 0, -30),
+        ),
     },
 )
 
@@ -76,9 +79,8 @@ walking = Aspect(
         wecs.panda3d.character.BumpingMovement,
         wecs.panda3d.character.FallingMovement,
         wecs.panda3d.character.JumpingMovement,
-        # wecs.panda3d.character.TurningBackToCameraMovement,
     ],
-    #overrides={wecs.panda3d.character.WalkingMovement:dict(turning_speed=400)}
+    overrides={wecs.panda3d.character.JumpingMovement:dict(impulse=Vec3(0, 0, 10))}
 )
 
 
@@ -120,6 +122,7 @@ third_person = Aspect(
         wecs.panda3d.camera.Camera,
         wecs.panda3d.camera.ObjectCentricCameraMode,
         wecs.panda3d.camera.CollisionZoom,
+        wecs.panda3d.character.TurningBackToCameraMovement,
     ],
 )
 

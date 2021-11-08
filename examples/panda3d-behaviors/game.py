@@ -34,9 +34,6 @@ system_types = [
     # Camera
     wecs.panda3d.camera.ReorientObjectCentricCamera,
     wecs.panda3d.camera.CollideCamerasWithTerrain,
-    # WECS subconsoles
-    # wecs.panda3d.cefconsole.UpdateWecsSubconsole,
-    # wecs.panda3d.cefconsole.WatchEntitiesInSubconsole,
     # Debug keys (`escape` to close, etc.)
     wecs.panda3d.debug.DebugTools,
 ]

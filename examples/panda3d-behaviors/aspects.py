@@ -27,7 +27,9 @@ game_map = Aspect(
         wecs.panda3d.mouseover.Pointable,
      ],
     overrides={
-        wecs.panda3d.prototype.Geometry: dict(file='../../assets/roadE.bam'),
+        wecs.panda3d.prototype.Geometry: dict(
+            file='../../assets/roadE.bam',
+        ),
         wecs.panda3d.prototype.CollidableGeometry: dict(
             mask=FALLING_MASK|BUMPING_MASK|CAMERA_MASK,
         ),
@@ -80,7 +82,11 @@ walking = Aspect(
         wecs.panda3d.character.FallingMovement,
         wecs.panda3d.character.JumpingMovement,
     ],
-    overrides={wecs.panda3d.character.JumpingMovement:dict(impulse=Vec3(0, 0, 10))}
+    overrides={
+        wecs.panda3d.character.JumpingMovement:dict(
+            impulse=Vec3(0, 0, 10),
+        ),
+    }
 )
 
 
@@ -93,6 +99,11 @@ avatar = Aspect(
         wecs.panda3d.mouseover.Targetable,
         Embodiable,
     ],
+    overrides={
+        wecs.panda3d.character.WalkingMovement: dict(
+            turning_speed=800.0,
+        ),
+    },
 )
 
 
@@ -106,8 +117,6 @@ disembodied = Aspect(
     ],
 )
 
-
-# Cameras
 
 first_person = Aspect(
     [
@@ -124,6 +133,12 @@ third_person = Aspect(
         wecs.panda3d.camera.CollisionZoom,
         wecs.panda3d.character.TurningBackToCameraMovement,
     ],
+    overrides={
+        wecs.panda3d.character.TurningBackToCameraMovement: dict(
+            view_axis_alignment=1.0,
+            threshold=-1.0,
+        ),
+    },
 )
 
 

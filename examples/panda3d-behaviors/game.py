@@ -3,7 +3,7 @@ import wecs
 import aspects
 import avatar_ui
 
-            
+
 # Each frame, run these systems. This defines the game itself.
 system_types = [
     # Set up newly added models/camera, tear down removed ones
@@ -19,7 +19,7 @@ system_types = [
     wecs.panda3d.ai.Think,
     wecs.panda3d.ai.BehaviorInhibitsDirectCharacterControl,
     wecs.panda3d.character.UpdateCharacter,
-    wecs.panda3d.camera.ReorientInputBasedOnCamera,
+    wecs.panda3d.character.ReorientInputBasedOnCamera,
     # Character controller
     wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,
@@ -27,7 +27,7 @@ system_types = [
     wecs.panda3d.character.Bumping,
     wecs.panda3d.character.Falling,
     wecs.panda3d.character.Jumping,
-    wecs.panda3d.character.TurningBackToCamera,
+    #wecs.panda3d.character.TurningBackToCamera,
     wecs.panda3d.character.ExecuteMovement,
     # Animation
     wecs.panda3d.animation.AnimateCharacter,

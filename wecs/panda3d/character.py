@@ -156,6 +156,11 @@ class CharacterController:
 
 
 @Component()
+class CameraReorientedInput:
+    node: NodePath = field(default_factory=lambda: NodePath('reorient'))
+
+
+@Component()
 class FloatingMovement:
     '''
     This character floats, moves with 6 degrees of freedom.
@@ -373,6 +378,52 @@ class UpdateCharacter(System):
             y = controller.move.y * xy_scaling
             z = controller.move.z * xy_scaling
             controller.translation = Vec3(x * dt, y * dt, z * dt)
+
+
+class ReorientInputBasedOnCamera(System):
+    """
+    By default, player input is relative to the character. If it is
+    viewed from a third person perspective, it is usually preferable to
+    rotate them so that they align with the camera instead.
+    """
+    entity_filters = {
+        'reorient': and_filter([
+            Camera,
+            ObjectCentricCameraMode,
+            CameraReorientedInput,
+            Proxy('model'),
+            CharacterController,
+        ]),
+    }
+    proxies = {
+        'model': ProxyType(Model, 'node'),
+    }
+
+    def enter_filter_reorient(self, entity):
+        camera = entity[Camera]
+        reorienter = entity[CameraReorientedInput]
+
+        reorienter.node.reparent_to(camera.camera)
+
+    def exit_filter_reorient(self, entity):
+        reorienter = entity[CameraReorientedInput]
+
+        reorienter.node.detach_node()
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['reorient']:
+            model_proxy = self.proxies['model']
+            model = entity[model_proxy.component_type]
+            model_node = model_proxy.field(entity)
+            character = entity[CharacterController]
+            camera = entity[Camera]
+            reorienter = entity[CameraReorientedInput]
+
+            reorienter.node.set_p(model_node, 0)
+            character.translation = model_node.get_relative_vector(
+                reorienter.node,
+                character.translation,
+            )
 
 
 # Movement systems

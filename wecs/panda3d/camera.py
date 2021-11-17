@@ -25,18 +25,18 @@ The functionality of all systems in detail:
 
 * `PrepareCameras`: Attach / detach cameras.
   * `Camera` and 'model' proxy: On entry, attach the camera to the
-    pivot, and the  pivot to the 'model' proxy's field (default: 
+    pivot, and the  pivot to the 'model' proxy's field (default:
     `Model.node`).
   * `Camera` and `MountedCameraMode`: On entry, reset the camera's and
     pivot's position and orientation to `0, 0, 0`.
   * `Camera` and `ObjectCentricCameraMode`: On update, reset the fields
-    `heading`, `pitch`, and `zoom` of `ObjectCentricCamera` to 0.  
+    `heading`, `pitch`, and `zoom` of `ObjectCentricCamera` to 0.
 * `ReorientObjectCentricCamera`: Update the camera mount
   * `Camera`, `ObjectCentricCamera`, and `Input`: On update, based on
     the player's input, set the mode's fields which control the camera's
     motion.
   * `Camera`, `ObjectCentricCamera`, and `Clock`: On update, adjust the
-    camera's and pivot's position and orientation. 
+    camera's and pivot's position and orientation.
 * `CollideCamerasWithTerrain`
   * `Camera`, `ObjectCentricCameraMode`, and `CollisionZoom`: If the
     camera is behind terrain, move it in front of it.
@@ -179,7 +179,7 @@ class PrepareCameras(System):
 
     def enter_filter_mount_actor(self, entity):
         camera = entity[Camera]
-        node = entity[Actor].node 
+        node = entity[Actor].node
         joint = node.expose_joint(None, 'modelRoot', 'camera')
         if joint:
             camera.pivot.set_pos((0, 0, 0))
@@ -198,23 +198,6 @@ class PrepareCameras(System):
             center.heading = 0
             center.pitch = 0
             center.zoom = 0
-
-
-class ReorientInputBasedOnCamera(System):
-    """
-    By default, player input is relative to the character. If it is 
-    viewed from a third person perspective, it is usually preferable to
-    rotate them so that they align with the camera instead.
-    """
-    entity_filters = {
-        'reorientable': and_filter([
-            Camera,
-            Proxy('model'),
-        ]),
-    }
-    proxies = {
-        'model': ProxyType(Model, 'node'),
-    }
 
 
 class ReorientObjectCentricCamera(System):
@@ -308,7 +291,6 @@ class CollideCamerasWithTerrain(System):
         zoom.traverser.add_collider(cn, zoom.queue)
 
     def update(self, entities_by_filter):
-        
         for entity in entities_by_filter['camera']:
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]

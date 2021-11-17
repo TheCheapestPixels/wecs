@@ -130,6 +130,7 @@ third_person = Aspect(
     [
         wecs.panda3d.camera.Camera,
         wecs.panda3d.camera.ObjectCentricCameraMode,
+        wecs.panda3d.character.CameraReorientedInput,
         wecs.panda3d.camera.CollisionZoom,
         wecs.panda3d.character.TurningBackToCameraMovement,
     ],

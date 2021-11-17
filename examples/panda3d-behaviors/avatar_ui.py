@@ -47,7 +47,7 @@ class AvatarUI(System):
         'parent': ProxyType(wecs.panda3d.prototype.Model, 'parent'),
     }
     input_context = 'select_entity'
-    
+
     def update(self, entities_by_filter):
         for entity in entities_by_filter['cursor']:
             input = entity[Input]
@@ -74,12 +74,12 @@ class AvatarUI(System):
         targeting_selection = False
         if selected_entity is not None and ui.selected_entity == ui.targeted_entity:
             targeting_selection = True
-        
+
         embodied = Embodiable in entity
         targeting_embodiable = None
         if mouseovered_entity is not None:
             targeting_embodiable = Embodiable in mouseovered_entity
-        
+
         # Now we can evaluate the player's input. First, he clicked to
         # select.
         if context.get('select', False):
@@ -141,6 +141,9 @@ class AvatarUI(System):
     def embody(self, entity, target):
         aspects.pc_mind.add(target)
         aspects.third_person.add(target)
+        print("embody")
+        #print(aspects.third_person)
+        #import pdb; pdb.set_trace()
         self.world.destroy_entity(entity)
 
     def jump_body(self, entity, target):

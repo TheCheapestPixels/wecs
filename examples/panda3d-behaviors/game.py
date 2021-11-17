@@ -19,6 +19,7 @@ system_types = [
     wecs.panda3d.ai.Think,
     wecs.panda3d.ai.BehaviorInhibitsDirectCharacterControl,
     wecs.panda3d.character.UpdateCharacter,
+    wecs.panda3d.camera.ReorientInputBasedOnCamera,
     # Character controller
     wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,

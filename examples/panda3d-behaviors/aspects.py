@@ -101,7 +101,7 @@ avatar = Aspect(
     ],
     overrides={
         wecs.panda3d.character.WalkingMovement: dict(
-            turning_speed=800.0,
+            turning_speed=540.0,
         ),
     },
 )
@@ -134,6 +134,9 @@ third_person = Aspect(
         wecs.panda3d.character.TurningBackToCameraMovement,
     ],
     overrides={
+        wecs.panda3d.camera.ObjectCentricCameraMode: dict(
+            turning_speed=180.0,
+        ),
         wecs.panda3d.character.TurningBackToCameraMovement: dict(
             view_axis_alignment=1.0,
             threshold=-1.0,

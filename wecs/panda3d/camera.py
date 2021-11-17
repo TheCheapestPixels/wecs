@@ -200,6 +200,23 @@ class PrepareCameras(System):
             center.zoom = 0
 
 
+class ReorientInputBasedOnCamera(System):
+    """
+    By default, player input is relative to the character. If it is 
+    viewed from a third person perspective, it is usually preferable to
+    rotate them so that they align with the camera instead.
+    """
+    entity_filters = {
+        'reorientable': and_filter([
+            Camera,
+            Proxy('model'),
+        ]),
+    }
+    proxies = {
+        'model': ProxyType(Model, 'node'),
+    }
+
+
 class ReorientObjectCentricCamera(System):
     """
     For entities with an object-centric camera and `Input`, read the

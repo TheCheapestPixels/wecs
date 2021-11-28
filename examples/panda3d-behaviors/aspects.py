@@ -126,24 +126,47 @@ first_person = Aspect(
 )
 
 
-third_person = Aspect(
+third_person_base = Aspect(
     [
         wecs.panda3d.camera.Camera,
         wecs.panda3d.camera.ObjectCentricCameraMode,
-        wecs.panda3d.character.CameraReorientedInput,
         wecs.panda3d.camera.CollisionZoom,
-        wecs.panda3d.character.TurningBackToCameraMovement,
+        wecs.panda3d.character.AutomaticTurningMovement,
     ],
     overrides={
         wecs.panda3d.camera.ObjectCentricCameraMode: dict(
             turning_speed=180.0,
         ),
+    },
+)
+
+
+third_person_action = Aspect(
+    [
+        third_person_base,
+        wecs.panda3d.character.TurningBackToCameraMovement,
+    ],
+    overrides={
         wecs.panda3d.character.TurningBackToCameraMovement: dict(
             view_axis_alignment=1.0,
-            threshold=-1.0,
+            threshold=0.2,
         ),
     },
 )
+
+
+third_person_twin_stick = Aspect(
+    [
+        third_person_base,
+        wecs.panda3d.character.CameraReorientedInput,
+    ],
+    overrides={
+    },
+)
+
+
+#third_person = third_person_action
+third_person = third_person_twin_stick
 
 
 # Player interface / AI.

@@ -89,6 +89,8 @@ Provided in this module are:
 """
 
 from math import sqrt
+from math import asin
+from math import pi
 from dataclasses import field
 
 from panda3d.core import Vec2, Vec3
@@ -239,13 +241,35 @@ class InertialMovement:
 
 
 @Component()
+class AutomaticTurningMovement:
+    '''
+    This character can be given a direction towards which to orient,
+    which will be used in addition or instead of that coming from
+    character input.
+
+    Examples are making the character face along the camera's view axis,
+    turning towards the direction in which they are moving, facing
+    towards a direction that the player is indicating, or staying locked
+    onto a target.
+
+    :param Vec3 direction: Direction in model space to turn towards
+    :param float alignment: 1.0 - turning rate
+    :param float angle:
+    '''
+    direction: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
+    alignment: float = 1.0
+    angle: float = 0.0
+
+
+@Component()
 class TurningBackToCameraMovement:
     '''
     This character has a tendency to face away from the camera.
 
     :param float view_axis_alignment: 1 - rate at which to turn away
+    :param float threshold: Minimum linear speed at which to turn.
     '''
-    view_axis_alignment: float = 1
+    view_axis_alignment: float = 1.0
     threshold: float = 0.2
 
 
@@ -560,6 +584,7 @@ class TurningBackToCamera(System):
         'character': and_filter([
             Proxy('character_node'),
             Clock,
+            AutomaticTurningMovement,
             TurningBackToCameraMovement,
             CharacterController,
             or_filter([
@@ -578,33 +603,95 @@ class TurningBackToCamera(System):
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]
             turning = entity[TurningBackToCameraMovement]
+            autoturning = entity[AutomaticTurningMovement]
+            model_node = self.proxies['character_node'].field(entity)
+
             if WalkingMovement in entity:
                 movement = entity[WalkingMovement]
             else:
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
 
-            if character.move.x ** 2 + character.move.y ** 2 > (turning.threshold * dt) ** 2:
-                # What's the angle to turn?
-                target_angle = camera.pivot.get_h() % 360
-                if target_angle > 180.0:
-                    target_angle = target_angle - 360.0
+            if character.move.xy.length() >= turning.threshold * dt:
+                autoturning.direction = model_node.get_relative_vector(
+                    camera.pivot,
+                    Vec3(0, 1, 0),
+                )
+                autoturning.alignment = turning.view_axis_alignment
+            else:
+                autoturning.alignment = 1.0
+
+
+class AutomaticallyTurnTowardsDirection(System):
+    '''
+        Turns character away from the camera.
+
+        Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.model.Model`
+            | :class:`wecs.panda3d.camera.ThirdPersonCamera`
+            | :class:`wecs.panda3d.camera.TurntableCamera`
+            | :class:`wecs.panda3d.model.Clock`
+    '''
+    entity_filters = {
+        'character': and_filter([
+            Proxy('character_node'),
+            Clock,
+            AutomaticTurningMovement,
+            CharacterController,
+            or_filter([
+                WalkingMovement,
+                FloatingMovement,
+            ]),
+        ])
+    }
+    proxies = {'character_node': ProxyType(Model, 'node')}
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            character = entity[CharacterController]
+            turning = entity[TurningBackToCameraMovement]
+            autoturning = entity[AutomaticTurningMovement]
+            model_node = self.proxies['character_node'].field(entity)
+            if WalkingMovement in entity:
+                movement = entity[WalkingMovement]
+            else:
+                movement = entity[FloatingMovement]
+            dt = entity[Clock].game_time
+
+            if autoturning.direction.xy.length() > 0.0:
+                direc = Vec2(autoturning.direction.xy)
+                direc.normalize()
+                angle = asin(direc.x) / pi * 180.0
+                if autoturning.direction.x < 0.0:
+                    angle *= -1
+                
                 # How far can we turn this frame? Clamp to that.
                 max_angle = movement.turning_speed * dt
-                if abs(target_angle) > max_angle:
-                    target_angle *= max_angle / abs(target_angle)
+                if abs(angle) > max_angle:
+                    angle *= max_angle / abs(angle)
                 # How much of that do we *want* to turn?
-                target_angle *= turning.view_axis_alignment
-
+                angle *= turning.view_axis_alignment
+    
                 # So let's turn, and clamp, in case we're already turning.
                 old_rotation = character.rotation.x
-                character.rotation.x += target_angle
-                character.rotation.x = min(character.rotation.x, movement.turning_speed * dt)
-                character.rotation.x = max(character.rotation.x, -movement.turning_speed * dt)
+                character.rotation.x += angle
+                character.rotation.x = min(
+                    character.rotation.x,
+                    movement.turning_speed * dt,
+                )
+                character.rotation.x = max(
+                    character.rotation.x,
+                    -movement.turning_speed * dt,
+                )
                 # Since the camera rotates with the character, we need
                 # to counteract that as well.
                 delta_rotation = character.rotation.x - old_rotation
-                camera.pivot.set_h(camera.pivot.get_h() - delta_rotation)
+                autoturning.angle = delta_rotation
+                
+                camera = entity[Camera]
+                camera.pivot.set_h(camera.pivot.get_h() - autoturning.angle)
 
 
 class FaceMovement(System):

@@ -141,9 +141,6 @@ class AvatarUI(System):
     def embody(self, entity, target):
         aspects.pc_mind.add(target)
         aspects.third_person.add(target)
-        print("embody")
-        #print(aspects.third_person)
-        #import pdb; pdb.set_trace()
         self.world.destroy_entity(entity)
 
     def jump_body(self, entity, target):

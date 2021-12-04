@@ -21,8 +21,6 @@ system_types = [
     wecs.panda3d.character.UpdateCharacter,
     # Fudge the inputs to achieve the kind of control that you want
     wecs.panda3d.character.ReorientInputBasedOnCamera,
-    #wecs.panda3d.character.TurningBackToCamera,
-    #wecs.panda3d.character.AutomaticallyTurnTowardsDirection,
     # Character controller
     wecs.panda3d.character.Floating,
     wecs.panda3d.character.Walking,
@@ -30,6 +28,8 @@ system_types = [
     wecs.panda3d.character.Bumping,
     wecs.panda3d.character.Falling,
     wecs.panda3d.character.Jumping,
+    wecs.panda3d.character.TurningBackToCamera,
+    wecs.panda3d.character.AutomaticallyTurnTowardsDirection,
     wecs.panda3d.character.ExecuteMovement,
     # Animation
     wecs.panda3d.animation.AnimateCharacter,

@@ -89,6 +89,7 @@ Provided in this module are:
 """
 
 from math import sqrt
+from math import copysign
 from math import asin
 from math import pi
 from dataclasses import field
@@ -606,20 +607,16 @@ class TurningBackToCamera(System):
             autoturning = entity[AutomaticTurningMovement]
             model_node = self.proxies['character_node'].field(entity)
 
-            if WalkingMovement in entity:
-                movement = entity[WalkingMovement]
-            else:
-                movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
 
+            autoturning.direction = model_node.get_relative_vector(
+                camera.pivot,
+                Vec3(0, 1, 0),
+            )
             if character.move.xy.length() >= turning.threshold * dt:
-                autoturning.direction = model_node.get_relative_vector(
-                    camera.pivot,
-                    Vec3(0, 1, 0),
-                )
                 autoturning.alignment = turning.view_axis_alignment
             else:
-                autoturning.alignment = 1.0
+                autoturning.alignment = 0.0
 
 
 class AutomaticallyTurnTowardsDirection(System):
@@ -651,8 +648,7 @@ class AutomaticallyTurnTowardsDirection(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             character = entity[CharacterController]
-            turning = entity[TurningBackToCameraMovement]
-            autoturning = entity[AutomaticTurningMovement]
+            turning = entity[AutomaticTurningMovement]
             model_node = self.proxies['character_node'].field(entity)
             if WalkingMovement in entity:
                 movement = entity[WalkingMovement]
@@ -660,38 +656,38 @@ class AutomaticallyTurnTowardsDirection(System):
                 movement = entity[FloatingMovement]
             dt = entity[Clock].game_time
 
-            if autoturning.direction.xy.length() > 0.0:
-                direc = Vec2(autoturning.direction.xy)
-                direc.normalize()
-                angle = asin(direc.x) / pi * 180.0
-                if autoturning.direction.x < 0.0:
-                    angle *= -1
+            if turning.direction.xy.length() > 0.0:
+                # How much would he have to adjust heading to face
+                # towards the given vector?
+                direc = Vec2(turning.direction.xy)
+                angle = Vec2(0, 1).signed_angle_deg(direc)
                 
                 # How far can we turn this frame? Clamp to that.
-                max_angle = movement.turning_speed * dt
+                max_angle = movement.turning_speed
                 if abs(angle) > max_angle:
-                    angle *= max_angle / abs(angle)
+                    angle = copysign(max_angle, angle)
                 # How much of that do we *want* to turn?
-                angle *= turning.view_axis_alignment
-    
+                angle *= turning.alignment
+
                 # So let's turn, and clamp, in case we're already turning.
                 old_rotation = character.rotation.x
                 character.rotation.x += angle
                 character.rotation.x = min(
                     character.rotation.x,
-                    movement.turning_speed * dt,
+                    max_angle,
                 )
                 character.rotation.x = max(
                     character.rotation.x,
-                    -movement.turning_speed * dt,
+                    -max_angle,
                 )
                 # Since the camera rotates with the character, we need
                 # to counteract that as well.
                 delta_rotation = character.rotation.x - old_rotation
-                autoturning.angle = delta_rotation
-                
+                turning.angle = delta_rotation
+
+                # FIXME: This needs to be its own system
                 camera = entity[Camera]
-                camera.pivot.set_h(camera.pivot.get_h() - autoturning.angle)
+                camera.pivot.set_h(camera.pivot.get_h() - delta_rotation)
 
 
 class FaceMovement(System):

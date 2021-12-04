@@ -148,7 +148,7 @@ third_person_action = Aspect(
     ],
     overrides={
         wecs.panda3d.character.TurningBackToCameraMovement: dict(
-            view_axis_alignment=1.0,
+            view_axis_alignment=0.4,
             threshold=0.2,
         ),
     },

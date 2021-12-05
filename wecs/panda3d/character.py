@@ -275,6 +275,11 @@ class TurningBackToCameraMovement:
 
 
 @Component()
+class TwinStickMovement:
+    pass
+
+
+@Component()
 class FacingMovement:
     pass
 
@@ -617,6 +622,43 @@ class TurningBackToCamera(System):
                 autoturning.alignment = turning.view_axis_alignment
             else:
                 autoturning.alignment = 0.0
+
+
+class DirectlyIndicateDirection(System):
+    entity_filters = {
+        'character': and_filter([
+            Proxy('model'),
+            AutomaticTurningMovement,
+            TwinStickMovement,
+            CharacterController,
+            Camera,
+            ObjectCentricCameraMode,
+        ])
+    }
+    proxies = {'model': ProxyType(Model, 'node')}
+    input_context = 'character_direction'
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['character']:
+            input = entity[Input]
+            if self.input_context in input.contexts:
+                context = base.device_listener.read_context(self.input_context)
+                self.process_input(context, entity)
+
+    def process_input(self, context, entity):
+        model_proxy = self.proxies['model']
+        model_node = model_proxy.field(entity)
+        camera = entity[Camera]
+        turning = entity[AutomaticTurningMovement]
+
+        turning.direction = model_node.get_relative_vector(
+            camera.pivot,
+            Vec3(
+                context['direction'].x,
+                context['direction'].y,
+                0,
+            ),
+        )
 
 
 class AutomaticallyTurnTowardsDirection(System):

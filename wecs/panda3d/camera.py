@@ -256,6 +256,33 @@ class ReorientObjectCentricCamera(System):
         if 'rotation' in context and context['rotation'] is not None:
             center.heading += -context['rotation'].x
             center.pitch += context['rotation'].y
+
+
+class ZoomObjectCentricCamera(System):
+    entity_filters = {
+        'camera': and_filter([
+            Clock,
+            Camera,
+            ObjectCentricCameraMode,
+        ]),
+        'input': and_filter([
+            Input,
+            Camera,
+            ObjectCentricCameraMode,
+        ]),
+    }
+    input_context = 'camera_zoom'
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['input']:
+            input = entity[Input]
+            if self.input_context in input.contexts:
+                context = base.device_listener.read_context(self.input_context)
+                self.process_input(entity, context)
+
+    def process_input(self, entity, context):
+        camera = entity[Camera]
+        center = entity[ObjectCentricCameraMode]
         center.distance *= 1 + context['zoom'] * 0.01  # FIXME: Respect actual time!
 
 

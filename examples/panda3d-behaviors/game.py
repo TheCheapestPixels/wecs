@@ -28,6 +28,7 @@ system_types = [
     wecs.panda3d.character.Bumping,
     wecs.panda3d.character.Falling,
     wecs.panda3d.character.Jumping,
+    wecs.panda3d.character.DirectlyIndicateDirection,
     wecs.panda3d.character.TurningBackToCamera,
     wecs.panda3d.character.AutomaticallyTurnTowardsDirection,
     wecs.panda3d.character.ExecuteMovement,
@@ -36,6 +37,7 @@ system_types = [
     wecs.panda3d.animation.Animate,
     # Camera
     wecs.panda3d.camera.ReorientObjectCentricCamera,
+    wecs.panda3d.camera.ZoomObjectCentricCamera,
     wecs.panda3d.camera.CollideCamerasWithTerrain,
     # Debug keys (`escape` to close, etc.)
     wecs.panda3d.debug.DebugTools,

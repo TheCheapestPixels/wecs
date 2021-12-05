@@ -101,7 +101,8 @@ avatar = Aspect(
     ],
     overrides={
         wecs.panda3d.character.WalkingMovement: dict(
-            turning_speed=540.0,
+            turning_speed=40.0,
+            #turning_speed=540.0,
         ),
     },
 )
@@ -159,14 +160,21 @@ third_person_twin_stick = Aspect(
     [
         third_person_base,
         wecs.panda3d.character.CameraReorientedInput,
+        wecs.panda3d.character.TwinStickMovement,
     ],
     overrides={
+        wecs.panda3d.camera.ObjectCentricCameraMode: dict(
+            pitch=-10.0,
+        ),
     },
 )
 
 
-#third_person = third_person_action
-third_person = third_person_twin_stick
+# The action camera uses the 'camera_movement' context to rotate the
+# camera. Twin stick uses the 'character_direction' context to indicate
+# where to face.
+third_person = third_person_action
+# third_person = third_person_twin_stick
 
 
 # Player interface / AI.
@@ -187,7 +195,9 @@ pc_mind = Aspect(
         wecs.panda3d.input.Input: dict(
             contexts={
                 'character_movement',
+                #'character_direction',
                 'camera_movement',
+                'camera_zoom',
                 'mouse_over',
                 'select_entity',
             },

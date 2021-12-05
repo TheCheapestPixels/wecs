@@ -363,10 +363,17 @@ class UpdateCharacter(System):
                 context = base.device_listener.read_context(self.input_context)
                 character = entity[CharacterController]
 
-                character.move.x = context['direction'].x
-                character.move.y = context['direction'].y
-                character.heading = -context['rotation'].x
-                character.pitch = context['rotation'].y
+                if context['direction'] is not None:
+                    character.move.x = context['direction'].x
+                    character.move.y = context['direction'].y
+                else:
+                    character.move = Vec2(0, 0)
+                if context['rotation'] is not None:
+                    character.heading = -context['rotation'].x
+                    character.pitch = context['rotation'].y
+                else:
+                    character.heading = 0
+                    character.pitch = 0
 
                 # Special movement modes.
                 # By default, you run ("sprint"), unless you press e, in
@@ -651,14 +658,17 @@ class DirectlyIndicateDirection(System):
         camera = entity[Camera]
         turning = entity[AutomaticTurningMovement]
 
-        turning.direction = model_node.get_relative_vector(
-            camera.pivot,
-            Vec3(
-                context['direction'].x,
-                context['direction'].y,
-                0,
-            ),
-        )
+        if context['direction'] is not None:
+            turning.direction = model_node.get_relative_vector(
+                camera.pivot,
+                Vec3(
+                    context['direction'].x,
+                    context['direction'].y,
+                    0,
+                ),
+            )
+        else:
+            turning.direction = Vec3(0, 1, 0)
 
 
 class AutomaticallyTurnTowardsDirection(System):

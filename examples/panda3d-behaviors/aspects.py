@@ -164,7 +164,7 @@ third_person_twin_stick = Aspect(
     ],
     overrides={
         wecs.panda3d.camera.ObjectCentricCameraMode: dict(
-            pitch=-10.0,
+            pitch=-30.0,
         ),
     },
 )
@@ -173,8 +173,8 @@ third_person_twin_stick = Aspect(
 # The action camera uses the 'camera_movement' context to rotate the
 # camera. Twin stick uses the 'character_direction' context to indicate
 # where to face.
-third_person = third_person_action
-# third_person = third_person_twin_stick
+#third_person = third_person_action
+third_person = third_person_twin_stick
 
 
 # Player interface / AI.
@@ -195,8 +195,8 @@ pc_mind = Aspect(
         wecs.panda3d.input.Input: dict(
             contexts={
                 'character_movement',
-                #'character_direction',
-                'camera_movement',
+                'character_direction',
+                #'camera_movement',
                 'camera_zoom',
                 'mouse_over',
                 'select_entity',

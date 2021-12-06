@@ -107,6 +107,7 @@ class ObjectCentricCameraMode:
     :param:`max_pitch`: Limit to looking up
     """
     focus_height: float = 1.8
+    initial_pitch: float = 0.0
     distance: float = 10.0
     turning_speed: float = 60.0
     heading: float = 0
@@ -190,6 +191,10 @@ class PrepareCameras(System):
         model = entity[model_proxy.component_type]
         camera = entity[Camera]
 
+    def enter_filter_center(self, entity):
+        camera = entity[Camera]
+        center = entity[ObjectCentricCameraMode]
+        camera.pivot.set_p(center.initial_pitch)
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['center']:

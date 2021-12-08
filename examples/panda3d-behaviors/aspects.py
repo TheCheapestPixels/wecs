@@ -101,8 +101,7 @@ avatar = Aspect(
     ],
     overrides={
         wecs.panda3d.character.WalkingMovement: dict(
-            turning_speed=40.0,
-            #turning_speed=540.0,
+            turning_speed=540.0,
         ),
     },
 )
@@ -127,54 +126,25 @@ first_person = Aspect(
 )
 
 
-third_person_base = Aspect(
+third_person = Aspect(
     [
         wecs.panda3d.camera.Camera,
         wecs.panda3d.camera.ObjectCentricCameraMode,
         wecs.panda3d.camera.CollisionZoom,
         wecs.panda3d.character.AutomaticTurningMovement,
+        wecs.panda3d.character.TurningBackToCameraMovement,
     ],
     overrides={
         wecs.panda3d.camera.ObjectCentricCameraMode: dict(
             turning_speed=180.0,
+            initial_pitch=-10.0,
         ),
-    },
-)
-
-
-third_person_action = Aspect(
-    [
-        third_person_base,
-        wecs.panda3d.character.TurningBackToCameraMovement,
-    ],
-    overrides={
         wecs.panda3d.character.TurningBackToCameraMovement: dict(
             view_axis_alignment=0.4,
             threshold=0.2,
         ),
     },
 )
-
-
-third_person_twin_stick = Aspect(
-    [
-        third_person_base,
-        wecs.panda3d.character.CameraReorientedInput,
-        wecs.panda3d.character.TwinStickMovement,
-    ],
-    overrides={
-        wecs.panda3d.camera.ObjectCentricCameraMode: dict(
-            pitch=-30.0,
-        ),
-    },
-)
-
-
-# The action camera uses the 'camera_movement' context to rotate the
-# camera. Twin stick uses the 'character_direction' context to indicate
-# where to face.
-#third_person = third_person_action
-third_person = third_person_twin_stick
 
 
 # Player interface / AI.
@@ -195,8 +165,7 @@ pc_mind = Aspect(
         wecs.panda3d.input.Input: dict(
             contexts={
                 'character_movement',
-                'character_direction',
-                #'camera_movement',
+                'camera_movement',
                 'camera_zoom',
                 'mouse_over',
                 'select_entity',
@@ -207,7 +176,6 @@ pc_mind = Aspect(
 
 
 npc_behaviors = lambda: dict(
-    #idle=wecs.panda3d.ai.idle,
     idle=behaviors.idle(),
     walk_to_entity=behaviors.walk_to_entity(),
 )
@@ -332,7 +300,7 @@ spawn_point_3 = {
 spawn_point_air = {
     wecs.panda3d.prototype.Model: dict(
         post_attach=lambda: wecs.panda3d.prototype.transform(
-            pos=Vec3(55, 250, 20),
+            pos=Vec3(55, 250, 5),
         ),
     ),
 }

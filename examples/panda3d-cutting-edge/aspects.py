@@ -287,8 +287,8 @@ rebecca = {
         file='models/character/rebecca.bam',
     ),
     wecs.panda3d.character.BumpingMovement: dict(
-        #solids=None,
-        solids=factory(rebecca_bumper),
+        solids=None,
+        #solids=factory(rebecca_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
         #solids=None,

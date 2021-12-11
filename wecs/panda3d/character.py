@@ -514,6 +514,8 @@ class CollisionSystem(System):
                     movement.queue,
                 )
                 node.set_python_tag(movement.tag_name, movement)
+                if movement.debug:
+                    nodepath.show()
 
         if movement.debug:
             scene_proxy = self.proxies['scene_node']

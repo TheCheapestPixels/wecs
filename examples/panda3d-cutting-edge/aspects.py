@@ -288,10 +288,12 @@ rebecca = {
     ),
     wecs.panda3d.character.BumpingMovement: dict(
         solids=None,
+        debug=True,
         #solids=factory(rebecca_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
         #solids=None,
+        debug=True,
         solids=factory(rebecca_lifter),
     ),
     #wecs.panda3d.mouseover.MouseOverable: dict(

@@ -502,11 +502,11 @@ class CollisionSystem(System):
             for nodepath in solids:
                 # FIXME: Colliding with multiple nodes is broken. See
                 # bumping and Falling as well.
-                movement.solids = {movement.node_name: {'node': nodepath}}
+                movement.solids = {movement.tag_name: {'node': nodepath}}
                 # FIXME: This is mostly copypasta from add_solid, which
                 # should be broken up.
                 node = nodepath.node()
-                #import pdb; pdb.set_trace()
+                nodepath.wrt_reparent_to(model_node)
                 node.set_from_collide_mask(movement.from_collide_mask)
                 node.set_into_collide_mask(movement.into_collide_mask)
                 movement.traverser.add_collider(
@@ -514,6 +514,7 @@ class CollisionSystem(System):
                     movement.queue,
                 )
                 node.set_python_tag(movement.tag_name, movement)
+                #import pdb; pdb.set_trace()
                 if movement.debug:
                     nodepath.show()
 
@@ -907,7 +908,7 @@ class Bumping(CollisionSystem):
     def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
         self.init_sensors(entity, movement)
-        bumper = movement.solids['bumper']
+        bumper = movement.solids[movement.tag_name]
         node = bumper['node']
         movement.queue.add_collider(node, node)
 
@@ -918,7 +919,7 @@ class Bumping(CollisionSystem):
             scene_node = scene_proxy.field(entity)
             character = entity[CharacterController]
             movement = entity[BumpingMovement]
-            bumper = movement.solids['bumper']
+            bumper = movement.solids[movement.tag_name]
             node = bumper['node']
             node.set_pos(character.translation)
             movement.traverser.traverse(scene_node)

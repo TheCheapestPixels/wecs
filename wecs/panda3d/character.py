@@ -3,7 +3,7 @@ The character controller mechanic is a collection of game-typical modes
 of movement, steered by user input or AI, applied to a node that
 represents the character.
 
-The core of the mechanic consists of the :class:`CharacterController`
+The core of the mechanic consists of the :class:`Mover`
 (which in the following will be abbreviated as `character`) component,
 and the systems :class:`UpdateCharacter` and :class:`ExecuteMovement`. 
 Additionally, :class:`Clock` and :class:`Input` see heavy use. Together,
@@ -13,7 +13,7 @@ these implement a basic character that can be moved around.
   * If the entity has an `Input` component, and
     `UpdateCharacter.input_context` (default: 'character_movement') is
     in `Input.contexts`, then that context is read from the device
-    listener and transcribed to the `CharacterController` component.
+    listener and transcribed to the `Mover` component.
     Specifically:
     * `character.move` (`x` and `y`) is set to the context's `direction`
     * `character.heading` is set to the negative of the context's
@@ -34,7 +34,7 @@ these implement a basic character that can be moved around.
     changed. It falls to the developer to set them some other way (e.g.
     by an AI system), otherwise the character will keep moving based on
     the last used input (which may be the values set at the
-    `CharacterController` component's creation).
+    `Mover` component's creation).
   * Time scaling is applied to these values, meaning that they are
     understood as being "requested movement per second", and are scaled
     down to the movement requested for just this frame.
@@ -59,12 +59,12 @@ these implement a basic character that can be moved around.
 
 Obviously, this alone does us not get us very far; But now we can add
 further mechanics between `UpdateCharacter` and `ExecuteMovement`. They
-can change the values on the `CharacterController` to make it conform
+can change the values on the `Mover` to make it conform
 with the level geometry, other entities present on it, and the physics
 and mechanics of the game world. In many cases, they consist simply of
 a component type that indicates that a character is subject to a certain
 movement type's rules (and with which parameters, e.g. maximum speed),
-and the system to process it (and the `CharacterController`).
+and the system to process it (and the `Mover`).
 
 Provided in this module are:
 
@@ -113,7 +113,9 @@ from wecs.mechanics.clock import Clock
 from wecs.panda3d.input import Input
 
 from wecs.panda3d.prototype import Model
+
 from wecs.panda3d.prototype import Geometry
+from wecs.panda3d.prototype import Mover
 
 from .camera import Camera
 from .camera import ObjectCentricCameraMode
@@ -124,69 +126,17 @@ from wecs.panda3d.constants import FALLING_MASK
 
 @Component()
 class CharacterController:
-    """
-    A moving entity.
-
-    :param Vec3 move: (0, 0, 0) - speed of relative movement
-    :param float heading: 0.0 - horizontal direction the character is headed
-    :param float pitch: 0.0 - vertical direction the character is headed
     :param bool jumps: False - Triggers a jump
     :param bool sprints: False - Is True when sprinting
     :param bool crouches: False - Is True when crouching
-
-    Remaining variables are calculated by systems.
-    """
-
-    # Input or AI
-    move: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    heading: float = 0.0
-    pitch: float = 0.0
     jumps: bool = False
     sprints: bool = False
     crouches: bool = False
-    # FIXME: Shouldn't be used anymore
-    max_heading: float = 90.0
-    max_pitch: float = 90.0
-    # Intention of movement
-    translation: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    rotation: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    clamp_pitch: bool = True
-    # Speed bookkeeping
-    last_translation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    last_rotation_speed: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    # Gravity vector
-    gravity: Vec3 = field(default_factory=lambda: Vec3(0, 0, -1))
 
 
 @Component()
 class CameraReorientedInput:
     node: NodePath = field(default_factory=lambda: NodePath('reorient'))
-
-
-@Component()
-class FloatingMovement:
-    '''
-    This character floats, moves with 6 degrees of freedom.
-
-    :param float speed: 200.0 - speed of relative forward movement
-    :param float turning_speed: 60.0 - rotation speed
-    '''
-    speed: float = 200.0
-    turning_speed: float = 60.0
-
-
-@Component()
-class WalkingMovement:
-    '''
-    This character walks, moves on the horizontal dimensions.
-
-    :param float speed: 10.0 - speed of relative forward movement
-    :param float backwards_multiplier: 0.5 - how much faster is backwards movement
-    :param float turning_speed: 60.0 - rotation speed
-    '''
-    speed: float = 10.0
-    backwards_multiplier: float = 0.5
-    turning_speed: float = 60.0
 
 
 @Component()
@@ -221,24 +171,6 @@ class JumpingMovement:
     '''
     speed: Vec3 = field(default_factory=lambda: Vec3(1, 1, 0))
     impulse: bool = field(default_factory=lambda: Vec3(0, 0, 5))
-
-
-@Component()
-class InertialMovement:
-    '''
-    This character can jump.
-
-    :param float acceleration: 30.0 - rate at which to accumulate speed
-    :param float rotated_inertia: 0.5 - how much rotation impacts inertia
-    :param NodePath node: NodePath("Inertia") - relative position based on inertia
-    :param bool ignore_z: True - ignore_z
-    :param bool delta_inputs: False - Inputs in the character indicate a wish for change in speed, not absolute speed
-    '''
-    acceleration: float = 30.0
-    rotated_inertia: float = 0.5
-    node: NodePath = field(default_factory=lambda: NodePath("Inertia"))
-    ignore_z: bool = True
-    delta_inputs: bool = False
 
 
 @Component()
@@ -285,55 +217,48 @@ class FacingMovement:
 
 
 @Component()
-class BumpingMovement:
+class WalkingMovement:
     '''
-    This character's horizontal movement is hindered by collisions.
+    This mover 'walks', moves on the horizontal dimensions.
+
+    :param float speed: 10.0 - speed of relative forward movement
+    :param float backwards_multiplier: 0.5 - how much faster is backwards movement
+    :param float turning_speed: 60.0 - rotation speed
     '''
-    tag_name: str = 'bumping'
-    from_collide_mask: int = BUMPING_MASK
-    into_collide_mask: int = BUMPING_MASK
-    # The name of the node to use if `solids` is None
-    node_name: str = 'bumper'
-    solids: dict = None  # field(default_factory=lambda: dict())
-    contacts: list = field(default_factory=list)
-    traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
-    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
-    debug: bool = False
+    speed: float = 10.0
+    backwards_multiplier: float = 0.5
+    turning_speed: float = 60.0
 
 
-@Component()
-class FallingMovement:
+class Walking(System):
     '''
-    This character falls unless on solid ground.
+        Components used :func:`wecs.core.and_filter` 'mover'
+            | :class:`wecs.panda3d.mover.Mover`
+            | :class:`wecs.panda3d.mover.WalkingMovement`
     '''
-    inertia: Vec3 = field(default_factory=lambda: Vec3(0, 0, 0))
-    ground_contact: bool = False
-    tag_name: str = 'falling'
-    from_collide_mask: int = FALLING_MASK
-    into_collide_mask: int = 0x0
-    node_name: str = 'lifter'
-    solids: dict = field(default_factory=lambda: dict())
-    contacts: list = field(default_factory=list)
-    traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
-    queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
-    debug: bool = False
+    entity_filters = {
+        'mover': and_filter([
+            Mover,
+            WalkingMovement,
+        ]),
+    }
 
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['mover']:
+            mover = entity[Mover]
+            walking = entity[WalkingMovement]
 
-@Component()
-class FrictionalMovement:
-    '''
-    A slow-down is applied to the character.
-    '''
-    half_life: float = 5.0
+            speed = walking.speed
+            if mover.sprints and SprintingMovement in entity:
+                speed = entity[SprintingMovement].speed
+            if mover.crouches and CrouchingMovement in entity:
+                speed = entity[CrouchingMovement].speed
+            if mover.move.y < 0:
+                speed *= walking.backwards_multiplier
 
-
-# @Component()
-# class MovementSensors:
-#     solids: dict = field(default_factory=lambda:dict())
-#     contacts: dict = field(default_factory=lambda:dict())
-#     traverser: CollisionTraverser = field(default_factory=lambda:CollisionTraverser())
-#     queue: CollisionHandlerQueue = field(default_factory=lambda:CollisionHandlerQueue())
-#     debug: bool = False
+            mover.translation *= speed
+            mover.rotation *= walking.turning_speed
+            mover.rotation.y = 0  # No pitch adjustment while walking
 
 
 class UpdateCharacter(System):
@@ -341,7 +266,7 @@ class UpdateCharacter(System):
     Convert input to character movement.
 
         Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.movement.Mover`
             | :class:`wecs.panda3d.model.Clock`
             | :class:`wecs.panda3d.mode.Model`
     '''
@@ -350,8 +275,10 @@ class UpdateCharacter(System):
             Proxy('character_node'),  # Not used, but required for a complete character
             Clock,
             CharacterController,
+            Mover,
         ]),
         'input': and_filter([
+            Mover,
             CharacterController,
             Input,
         ]),
@@ -364,19 +291,18 @@ class UpdateCharacter(System):
             input = entity[Input]
             if self.input_context in input.contexts:
                 context = base.device_listener.read_context(self.input_context)
-                character = entity[CharacterController]
-
+                mover = entity[Mover]
                 if context['direction'] is not None:
-                    character.move.x = context['direction'].x
-                    character.move.y = context['direction'].y
+                    mover.move.x = context['direction'].x
+                    mover.move.y = context['direction'].y
                 else:
-                    character.move = Vec2(0, 0)
+                    mover.move = Vec2(0, 0)
                 if context['rotation'] is not None:
-                    character.heading = -context['rotation'].x
-                    character.pitch = context['rotation'].y
+                    mover.heading = -context['rotation'].x
+                    mover.pitch = context['rotation'].y
                 else:
-                    character.heading = 0
-                    character.pitch = 0
+                    mover.heading = 0
+                    mover.pitch = 0
 
                 # Special movement modes.
                 # By default, you run ("sprint"), unless you press e, in
@@ -384,6 +310,7 @@ class UpdateCharacter(System):
                 # overrides walking and running. Jump by pressing space.
                 # This logic is implemented by the Walking system. Here,
                 # only intention is signalled.
+                character = entity[Character]
                 character.jumps = False
                 character.sprints = False
                 character.crouches = False
@@ -396,7 +323,7 @@ class UpdateCharacter(System):
                     character.crouches = context['crouch']
 
         for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
+            controller = entity[Mover]
             dt = entity[Clock].game_time
 
             # Rotation
@@ -432,7 +359,7 @@ class ReorientInputBasedOnCamera(System):
             ObjectCentricCameraMode,
             CameraReorientedInput,
             Proxy('model'),
-            CharacterController,
+            Mover,
         ]),
     }
     proxies = {
@@ -455,156 +382,17 @@ class ReorientInputBasedOnCamera(System):
             model_proxy = self.proxies['model']
             model = entity[model_proxy.component_type]
             model_node = model_proxy.field(entity)
-            character = entity[CharacterController]
+            mover = entity[Mover]
             camera = entity[Camera]
             reorienter = entity[CameraReorientedInput]
 
             reorienter.node.set_p(model_node, 0)
-            character.translation = model_node.get_relative_vector(
+            mover.translation = model_node.get_relative_vector(
                 reorienter.node,
-                character.translation,
+                mover.translation,
             )
 
 
-# Movement systems
-#
-# These systems modify the intended movement as stored on the
-# character controller to conform to external constraints. A
-# recurring element is that systems will run a collision
-# traverser, so first we provide a helpful base class.
-
-class CollisionSystem(System):
-    proxies = {
-        'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Model, 'parent'),
-    }
-
-    def init_sensors(self, entity, movement):
-        solids = movement.solids
-        if solids is not None:  # Create solids from specification
-            for tag, solid in solids.items():
-                solid['tag'] = tag
-                if solid['shape'] is CollisionSphere:
-                    shape = CollisionSphere(solid['center'], solid['radius'])
-                    self.add_shape(entity, movement, solid, shape)
-                elif solid['shape'] is CollisionCapsule:
-                    shape = CollisionCapsule(
-                        solid['end_a'],
-                        solid['end_b'],
-                        solid['radius'],
-                    )
-                    self.add_shape(entity, movement, solid, shape)
-        else:  # Fetch solids from model
-            model_node = self.proxies['character_node'].field(entity)
-            solids = model_node.find_all_matches(
-                f'**/{movement.node_name}',
-            )
-            for nodepath in solids:
-                # FIXME: Colliding with multiple nodes is broken. See
-                # bumping and Falling as well.
-                movement.solids = {movement.node_name: {'node': nodepath}}
-                # FIXME: This is mostly copypasta from add_solid, which
-                # should be broken up.
-                node = nodepath.node()
-                #import pdb; pdb.set_trace()
-                node.set_from_collide_mask(movement.from_collide_mask)
-                node.set_into_collide_mask(movement.into_collide_mask)
-                movement.traverser.add_collider(
-                    nodepath,
-                    movement.queue,
-                )
-                node.set_python_tag(movement.tag_name, movement)
-                if movement.debug:
-                    nodepath.show()
-
-        if movement.debug:
-            scene_proxy = self.proxies['scene_node']
-            scene = entity[scene_proxy.component_type]
-            scene_node = scene_proxy.field(entity)
-
-            movement.traverser.show_collisions(scene_node)
-
-    def add_shape(self, entity, movement, solid, shape):
-        model_proxy = self.proxies['character_node']
-        model = entity[model_proxy.component_type]
-        model_node = model_proxy.field(entity)
-
-        node = NodePath(
-            CollisionNode(
-                f'{movement.tag_name}-{solid["tag"]}',
-            ),
-        )
-        solid['node'] = node
-        node.node().add_solid(shape)
-        node.node().set_from_collide_mask(movement.from_collide_mask)
-        node.node().set_into_collide_mask(movement.into_collide_mask)
-        node.reparent_to(model_node)
-        movement.traverser.add_collider(node, movement.queue)
-        node.set_python_tag(movement.tag_name, movement)
-        if 'debug' in solid and solid['debug']:
-            node.show()
-
-    def run_sensors(self, entity, movement):
-        scene_proxy = self.proxies['scene_node']
-        scene = entity[scene_proxy.component_type]
-        scene_node = scene_proxy.field(entity)
-
-        movement.traverser.traverse(scene_node)
-        movement.queue.sort_entries()
-        movement.contacts = movement.queue.entries
-
-
-class Floating(System):
-    '''
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.character.FloatingMovement`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            FloatingMovement,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
-            floating = entity[FloatingMovement]
-
-            character.translation *= floating.speed
-            character.rotation *= floating.turning_speed
-
-
-class Walking(System):
-    '''
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.character.WalkingMovement`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            CharacterController,
-            WalkingMovement,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
-            walking = entity[WalkingMovement]
-
-            speed = walking.speed
-            if character.sprints and SprintingMovement in entity:
-                speed = entity[SprintingMovement].speed
-            if character.crouches and CrouchingMovement in entity:
-                speed = entity[CrouchingMovement].speed
-            if character.move.y < 0:
-                speed *= walking.backwards_multiplier
-
-            character.translation *= speed
-            character.rotation *= walking.turning_speed
-            character.rotation.y = 0  # No pitch adjustment while walking
 
 
 class TurningBackToCamera(System):
@@ -613,7 +401,7 @@ class TurningBackToCamera(System):
 
         Components used :func:`wecs.core.and_filter` 'character'
             | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
-            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.movement.Mover''
             | :class:`wecs.panda3d.model.Model`
             | :class:`wecs.panda3d.camera.ThirdPersonCamera`
             | :class:`wecs.panda3d.camera.TurntableCamera`
@@ -625,7 +413,7 @@ class TurningBackToCamera(System):
             Clock,
             AutomaticTurningMovement,
             TurningBackToCameraMovement,
-            CharacterController,
+            Mover,
             or_filter([
                 WalkingMovement,
                 FloatingMovement,
@@ -638,7 +426,7 @@ class TurningBackToCamera(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
+            mover = entity[Mover]
             camera = entity[Camera]
             center = entity[ObjectCentricCameraMode]
             turning = entity[TurningBackToCameraMovement]
@@ -651,7 +439,7 @@ class TurningBackToCamera(System):
                 camera.pivot,
                 Vec3(0, 1, 0),
             )
-            if character.move.xy.length() >= turning.threshold * dt:
+            if mover.move.xy.length() >= turning.threshold * dt:
                 autoturning.alignment = turning.view_axis_alignment
             else:
                 autoturning.alignment = 0.0
@@ -663,7 +451,7 @@ class DirectlyIndicateDirection(System):
             Proxy('model'),
             AutomaticTurningMovement,
             TwinStickMovement,
-            CharacterController,
+            Mover,
             Camera,
             ObjectCentricCameraMode,
         ])
@@ -703,7 +491,7 @@ class AutomaticallyTurnTowardsDirection(System):
 
         Components used :func:`wecs.core.and_filter` 'character'
             | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
-            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.Mover`
             | :class:`wecs.panda3d.model.Model`
             | :class:`wecs.panda3d.camera.ThirdPersonCamera`
             | :class:`wecs.panda3d.camera.TurntableCamera`
@@ -714,7 +502,7 @@ class AutomaticallyTurnTowardsDirection(System):
             Proxy('character_node'),
             Clock,
             AutomaticTurningMovement,
-            CharacterController,
+            Mover,
             or_filter([
                 WalkingMovement,
                 FloatingMovement,
@@ -725,7 +513,7 @@ class AutomaticallyTurnTowardsDirection(System):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
+            mover = entity[Mover]
             turning = entity[AutomaticTurningMovement]
             model_node = self.proxies['character_node'].field(entity)
             if WalkingMovement in entity:
@@ -748,19 +536,19 @@ class AutomaticallyTurnTowardsDirection(System):
                 angle *= turning.alignment
 
                 # So let's turn, and clamp, in case we're already turning.
-                old_rotation = character.rotation.x
-                character.rotation.x += angle
-                character.rotation.x = min(
-                    character.rotation.x,
+                old_rotation = mover.rotation.x
+                mover.rotation.x += angle
+                mover.rotation.x = min(
+                    mover.rotation.x,
                     max_angle,
                 )
-                character.rotation.x = max(
-                    character.rotation.x,
+                mover.rotation.x = max(
+                    mover.rotation.x,
                     -max_angle,
                 )
                 # Since the camera rotates with the character, we need
                 # to counteract that as well.
-                delta_rotation = character.rotation.x - old_rotation
+                delta_rotation = mover.rotation.x - old_rotation
                 turning.angle = delta_rotation
 
                 # FIXME: This needs to be its own system
@@ -773,7 +561,7 @@ class FaceMovement(System):
         'character': and_filter([
             Proxy('geometry_node'),
             Clock,
-            CharacterController,
+            Mover,
             FacingMovement,
         ]),
     }
@@ -785,236 +573,9 @@ class FaceMovement(System):
             geometry = entity[geometry_proxy.component_type]
             geometry_node = geometry_proxy.field(entity)
 
-            controller = entity[CharacterController]
+            controller = entity[Mover]
             x, y, z = controller.last_translation_speed
             geometry_node.look_at(x, y, 0)
-
-
-class Inertiing(System):
-    '''
-        Accelerate character, as opposed to an instantanious velocity.
-
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.character.InertialMovement`
-            | :class:`wecs.panda3d.model.Model`
-            | :class:`wecs.model.clock`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            Proxy('character_node'),
-            Clock,
-            CharacterController,
-            InertialMovement,
-        ]),
-    }
-    proxies = {'character_node': ProxyType(Model, 'node')}
-
-    def enter_filter_character(self, entity):
-        movement = entity[InertialMovement]
-        model_proxy = self.proxies['character_node']
-        model = entity[model_proxy.component_type]
-        model_node = model_proxy.field(entity)
-
-        movement.node.reparent_to(model_node)
-        movement.node.set_hpr(0, 0, 0)
-
-    def exit_filter_character(self, entity):
-        # detach InertialMovement.node
-        import pdb;
-        pdb.set_trace()
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            dt = entity[Clock].game_time
-            model_proxy = self.proxies['character_node']
-            model = entity[model_proxy.component_type]
-            model_node = model_proxy.field(entity)
-            character = entity[CharacterController]
-            inertia = entity[InertialMovement]
-
-            # Usually you want to apply inertia only to x and y, and
-            # ignore z, so we cache it.
-            old_z = character.translation.z
-
-            # We use inertia.node to represent "last frame's" model
-            # orientation, scaled for how much inertia you'd like to
-            # keep model-relative. Wow, what a sentence...
-            # When you run forward and turn around, where should inertia
-            # carry you? Physically, towards your new backward
-            # direction. The opposite end of the scale of realism is
-            # that your inertia vector turns around with you, and keeps
-            # carrying you towards your new forward.
-            # So if inertia.rotated_inertia = 1.0, inertia.node will
-            # be aligned with the model, and thus the inertia vector
-            # turns with you. If inertia.rotated_inertia = 0.0,
-            # inertia.node will extrapolate the model's past rotation,
-            # and the inertia vector will thus be kept still relative to
-            # the surroundings. And if it is between those, it will
-            # interpolate accordingly.
-            inertia.node.set_hpr(
-                -character.last_rotation_speed * dt * (1 - inertia.rotated_inertia),
-            )
-            last_speed_vector = model_node.get_relative_vector(
-                inertia.node,
-                character.last_translation_speed,
-            )
-
-            # Now we calculate the wanted speed difference, and scale it
-            # within gameplay limits.
-            wanted_speed_vector = character.translation / dt
-            if inertia.delta_inputs:
-                delta_v = wanted_speed_vector
-            else:
-                delta_v = wanted_speed_vector - last_speed_vector
-            max_delta_v = inertia.acceleration * dt
-            if delta_v.length() > max_delta_v:
-                capped_delta_v = delta_v / delta_v.length() * max_delta_v
-            else:
-                capped_delta_v = delta_v
-
-            character.translation = (last_speed_vector + capped_delta_v) * dt
-
-            if inertia.ignore_z:
-                character.translation.z = old_z
-
-
-class Bumping(CollisionSystem):
-    '''
-        Stop the character from moving through solid geometry.
-
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.model.Scene`
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.character.BumpingMovement`
-            | :class:`wecs.panda3d.model.Clock`
-            | :class:`wecs.panda3d.model.Model`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            Proxy('scene_node'),
-            Proxy('character_node'),
-            Clock,
-            CharacterController,
-            BumpingMovement,
-        ]),
-    }
-    proxies = {
-        'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Model, 'parent'),
-    }
-
-    def enter_filter_character(self, entity):
-        movement = entity[BumpingMovement]
-        self.init_sensors(entity, movement)
-        bumper = movement.solids['bumper']
-        node = bumper['node']
-        movement.queue.add_collider(node, node)
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            scene_proxy = self.proxies['scene_node']
-            scene = entity[scene_proxy.component_type]
-            scene_node = scene_proxy.field(entity)
-            character = entity[CharacterController]
-            movement = entity[BumpingMovement]
-            bumper = movement.solids['bumper']
-            node = bumper['node']
-            node.set_pos(character.translation)
-            movement.traverser.traverse(scene_node)
-            character.translation = node.get_pos()
-
-
-class Falling(CollisionSystem):
-    '''
-        Stop the character from falling through solid geometry.
-
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.character.FallingMovement`
-            | :class:`wecs.panda3d.model.Clock`
-            | :class:`wecs.panda3d.model.Model`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            Proxy('scene_node'),
-            Proxy('character_node'),
-            Clock,
-            CharacterController,
-            FallingMovement,
-        ]),
-    }
-    proxies = {
-        'character_node': ProxyType(Model, 'node'),
-        'scene_node': ProxyType(Model, 'parent'),
-    }
-
-    def enter_filter_character(self, entity):
-        self.init_sensors(entity, entity[FallingMovement])
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            # Adjust the falling inertia by gravity, and position the
-            # lifter collider.
-            self.predict_falling(entity)
-            # Find collisions with the ground.
-            self.run_sensors(entity, entity[FallingMovement])
-            # Adjust the character's intended translation so that his
-            # falling is stoppedby the ground.
-            self.fall_and_land(entity)
-
-    def predict_falling(self, entity):
-        character = entity[CharacterController]
-        model_proxy = self.proxies['character_node']
-        model = entity[model_proxy.component_type]
-        model_node = model_proxy.field(entity)
-        scene_proxy = self.proxies['scene_node']
-        scene = entity[scene_proxy.component_type]
-        scene_node = scene_proxy.field(entity)
-
-        clock = entity[Clock]
-        controller = entity[CharacterController]
-        falling_movement = entity[FallingMovement]
-
-        # Adjust inertia by gravity
-        frame_gravity = character.gravity * clock.game_time
-        falling_movement.inertia += frame_gravity
-
-        # Adjust lifter collider by inertia
-        frame_inertia = falling_movement.inertia * clock.game_time
-        lifter = falling_movement.solids['lifter']
-        node = lifter['node']
-        node.set_pos(lifter['center'] + controller.translation + frame_inertia)
-
-    def fall_and_land(self, entity):
-        falling_movement = entity[FallingMovement]
-        clock = entity[Clock]
-        controller = entity[CharacterController]
-
-        falling_movement.ground_contact = False
-        frame_falling = falling_movement.inertia * clock.game_time
-        if len(falling_movement.contacts) > 0:
-            lifter = falling_movement.solids['lifter']['node']
-            center = falling_movement.solids['lifter']['center']
-            radius = falling_movement.solids['lifter']['radius']
-            height_corrections = []
-            for contact in falling_movement.contacts:
-                if contact.get_surface_normal(lifter).get_z() > 0.0:
-                    contact_point = contact.get_surface_point(lifter) - center
-                    x = contact_point.get_x()
-                    y = contact_point.get_y()
-                    # x**2 + y**2 + z**2 = radius**2
-                    # z**2 = radius**2 - (x**2 + y**2)
-                    expected_z = -sqrt(radius ** 2 - (x ** 2 + y ** 2))
-                    actual_z = contact_point.get_z()
-                    height_corrections.append(actual_z - expected_z)
-            if height_corrections:
-                frame_falling += Vec3(0, 0, max(height_corrections))
-                falling_movement.inertia = Vec3(0, 0, 0)
-                falling_movement.ground_contact = True
-
-        # Now we know how falling / lifting influences the character move
-        controller.translation += frame_falling
 
 
 class Jumping(CollisionSystem):
@@ -1022,7 +583,7 @@ class Jumping(CollisionSystem):
         Make the character jump.
 
         Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.Mover`
             | :class:`wecs.panda3d.character.JumpingMovement`
             | :class:`wecs.panda3d.character.FallingMovement`
             | :class:`wecs.panda3d.model.Scene`
@@ -1034,7 +595,7 @@ class Jumping(CollisionSystem):
             Proxy('scene_node'),
             Proxy('character_node'),
             Clock,
-            CharacterController,
+            Mover,
             JumpingMovement,
             FallingMovement,
         ]),
@@ -1046,32 +607,11 @@ class Jumping(CollisionSystem):
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            controller = entity[CharacterController]
+            controller = entity[Mover]
             falling_movement = entity[FallingMovement]
             jumping_movement = entity[JumpingMovement]
             if controller.jumps and falling_movement.ground_contact:
                 falling_movement.inertia += jumping_movement.impulse
-
-
-class Frictioning(System):
-    '''
-    Applies a slow-down to the character.
-    '''
-    entity_filters = {
-        'character': and_filter([
-            Clock,
-            CharacterController,
-            FrictionalMovement,
-        ]),
-    }
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            dt = entity[Clock].game_time
-            character = entity[CharacterController]
-            friction = entity[FrictionalMovement]
-
-            character.translation *= 0.5 ** (dt / friction.half_life)
 
 
 class WalkSpeedLimiting(System):
@@ -1081,7 +621,7 @@ class WalkSpeedLimiting(System):
     entity_filters = {
         'character': and_filter([
             Clock,
-            CharacterController,
+            Mover,
             WalkingMovement,
         ]),
     }
@@ -1089,58 +629,13 @@ class WalkSpeedLimiting(System):
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
             dt = entity[Clock].game_time
-            character = entity[CharacterController]
+            mover = entity[Mover]
             walking = entity[WalkingMovement]
 
-            v_length = character.translation.length()
+            v_length = mover.translation.length()
             if v_length > walking.speed * dt:
-                character.translation.normalize()
-                character.translation *= walking.speed * dt
-
-
-# Transcribe the final intended movement to the model, making it an
-# actual movement.
-
-class ExecuteMovement(System):
-    '''
-    Transcribe the final intended movement to the model, making it an actual movement.
-
-        Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.model.Model`
-            | :class:`wecs.panda3d.model.Clock`
-    '''
-    entity_filters = {
-        'character': and_filter([
-            Proxy('character_node'),
-            Clock,
-            CharacterController,
-        ]),
-    }
-    proxies = {'character_node': ProxyType(Model, 'node')}
-
-    def update(self, entities_by_filter):
-        for entity in entities_by_filter['character']:
-            model_proxy = self.proxies['character_node']
-            model = entity[model_proxy.component_type]
-            character = entity[CharacterController]
-            dt = entity[Clock].game_time
-
-            # Translation: Simple self-relative movement for now.
-            model_node = model_proxy.field(entity)
-            model_node.set_pos(model_node, character.translation)
-            character.last_translation_speed = character.translation / dt
-
-            # Rotation
-            if character.clamp_pitch:
-                # Adjust intended pitch until it won't move you over a pole.
-                preclamp_pitch = model_node.get_p() + character.rotation.y
-                clamped_pitch = max(min(preclamp_pitch, 89.9), -89.9)
-                character.rotation.y += clamped_pitch - preclamp_pitch
-
-            model_node.set_hpr(model_node, character.rotation)
-            character.last_rotation_speed = character.rotation / dt
-
+                mover.translation.normalize()
+                mover.translation *= walking.speed * dt
 
 ### Stamina
 
@@ -1172,21 +667,21 @@ class UpdateStamina(System):
     Disable or allow character's movement abilities based on stamina.
 
         Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.Mover`
             | :class:`wecs.panda3d.character.Stamina`
             | :class:`wecs.panda3d.model.Clock`
     '''
     entity_filters = {
         'character': and_filter([
             Clock,
-            CharacterController,
+            Mover,
             Stamina,
         ]),
     }
 
     def update(self, entities_by_filter):
         for entity in entities_by_filter['character']:
-            character = entity[CharacterController]
+            character = entity[Mover]
             stamina = entity[Stamina]
             dt = entity[Clock].timestep
             av = abs(character.move.x) + abs(character.move.y)

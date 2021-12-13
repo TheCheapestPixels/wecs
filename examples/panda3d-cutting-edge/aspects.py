@@ -262,9 +262,10 @@ non_player_character = Aspect(
 def rebecca_bumper():
     return {
         'bumper': dict(
-            shape=CollisionSphere,
-            center=Vec3(0.0, 0.0, 1.0),
-            radius=0.7,
+            #shape=CollisionSphere,
+            #center=Vec3(0.0, 0.0, 1.0),
+            #radius=0.7,
+            node_name='bumper',
             debug=True,
         ),
     }
@@ -273,9 +274,10 @@ def rebecca_bumper():
 def rebecca_lifter():
     return {
         'lifter': dict(
-            shape=CollisionSphere,
-            center=Vec3(0.0, 0.0, 0.25),
-            radius=0.5,
+            #shape=CollisionSphere,
+            #center=Vec3(0.0, 0.0, 0.25),
+            #radius=0.5,
+            node_name='lifter',
             debug=True,
         ),
     }
@@ -291,11 +293,13 @@ rebecca = {
     wecs.panda3d.character.BumpingMovement: dict(
         node_name='bumper',
         tag_name='bumper',
-        solids=None,
-        #solids=factory(rebecca_bumper),
+        #solids=None,
+        solids=factory(rebecca_bumper),
         debug=True,
     ),
     wecs.panda3d.character.FallingMovement: dict(
+        node_name='lifter',
+        tag_name='lifter',
         #solids=None,
         solids=factory(rebecca_lifter),
         debug=True,

@@ -481,42 +481,54 @@ class CollisionSystem(System):
 
     def init_sensors(self, entity, movement):
         solids = movement.solids
-        if solids is not None:  # Create solids from specification
-            for tag, solid in solids.items():
+        for tag, solid in solids.items():
+            if 'shape' in solid:  # Create solids from specification
                 solid['tag'] = tag
                 if solid['shape'] is CollisionSphere:
                     shape = CollisionSphere(solid['center'], solid['radius'])
-                    self.add_shape(entity, movement, solid, shape)
                 elif solid['shape'] is CollisionCapsule:
                     shape = CollisionCapsule(
                         solid['end_a'],
                         solid['end_b'],
                         solid['radius'],
                     )
-                    self.add_shape(entity, movement, solid, shape)
-        else:  # Fetch solids from model
-            model_node = self.proxies['character_node'].field(entity)
-            solids = model_node.find_all_matches(
-                f'**/{movement.node_name}',
-            )
-            for nodepath in solids:
-                # FIXME: Colliding with multiple nodes is broken. See
-                # bumping and Falling as well.
-                movement.solids = {movement.tag_name: {'node': nodepath}}
+                else:
+                    raise Exception("Shape unsupported.")
+                self.add_shape(entity, movement, solid, shape)
+            else:  # Fetch solids from model
+                model_node = self.proxies['character_node'].field(entity)
+                solid_nodes = model_node.find_all_matches(
+                    f'**/{movement.node_name}',
+                )
+                # FIXME: This is a temporary prevention of sing multiple
+                # solids in one movement system. This whole .py needs to
+                # be refactored to account for multiple ones.
+                assert len(solids) == 1
+                solid_node = solid_nodes[0]
+
+                solid['node'] = solid_node
+                solid_objects = solid_node.node().get_solids()
+                # FIXME: As above, please refactor this .py to account
+                # for multiple solids.
+                assert len(solids) == 1
+                solid_object = solid_objects[0]
+                solid['shape'] = solid_object.type
+                if solid['shape'] == CollisionSphere:
+                    solid['center'] = solid_object.center
+                    solid['radius'] = solid_object.radius
+
                 # FIXME: This is mostly copypasta from add_solid, which
                 # should be broken up.
-                node = nodepath.node()
-                nodepath.wrt_reparent_to(model_node)
+                node = solid_node.node()
                 node.set_from_collide_mask(movement.from_collide_mask)
                 node.set_into_collide_mask(movement.into_collide_mask)
                 movement.traverser.add_collider(
-                    nodepath,
+                    solid_node,
                     movement.queue,
                 )
                 node.set_python_tag(movement.tag_name, movement)
-                #import pdb; pdb.set_trace()
                 if movement.debug:
-                    nodepath.show()
+                    solid_node.show()
 
         if movement.debug:
             scene_proxy = self.proxies['scene_node']

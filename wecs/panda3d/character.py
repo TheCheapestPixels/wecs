@@ -997,7 +997,14 @@ class Falling(CollisionSystem):
         frame_inertia = falling_movement.inertia * clock.game_time
         lifter = falling_movement.solids['lifter']
         node = lifter['node']
+
+        # FIXME: Debug code
+        before = node.get_pos()
         node.set_pos(lifter['center'] + controller.translation + frame_inertia)
+        print(f"old {before.get_z():1.3f}"
+              f"new {node.get_z():1.3f}"
+              f"inertia {frame_inertia.get_z():1.3f}"
+              )
 
     def fall_and_land(self, entity):
         falling_movement = entity[FallingMovement]
@@ -1006,27 +1013,36 @@ class Falling(CollisionSystem):
 
         falling_movement.ground_contact = False
         frame_falling = falling_movement.inertia * clock.game_time
+
+        height_corrections = [] # FIXME: Delete this debug line
+
         if len(falling_movement.contacts) > 0:
             lifter = falling_movement.solids['lifter']['node']
             center = falling_movement.solids['lifter']['center']
             radius = falling_movement.solids['lifter']['radius']
+
             height_corrections = []
             for contact in falling_movement.contacts:
-                if contact.get_surface_normal(lifter).get_z() > 0.0:
-                    contact_point = contact.get_surface_point(lifter) - center
-                    x = contact_point.get_x()
-                    y = contact_point.get_y()
-                    # x**2 + y**2 + z**2 = radius**2
-                    # z**2 = radius**2 - (x**2 + y**2)
-                    expected_z = -sqrt(radius ** 2 - (x ** 2 + y ** 2))
-                    actual_z = contact_point.get_z()
-                    height_corrections.append(actual_z - expected_z)
+                # FIXME: We're assuming a sphere here.
+                # We only use the lower half of the sphere, no equator.
+                #if contact.get_surface_normal(lifter).get_z() > 0.0:
+                contact_point = contact.get_surface_point(lifter)
+                contact_point -= center  # In solid's space
+                xy = contact_point.xy
+                expected_z = -sqrt(radius ** 2 - xy.length() ** 2)
+                actual_z = contact_point.get_z()
+                height_corrections.append(actual_z - expected_z)
             if height_corrections:
                 frame_falling += Vec3(0, 0, max(height_corrections))
                 falling_movement.inertia = Vec3(0, 0, 0)
                 falling_movement.ground_contact = True
+                print(height_corrections)
 
         # Now we know how falling / lifting influences the character move
+        #print(height_corrections, frame_falling)
+        #lifter = falling_movement.solids['lifter']['node']
+        #print(lifter.get_pos(), frame_falling)
+
         controller.translation += frame_falling
 
 

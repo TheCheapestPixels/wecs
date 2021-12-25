@@ -506,6 +506,8 @@ class CollisionSystem(System):
                 assert len(solids) == 1
                 solid_node = solid_nodes[0]
 
+                solid_node.reparent_to(model_node)
+
                 solid['node'] = solid_node
                 solid_objects = solid_node.node().get_solids()
                 # FIXME: As above, please refactor this .py to account
@@ -1000,11 +1002,12 @@ class Falling(CollisionSystem):
 
         # FIXME: Debug code
         before = node.get_pos()
-        node.set_pos(lifter['center'] + controller.translation + frame_inertia)
-        print(f"old {before.get_z():1.3f}"
-              f"new {node.get_z():1.3f}"
-              f"inertia {frame_inertia.get_z():1.3f}"
-              )
+        node.set_pos(controller.translation + frame_inertia)
+        #node.set_pos(lifter['center'] + controller.translation + frame_inertia)
+        #print(f"old {before.get_z():1.3f}"
+        #      f"new {node.get_z():1.3f}"
+        #      f"inertia {frame_inertia.get_z():1.3f}"
+        #      )
 
     def fall_and_land(self, entity):
         falling_movement = entity[FallingMovement]
@@ -1036,7 +1039,7 @@ class Falling(CollisionSystem):
                 frame_falling += Vec3(0, 0, max(height_corrections))
                 falling_movement.inertia = Vec3(0, 0, 0)
                 falling_movement.ground_contact = True
-                print(height_corrections)
+                #print(height_corrections)
 
         # Now we know how falling / lifting influences the character move
         #print(height_corrections, frame_falling)

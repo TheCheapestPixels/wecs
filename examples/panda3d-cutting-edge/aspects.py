@@ -274,10 +274,10 @@ def rebecca_bumper():
 def rebecca_lifter():
     return {
         'lifter': dict(
-            #node_name='lifter',
-            shape=CollisionSphere,
-            center=Vec3(0.0, 0.0, 0.25),
-            radius=0.5,
+            node_name='lifter',
+            #shape=CollisionSphere,
+            #center=Vec3(0.0, 0.0, 0.5),
+            #radius=0.5,
             debug=True,
         ),
     }
@@ -290,19 +290,19 @@ rebecca = {
     wecs.panda3d.prototype.Actor: dict(
         file='models/character/rebecca.bam',
     ),
-    #wecs.panda3d.character.BumpingMovement: dict(
-    #    node_name='bumper',
-    #    tag_name='bumper',
-    #    solids=factory(rebecca_bumper),
-    #    #debug=True,
-    #),
+    wecs.panda3d.character.BumpingMovement: dict(
+        node_name='bumper',
+        tag_name='bumper',
+        solids=factory(rebecca_bumper),
+        #debug=True,
+    ),
     wecs.panda3d.character.FallingMovement: dict(
         node_name='lifter',
         tag_name='lifter',
         solids=factory(rebecca_lifter),
-        debug=True,
+        #debug=True,
     ),
-    #wecs.panda3d.mouseover.MouseOverable: dict(
-    #    solid=CollisionSphere(0, 0, 1, 1),
-    #),
+    wecs.panda3d.mouseover.MouseOverable: dict(
+        solid=CollisionSphere(0, 0, 1, 1),
+    ),
 }

@@ -292,7 +292,9 @@ class BumpingMovement:
     tag_name: str = 'bumping'
     from_collide_mask: int = BUMPING_MASK
     into_collide_mask: int = BUMPING_MASK
-    solids: dict = field(default_factory=lambda: dict())
+    # The name of the node to use if `solids` is None
+    node_name: str = 'bumper'
+    solids: dict = None  # field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
     queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerPusher)
@@ -309,6 +311,7 @@ class FallingMovement:
     tag_name: str = 'falling'
     from_collide_mask: int = FALLING_MASK
     into_collide_mask: int = 0x0
+    node_name: str = 'lifter'
     solids: dict = field(default_factory=lambda: dict())
     contacts: list = field(default_factory=list)
     traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
@@ -479,17 +482,56 @@ class CollisionSystem(System):
     def init_sensors(self, entity, movement):
         solids = movement.solids
         for tag, solid in solids.items():
-            solid['tag'] = tag
-            if solid['shape'] is CollisionSphere:
-                shape = CollisionSphere(solid['center'], solid['radius'])
+            if 'shape' in solid:  # Create solids from specification
+                solid['tag'] = tag
+                if solid['shape'] is CollisionSphere:
+                    shape = CollisionSphere(solid['center'], solid['radius'])
+                elif solid['shape'] is CollisionCapsule:
+                    shape = CollisionCapsule(
+                        solid['end_a'],
+                        solid['end_b'],
+                        solid['radius'],
+                    )
+                else:
+                    raise Exception("Shape unsupported.")
                 self.add_shape(entity, movement, solid, shape)
-            elif solid['shape'] is CollisionCapsule:
-                shape = CollisionCapsule(
-                    solid['end_a'],
-                    solid['end_b'],
-                    solid['radius'],
+            else:  # Fetch solids from model
+                model_node = self.proxies['character_node'].field(entity)
+                solid_nodes = model_node.find_all_matches(
+                    f'**/{movement.node_name}',
                 )
-                self.add_shape(entity, movement, solid, shape)
+                # FIXME: This is a temporary prevention of sing multiple
+                # solids in one movement system. This whole .py needs to
+                # be refactored to account for multiple ones.
+                assert len(solids) == 1
+                solid_node = solid_nodes[0]
+
+                solid_node.reparent_to(model_node)
+
+                solid['node'] = solid_node
+                solid_objects = solid_node.node().get_solids()
+                # FIXME: As above, please refactor this .py to account
+                # for multiple solids.
+                assert len(solids) == 1
+                solid_object = solid_objects[0]
+                solid['shape'] = solid_object.type
+                if solid['shape'] == CollisionSphere:
+                    solid['center'] = solid_object.center
+                    solid['radius'] = solid_object.radius
+
+                # FIXME: This is mostly copypasta from add_solid, which
+                # should be broken up.
+                node = solid_node.node()
+                node.set_from_collide_mask(movement.from_collide_mask)
+                node.set_into_collide_mask(movement.into_collide_mask)
+                movement.traverser.add_collider(
+                    solid_node,
+                    movement.queue,
+                )
+                node.set_python_tag(movement.tag_name, movement)
+                if movement.debug:
+                    solid_node.show()
+
         if movement.debug:
             scene_proxy = self.proxies['scene_node']
             scene = entity[scene_proxy.component_type]
@@ -502,12 +544,11 @@ class CollisionSystem(System):
         model = entity[model_proxy.component_type]
         model_node = model_proxy.field(entity)
 
-        node = NodePath(CollisionNode(
-            '{}-{}'.format(
-                movement.tag_name,
-                solid['tag'],
-            )
-        ))
+        node = NodePath(
+            CollisionNode(
+                f'{movement.tag_name}-{solid["tag"]}',
+            ),
+        )
         solid['node'] = node
         node.node().add_solid(shape)
         node.node().set_from_collide_mask(movement.from_collide_mask)
@@ -881,7 +922,7 @@ class Bumping(CollisionSystem):
     def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
         self.init_sensors(entity, movement)
-        bumper = movement.solids['bumper']
+        bumper = movement.solids[movement.tag_name]
         node = bumper['node']
         movement.queue.add_collider(node, node)
 
@@ -892,7 +933,7 @@ class Bumping(CollisionSystem):
             scene_node = scene_proxy.field(entity)
             character = entity[CharacterController]
             movement = entity[BumpingMovement]
-            bumper = movement.solids['bumper']
+            bumper = movement.solids[movement.tag_name]
             node = bumper['node']
             node.set_pos(character.translation)
             movement.traverser.traverse(scene_node)
@@ -958,7 +999,8 @@ class Falling(CollisionSystem):
         frame_inertia = falling_movement.inertia * clock.game_time
         lifter = falling_movement.solids['lifter']
         node = lifter['node']
-        node.set_pos(lifter['center'] + controller.translation + frame_inertia)
+
+        node.set_pos(controller.translation + frame_inertia)
 
     def fall_and_land(self, entity):
         falling_movement = entity[FallingMovement]
@@ -967,19 +1009,21 @@ class Falling(CollisionSystem):
 
         falling_movement.ground_contact = False
         frame_falling = falling_movement.inertia * clock.game_time
+
         if len(falling_movement.contacts) > 0:
             lifter = falling_movement.solids['lifter']['node']
             center = falling_movement.solids['lifter']['center']
             radius = falling_movement.solids['lifter']['radius']
+
             height_corrections = []
             for contact in falling_movement.contacts:
+                # FIXME: We're assuming a sphere here.
+                # We only use the lower half of the sphere, no equator.
                 if contact.get_surface_normal(lifter).get_z() > 0.0:
-                    contact_point = contact.get_surface_point(lifter) - center
-                    x = contact_point.get_x()
-                    y = contact_point.get_y()
-                    # x**2 + y**2 + z**2 = radius**2
-                    # z**2 = radius**2 - (x**2 + y**2)
-                    expected_z = -sqrt(radius ** 2 - (x ** 2 + y ** 2))
+                    contact_point = contact.get_surface_point(lifter)
+                    contact_point -= center  # In solid's space
+                    xy = contact_point.xy
+                    expected_z = -sqrt(radius ** 2 - xy.length() ** 2)
                     actual_z = contact_point.get_z()
                     height_corrections.append(actual_z - expected_z)
             if height_corrections:
@@ -987,7 +1031,7 @@ class Falling(CollisionSystem):
                 falling_movement.inertia = Vec3(0, 0, 0)
                 falling_movement.ground_contact = True
 
-        # Now we know how falling / lifting influences the character move
+        # Now we know how falling / lifting influences the movement
         controller.translation += frame_falling
 
 

@@ -51,7 +51,8 @@ aspects.game_map.add(
     base.ecs_world.create_entity(name="Level geometry"),
     overrides={
         wecs.panda3d.prototype.Geometry: dict(
-            file='models/scenes/lona.bam',
+            #file='models/scenes/lona.bam',
+            file='rectangle_map.bam',
         ),
     },
 )
@@ -62,11 +63,24 @@ aspects.player_character.add(
     base.ecs_world.create_entity(name="Playerbecca"),
     overrides={
         wecs.panda3d.spawnpoints.SpawnAt: dict(
-            name='spawn_player_a',
+            #name='spawn_player_a',
+            name='spawn_point_a_0',
         ),
         **aspects.rebecca,
     },
 )
+
+
+for i in range(21):
+    aspects.non_player_character.add(
+        base.ecs_world.create_entity(name="NonPlayerbecca_{i}"),
+        overrides={
+            wecs.panda3d.spawnpoints.SpawnAt: dict(
+                name=f'spawn_point_b_{i}',
+            ),
+            **aspects.rebecca,
+        },
+    )
 
 
 # aspects.non_player_character.add(

@@ -2,13 +2,14 @@ import sys
 from math import sin
 from math import cos
 
-from direct.showbase.ShowBase import ShowBase
-
 from panda3d.core import CardMaker
 from panda3d.core import Material
 from panda3d.core import TextureStage
 from panda3d.core import DirectionalLight
 from panda3d.core import AmbientLight
+
+from direct.showbase.ShowBase import ShowBase
+from direct.filter.CommonFilters import CommonFilters
 
 import simplepbr
 
@@ -41,26 +42,37 @@ card_np = base.render.attach_new_node(cm.generate())
 
 
 mat = Material()
-mat.set_ambient((0.5, 0.5, 0.5, 1))
-mat.set_diffuse((0.5, 0.5, 0.5, 1))
-#mat.set_emission((0.1, 0.1, 0.1, 1))
-mat.set_emission((0.0, 0.0, 0.0, 1))
-mat.set_shininess(5.0)
-mat.set_specular((0, 1, 0, 1))
-mat.set_metallic(0.1)
-mat.set_roughness(0.1)
+mat.set_base_color((1.0, 1.0, 1.0, 1))
+mat.set_emission((100.0, 100.0, 100.0, 1))
+mat.set_metallic(1.0)
+mat.set_roughness(1.0)
 card_np.set_material(mat)
 
 
-ts = TextureStage('Modulate')
+#mat.set_diffuse((0.5, 0.5, 0.5, 1))
+#mat.set_emission((0.0, 0.0, 0.0, 1))
+#mat.set_shininess(5.0)
+#mat.set_specular((0, 1, 0, 1))
+#mat.set_metallic(1.0)
+#mat.set_roughness(1.0)
+
+
+# Base color, a.k.a. Modulate; Gets multiplied with mat.base_color
+ts = TextureStage('BaseColor') # a.k.a. Modulate
 ts.set_mode(TextureStage.M_modulate)
 card_np.set_texture(ts, base.loader.loadTexture('Gravel022_1K_Color.png'))
+# Emission; Gets multiplied with mat.emission
 ts = TextureStage('Emission')
 ts.set_mode(TextureStage.M_emission)
-card_np.set_texture(ts, base.loader.loadTexture('maps/color-grid.rgb'))
-ts = TextureStage('Selector')
+card_np.set_texture(ts, base.loader.loadTexture('rgb_abc.png'))
+# Ambient Occlusion, Roughness, Metallicity
+# R: Ambient Occlusion
+# G: Roughness; Gets multiplied with mat.roughness
+# B: Metallicity; Gets multiplied with mat.metallic
+ts = TextureStage('MetalRoughness') # a.k.a. Selector
 ts.set_mode(TextureStage.M_selector)
 card_np.set_texture(ts, base.loader.loadTexture('Gravel022_1K_Roughness.png'))
+# Normals
 ts = TextureStage('Normals')
 ts.set_mode(TextureStage.M_normal)
 card_np.set_texture(ts, base.loader.loadTexture('Gravel022_1K_NormalGL.png'))
@@ -76,13 +88,13 @@ card_np.set_texture(ts, base.loader.loadTexture('Gravel022_1K_NormalGL.png'))
 ambient_light = base.render.attach_new_node(AmbientLight('ambient'))
 ambient_light.node().set_color((.1, .1, .1, 1))
 base.render.set_light(ambient_light)
-
-
-direct_light = base.render.attach_new_node(DirectionalLight('light'))
-direct_light.node().set_color((.2, .2, .2, 1))
-base.render.set_light(direct_light)
-direct_light.set_pos(0, -10, 10)
-direct_light.look_at(0, 0, 0)
+# 
+# 
+# direct_light = base.render.attach_new_node(DirectionalLight('light'))
+# direct_light.node().set_color((.2, .2, .2, 1))
+# base.render.set_light(direct_light)
+# direct_light.set_pos(0, -10, 10)
+# direct_light.look_at(0, 0, 0)
 
 
 def rotate_card(task):

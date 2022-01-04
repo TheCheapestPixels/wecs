@@ -64,14 +64,14 @@ aspects.player_character.add(
     overrides={
         wecs.panda3d.spawnpoints.SpawnAt: dict(
             #name='spawn_player_a',
-            name='spawn_point_a_0',
+            name='spawn_point_a_10',
         ),
         **aspects.rebecca,
     },
 )
 
 
-for i in range(21):
+for i in range(0, 21, 9):
     aspects.non_player_character.add(
         base.ecs_world.create_entity(name="NonPlayerbecca_{i}"),
         overrides={
@@ -81,6 +81,8 @@ for i in range(21):
             **aspects.rebecca,
         },
     )
+
+
 
 
 # aspects.non_player_character.add(

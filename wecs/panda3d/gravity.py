@@ -25,7 +25,7 @@ class AdjustGravity(System):
             character = entity[CharacterController]
             model_node = self.proxies['model_node'].field(entity)
             
-            gravity_node = base.render
+            gravity_node = base.render.find('**/gravity')
             attractor = model_node.get_pos(gravity_node)
             attractor.y = 0.0
             attractor.normalize()

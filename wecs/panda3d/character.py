@@ -624,15 +624,18 @@ class Walking(System):
 
 class TurningBackToCamera(System):
     '''
-        Turns character away from the camera.
+        Sets ´AutomaticTurningMovement.direction´ parallel to the 
+        camera's view axis.
 
         Components used :func:`wecs.core.and_filter` 'character'
+            | :class:`wecs.panda3d.model.Model`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.character.AutomaticTurningMovement`
             | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
             | :class:`wecs.panda3d.character.CharacterController`
-            | :class:`wecs.panda3d.model.Model`
-            | :class:`wecs.panda3d.camera.ThirdPersonCamera`
-            | :class:`wecs.panda3d.camera.TurntableCamera`
-            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.character.WalkingMovement` or :class:`wecs.panda3d.character.FloatingMovement`
+o            | :class:`wecs.panda3d.camera.Camera`
+            | :class:`wecs.panda3d.camera.ObjectCentricCamera`
     '''
     entity_filters = {
         'character': and_filter([
@@ -714,15 +717,16 @@ class DirectlyIndicateDirection(System):
 
 class AutomaticallyTurnTowardsDirection(System):
     '''
-        Turns character away from the camera.
+        Turns character towards ´AutomaticTurningMovement.direction´ 
+        (and the camera in the opposite direction, so the net result is
+        no camera movement in scene space).
 
         Components used :func:`wecs.core.and_filter` 'character'
-            | :class:`wecs.panda3d.character.TurningBackToCameraMovement`
-            | :class:`wecs.panda3d.character.CharacterController`
             | :class:`wecs.panda3d.model.Model`
-            | :class:`wecs.panda3d.camera.ThirdPersonCamera`
-            | :class:`wecs.panda3d.camera.TurntableCamera`
             | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.character.AutomaticTurningMovement`
+            | :class:`wecs.panda3d.character.CharacterController`
+            | :class:`wecs.panda3d.character.WalkingMovement` or :class:`wecs.panda3d.character.FloatingMovement`
     '''
     entity_filters = {
         'character': and_filter([
@@ -784,6 +788,16 @@ class AutomaticallyTurnTowardsDirection(System):
 
 
 class FaceMovement(System):
+    '''
+        Orient the model along the velocity vector projected onto the
+        x/y plane; Model points to where it moves, but stays upright.
+
+        Components used
+            | :class:`wecs.panda3d.character.FacingMovement`
+            | :class:`wecs.panda3d.prototype.Geometry`
+            | :class:`wecs.panda3d.model.Clock`
+            | :class:`wecs.panda3d.character.CharacterController`
+    '''
     entity_filters = {
         'character': and_filter([
             Proxy('geometry_node'),

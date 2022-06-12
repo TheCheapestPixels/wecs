@@ -69,7 +69,8 @@ class Camera:
     """
     A camera mount (camera + pivot).
 
-    :param:`fov`: Field of vision`
+    :param:`fov`: Field of vision; The angle between the view axis and
+        the left/right edge of the camera frustum.
     :param:`camera`: Camera, by default `base.camera`
     :param:`pivot`: The pivot node.
     """
@@ -157,12 +158,11 @@ class PrepareCameras(System):
     }
 
     def enter_filter_camera(self, entity):
-        model_proxy = self.proxies['model']
-        model = entity[model_proxy.component_type]
+        model_node = self.proxies['model'].field(entity)
         camera = entity[Camera]
 
         camera.camera.reparent_to(camera.pivot)
-        camera.pivot.reparent_to(model_proxy.field(entity))
+        camera.pivot.reparent_to(model_node)
         camera.camera.node().get_lens().set_fov(camera.fov)
 
     def exit_filter_camera(self, entity):

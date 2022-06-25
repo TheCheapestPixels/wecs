@@ -9,3 +9,4 @@ import wecs.panda3d.spawnpoints
 import wecs.panda3d.mouseover
 import wecs.panda3d.avatar_ui
 import wecs.panda3d.gravity
+import wecs.panda3d.interaction

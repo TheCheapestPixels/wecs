@@ -35,6 +35,18 @@ game_map = Aspect(
 )
 
 
+# Props
+
+prop = Aspect(
+    [
+        wecs.panda3d.prototype.Model,
+        wecs.panda3d.prototype.Geometry,
+        wecs.panda3d.character.BumpingMovement,
+        wecs.panda3d.spawnpoints.SpawnAt,
+    ],
+)
+
+
 # There are characters, which are points in space that can be moved
 # around using the `CharacterController`, using either player input or
 # AI control.
@@ -304,5 +316,19 @@ rebecca = {
     ),
     wecs.panda3d.mouseover.MouseOverable: dict(
         solid=CollisionSphere(0, 0, 1, 1),
+    ),
+}
+
+
+# A park bench
+
+bench = {
+    wecs.panda3d.prototype.Geometry: dict(
+        file='models/props/parkbench.bam',
+    ),
+    wecs.panda3d.character.BumpingMovement: dict(
+        node_name='bumper',
+        tag_name='bumper',
+        #debug=True,
     ),
 }

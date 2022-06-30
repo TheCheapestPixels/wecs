@@ -83,7 +83,15 @@ for i in range(0, 21, 9):
     )
 
 
-
+aspects.prop.add(
+    base.ecs_world.create_entity(name="Park bench"),
+    overrides={
+        wecs.panda3d.spawnpoints.SpawnAt: dict(
+            name=f'spawn_point_a_2',
+        ),
+        **aspects.bench,
+    },
+)
 
 # aspects.non_player_character.add(
 #     base.ecs_world.create_entity(name="NonPlayerbecca_1"),

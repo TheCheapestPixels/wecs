@@ -474,6 +474,47 @@ class ReorientInputBasedOnCamera(System):
 # traverser, so first we provide a helpful base class.
 
 class CollisionSystem(System):
+    """
+    Quite a lot of mechanics use collision detection. This class is
+    a base class for such systems. It assumes that there is a component,
+    here called a movement (because all the early collision systems were
+    for character controller movement systems), that fulfills a set of
+    requirements.
+
+    The movement has a `solids` field that contains a dictionary where
+    each entry (identified by the `tag` used as the key) specifies what
+    collision solids to use for which role. There are two ways to
+    describe the collision geometry being used; Either an entry contains
+    the data required to create the solid, or to find it on a loaded
+    model.
+
+    To define the solid from data, the entry needs to have a `shape` key
+    with a Panda3D collision solid class for its value (FIXME: Currently
+    only CollisionSphere and CollisionCapsule are supported), and 
+    additional values depending on the collision solid class. To get the
+    solid from the model, have a `node_name` field instead. Do note that
+    the name must be unique on the model.
+    For example:
+    
+    ```
+    movement.solids = dict(
+        first_solid=dict(
+            shape=CollisionSphere,
+            center=(0, 0, 1),
+            radius=1,
+        ),
+        second_solid=dict(
+            shape=CollisionCapsule,
+            end_a=(0, 0, 0.5),
+            end_b=(0, 0, 1.0),
+            radius=0.5,
+        ),
+        third_solid=dict(
+            node_name='my_solid',
+        ),
+    )
+    ```
+    """
     proxies = {
         'character_node': ProxyType(Model, 'node'),
         'scene_node': ProxyType(Model, 'parent'),
@@ -541,7 +582,6 @@ class CollisionSystem(System):
 
     def add_shape(self, entity, movement, solid, shape):
         model_proxy = self.proxies['character_node']
-        model = entity[model_proxy.component_type]
         model_node = model_proxy.field(entity)
 
         node = NodePath(

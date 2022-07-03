@@ -527,8 +527,6 @@ class CollisionSystem(System):
 
     def init_sensors(self, entity, movement):
         """
-        * solid'tag'] = tag
-        * 
         """
         solids = movement.solids
         model_node = self.proxies['character_node'].field(entity)
@@ -560,13 +558,13 @@ class CollisionSystem(System):
                 # FIXME: This is a temporary prevention of sing multiple
                 # solids in one movement system. This whole .py needs to
                 # be refactored to account for multiple ones.
-                assert len(solids_nodes) == 1
+                assert len(solid_nodes) == 1
                 node_np = solid_nodes[0]
                 node = node_np.node()
                 solid_objects = node.get_solids()
                 # FIXME: As above, please refactor this .py to account
                 # for multiple solids.
-                assert len(solids_objects) == 1
+                assert len(solid_objects) == 1
                 solid_object = solid_objects[0]
 
                 # Transcribe solid properties into the solidd dict
@@ -584,13 +582,13 @@ class CollisionSystem(System):
             )
             # node -> this component
             node_np.set_python_tag(movement.tag_name, movement)
-            node_np.set_python_tag(tag, movement)
+            ##node_np.set_python_tag(tag, movement)
             # Set up the solid's collision masks
             node.set_from_collide_mask(movement.from_collide_mask)
             node.set_into_collide_mask(movement.into_collide_mask)
             # Node debug visualization
             if 'debug' in solid and solid['debug']:
-                node.show()
+                node_np.show()
 
         if movement.debug:
             scene_proxy = self.proxies['scene_node']
@@ -976,7 +974,7 @@ class Bumping(CollisionSystem):
     def enter_filter_character(self, entity):
         movement = entity[BumpingMovement]
         self.init_sensors(entity, movement)
-        bumper = movement.solids[movement.tag_name]
+        bumper = movement.solids['bumper']
         node = bumper['node']
         movement.queue.add_collider(node, node)
 
@@ -987,7 +985,7 @@ class Bumping(CollisionSystem):
             scene_node = scene_proxy.field(entity)
             character = entity[CharacterController]
             movement = entity[BumpingMovement]
-            bumper = movement.solids[movement.tag_name]
+            bumper = movement.solids['bumper']
             node = bumper['node']
             node.set_pos(character.translation)
             movement.traverser.traverse(scene_node)

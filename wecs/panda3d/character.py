@@ -519,6 +519,22 @@ class CollisionSystem(System):
     dict(
         tag=<solid's name>,
         node=<NodePath to the CollisionNode containing the solid>,
+    )
+
+    FIXME: Value transcription
+    FIXME: debug field
+    FIXME: Furter fields on the component:
+        @Component()
+        class Interactor:
+            tag_name: str = 'interacting'
+            node_name: str = 'interactor'
+            solids: dict = None
+            from_collide_mask: int = INTERACTION_MASK
+            into_collide_mask: int = 0
+            traverser: CollisionTraverser = field(default_factory=CollisionTraverser)
+            queue: CollisionHandlerQueue = field(default_factory=CollisionHandlerQueue)
+            debug: bool = False
+
     """
     proxies = {
         'character_node': ProxyType(Model, 'node'),
@@ -576,13 +592,14 @@ class CollisionSystem(System):
             solid['node'] = node_np
             node_np.reparent_to(model_node)
             # Hook up traverser
-            movement.traverser.add_collider(
-                node_np,
-                movement.queue,
-            )
+            if movement.traverser is not None:
+                movement.traverser.add_collider(
+                    node_np,
+                    movement.queue,
+                )
             # node -> this component
-            node_np.set_python_tag(movement.tag_name, movement)
-            ##node_np.set_python_tag(tag, movement)
+            node_np.set_python_tag(type(movement), entity)
+            #node_np.set_python_tag(movement.tag_name, movement)
             # Set up the solid's collision masks
             node.set_from_collide_mask(movement.from_collide_mask)
             node.set_into_collide_mask(movement.into_collide_mask)

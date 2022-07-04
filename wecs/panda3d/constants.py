@@ -8,3 +8,6 @@ CAMERA_MASK = 1 << 3
 # This object can be detected by putting the mouse pointer over it and
 # using wecs.panda3d.mouseover
 MOUSEOVER_MASK = 1 << 4
+# This object can interact with interactable objects, or is an object
+# that can be interacted with.
+INTERACTION_MASK = 1 << 5

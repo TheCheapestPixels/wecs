@@ -91,7 +91,6 @@ class Interacting(CollisionSystem):
             self.run_sensors(entity, entity[Interactor])
             entity[Interactor].action_options = []
             self.check_action_options(entity)
-            print(entity, entity[Interactor].action_options)
 
     def check_action_options(self, entity):
         for contact in entity[Interactor].contacts:
@@ -106,5 +105,5 @@ class Interacting(CollisionSystem):
                            if fa in into_actions]
                 for match in matches:
                     entity[Interactor].action_options.append(
-                        (match, entity),
+                        (match, into_entity),
                     )

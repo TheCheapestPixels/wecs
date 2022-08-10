@@ -1,5 +1,6 @@
 import math
 from dataclasses import field
+import enum
 
 from panda3d.core import Vec3
 
@@ -12,6 +13,17 @@ from wecs.panda3d.prototype import Model
 from wecs.panda3d.character import CharacterController
 
 
+class GravityType(enum.Enum):
+    BASIC = 1
+    CYLINDER = 2
+    SPHERE = 3
+
+
+class GravityDirection(enum.Enum):
+    INWARD = 1
+    OUTWARD = 2
+
+
 @Component()
 class GravityMap:
     """
@@ -20,6 +32,9 @@ class GravityMap:
     """
     nodes: dict = field(default_factory=dict)
     node_names: list = field(default_factory=lambda: ["gravity"])
+    geometry: GravityType = GravityType.BASIC
+    direction: GravityDirection = GravityDirection.INWARD
+    strength: float = 30.0
 
 
 @Component()
@@ -80,9 +95,28 @@ class AdjustGravity(System):
                 if gravity_name in gravity_map.nodes:
                     gravity_node = gravity_map.nodes[gravity_name]
                     attractor = model_node.get_pos(gravity_node)
-                    attractor.y = 0.0
+
+                    if gravity_map.geometry == GravityType.BASIC:
+                        attractor = Vec3(0, 0, -1)
+                    elif gravity_map.geometry == GravityType.CYLINDER:
+                        attractor.y = 0.0
+                    elif gravity_map.geometry == GravityType.SPHERE:
+                        pass
+                    else:
+                        # FIXME
+                        raise Exception
+
                     attractor.normalize()
-                    attractor *= 9.81
+                    attractor *= gravity_map.strength
+
+                    if gravity_map.direction == GravityDirection.INWARD:
+                        attractor *= -1
+                    elif gravity_map.direction == GravityDirection.OUTWARD:
+                        pass
+                    else:
+                        # FIXME
+                        raise Exception
+
                     local_gravity = model_node.get_relative_vector(
                         gravity_node,
                         attractor,

@@ -91,7 +91,6 @@ class Interacting(CollisionSystem):
             self.run_sensors(entity, entity[Interactor])
             entity[Interactor].action_options = []
             self.check_action_options(entity)
-            print(entity, entity[Interactor].action_options)
 
     def check_action_options(self, entity):
         for contact in entity[Interactor].contacts:
@@ -108,3 +107,27 @@ class Interacting(CollisionSystem):
                     entity[Interactor].action_options.append(
                         (match, entity),
                     )
+
+
+class PrintActionOptions(CollisionSystem):
+    '''
+        Check for collisions between interactors and interactees.
+
+        Components used :func:`wecs.core.and_filter`
+            | :class:`wecs.panda3d.model.Model`
+    '''
+    entity_filters = {
+        'interactor': and_filter([
+            Proxy('character_node'),
+            Interactor,
+        ]),
+    }
+    proxies = {
+        'character_node': ProxyType(Model, 'node'),
+    }
+
+    def update(self, entities_by_filter):
+        print("### Interactions")
+        for entity in entities_by_filter['interactor']:
+            print(entity, entity[Interactor].action_options)
+        print()

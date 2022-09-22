@@ -17,6 +17,7 @@ from wecs.panda3d.prototype import Model
 from wecs.panda3d.prototype import Geometry
 from wecs.panda3d.camera import Camera
 from wecs.panda3d.input import Input
+from wecs.panda3d.character import CollisionSystem
 
 from wecs.panda3d.constants import MOUSEOVER_MASK
 
@@ -38,7 +39,7 @@ class MouseOveringCamera:
     entity: object = None
     collision_entry: object = None
 
-    
+
 class MouseOverOnEntity(System):
     entity_filters = {
         'mouseoverable': [Proxy('model'), MouseOverable],
@@ -48,6 +49,91 @@ class MouseOverOnEntity(System):
     proxies = {
         'model': ProxyType(Model, 'node'),
         'geometry': ProxyType(Geometry, 'node'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.traverser = CollisionTraverser()
+        self.queue = CollisionHandlerQueue()
+        
+        self.picker_ray = CollisionRay()
+        self.picker_node = CollisionNode('mouse ray')
+        self.picker_node.add_solid(self.picker_ray)
+        self.picker_node.set_from_collide_mask(MOUSEOVER_MASK)
+        self.picker_node.set_into_collide_mask(0x0)
+        self.picker_node_path = NodePath(self.picker_node)
+
+        self.traverser.add_collider(self.picker_node_path, self.queue)
+
+    def enter_filter_mouseoverable(self, entity):
+        model_proxy = self.proxies['model']
+        model_node = model_proxy.field(entity)
+        mouseoverable = entity[MouseOverable]
+
+        into_node = CollisionNode('wecs_mouseoverable')
+        into_node.add_solid(mouseoverable.solid)
+        into_node.set_from_collide_mask(0x0)
+        into_node.set_into_collide_mask(mouseoverable.mask)
+        into_node_path = model_node.attach_new_node(into_node)
+        into_node_path.set_python_tag('wecs_mouseoverable', entity._uid)
+
+    def exit_filter_mouseoverable(self, entity):
+        # FIXME: Undo all the other stuff that accumulated!
+        entity[MouseOverable].solid.detach_node()
+
+    def enter_filter_mouseoverable_geometry(self, entity):
+        into_node = self.proxies['geometry'].field(entity)
+
+        old_mask = into_node.get_collide_mask()
+        new_mask = old_mask | entity[MouseOverableGeometry].mask
+        into_node.set_collide_mask(new_mask)
+        into_node.find('**/+GeomNode').set_python_tag('wecs_mouseoverable', entity._uid)
+
+    def update(self, entities_by_filter):
+        for entity in entities_by_filter['camera']:
+            mouse_overing = entity[MouseOveringCamera]
+            camera = entity[Camera]
+            input = entity[Input]
+
+            # Reset overed entity to None
+            mouse_overing.entity = None
+            mouse_overing.collision_entry = None
+
+            requested = 'mouse_over' in input.contexts
+            has_mouse = base.mouseWatcherNode.has_mouse()
+            if requested and has_mouse:
+                # Attach and align testing ray, and run collisions
+                self.picker_node_path.reparent_to(camera.camera)
+                mpos = base.mouseWatcherNode.get_mouse()
+                self.picker_ray.set_from_lens(
+                    base.camNode,
+                    mpos.getX(),
+                    mpos.getY(),
+                )
+                self.traverser.traverse(camera.camera.get_top())
+
+                # Remember reference to mouseovered entity, if any
+                if self.queue.get_num_entries() > 0:
+                    self.queue.sort_entries()
+                    entry = self.queue.get_entry(0)
+                    picked_node = entry.get_into_node_path()
+                    picked_uid = picked_node.get_python_tag('wecs_mouseoverable')
+                    mouse_overing.entity = picked_uid
+                    mouse_overing.collision_entry = entry
+
+
+class NewMouseOverOnEntity(CollisionSystem):
+    entity_filters = {
+        'mouseoverable': [Proxy('model'), MouseOverable],
+        'mouseoverable_geometry': [Proxy('geometry'), MouseOverableGeometry],
+        'camera': [Camera, Input, MouseOveringCamera],
+    }
+    proxies = {
+        'model': ProxyType(Model, 'node'),
+        'geometry': ProxyType(Geometry, 'node'),
+        'character_node': ProxyType(Model, 'node'),
+        'camera_node': ProxyType(Camera, 'node'),
+        'scene_node': ProxyType(Model, 'parent'),
     }
 
     def __init__(self, *args, **kwargs):

@@ -541,11 +541,18 @@ class CollisionSystem(System):
         'scene_node': ProxyType(Model, 'parent'),
     }
 
-    def init_sensors(self, entity, movement):
+    def init_sensors(self, entity, movement, proxy_node='character_node'):
         """
+        If a `movement.solids` entry contains a `'shape'` entry, a
+        `CollisionNode` is created for it under the proxied
+        `'character_node'`, otherwise `movement.node_name` will be used 
+        to find a node under the `character_node`.
+
+        FIXME: WTF was I on? Obviously the node name also has to be
+        taken from the solid entry.
         """
         solids = movement.solids
-        model_node = self.proxies['character_node'].field(entity)
+        model_node = self.proxies[proxy_node].field(entity)
         for tag, solid in solids.items():
             solid['tag'] = tag
             if 'shape' in solid:  # Create solids from specification
@@ -568,22 +575,34 @@ class CollisionSystem(System):
                 node = node.node()
                 node.add_solid(shape)
             else:  # Fetch solids from model
+                # FIXME: Use solids['node_name'] instead of
+                # movement.node_name, and let it be the full find
+                # expression (so maybe get a better name than
+                # node_name).
                 solid_nodes = model_node.find_all_matches(
                     f'**/{movement.node_name}',
                 )
-                # FIXME: This is a temporary prevention of sing multiple
+                # FIXME:
+                # (Strike the following)
+                # This is a temporary prevention of sing multiple
                 # solids in one movement system. This whole .py needs to
                 # be refactored to account for multiple ones.
+                # (Actually)
+                # FFS, node names (or node finding expressions, see
+                # above) have to be unique, how else are we to
+                # unambiguously identify them?
                 assert len(solid_nodes) == 1
                 node_np = solid_nodes[0]
                 node = node_np.node()
                 solid_objects = node.get_solids()
-                # FIXME: As above, please refactor this .py to account
-                # for multiple solids.
+                # FIXME: In this case, multiple solids might be
+                # warranted.
                 assert len(solid_objects) == 1
                 solid_object = solid_objects[0]
 
-                # Transcribe solid properties into the solidd dict
+                # Transcribe solid properties into the solid dict.
+                # FIXME: This will break if multiple solids are on a
+                # collision node.
                 solid['shape'] = solid_object.type
                 if solid['shape'] == CollisionSphere:
                     solid['center'] = solid_object.center

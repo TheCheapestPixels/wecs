@@ -251,15 +251,19 @@ def rebecca_lifter():
 
 rebecca = {
     wecs.panda3d.prototype.Geometry: dict(
-        file='../../assets/rebecca.bam',
+        file='models/character/rebecca.bam',
     ),
     wecs.panda3d.prototype.Actor: dict(
-        file='../../assets/rebecca.bam',
+        file='models/character/rebecca.bam',
     ),
     wecs.panda3d.character.BumpingMovement: dict(
+        node_name='bumper',
+        tag_name='bumper',
         solids=factory(rebecca_bumper),
     ),
     wecs.panda3d.character.FallingMovement: dict(
+        node_name='lifter',
+        tag_name='lifter',
         solids=factory(rebecca_lifter),
     ),
     wecs.panda3d.mouseover.MouseOverable: dict(

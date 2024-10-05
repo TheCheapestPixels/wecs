@@ -1,3 +1,5 @@
+import assetcoop
+
 import wecs
 
 import aspects

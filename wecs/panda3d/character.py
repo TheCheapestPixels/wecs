@@ -565,7 +565,7 @@ class CollisionSystem(System):
                         f'{movement.tag_name}-{solid["tag"]}',
                     ),
                 )
-                node = node.node()
+                node = node_np.node()
                 node.add_solid(shape)
             else:  # Fetch solids from model
                 solid_nodes = model_node.find_all_matches(
